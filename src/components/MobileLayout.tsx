@@ -109,45 +109,45 @@ export const MobileLayout = () => {
         {/* Main Content Area with Bottom Padding for Navigation Bar */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24 bg-slate-50 text-slate-800">
           
-          {/* Top Brand Header */}
-          <header className="bg-slate-900 text-white py-3.5 px-4 sm:px-5 flex items-center justify-between border-b border-slate-800/90 shadow-xs sticky top-0 z-30">
+          {/* Top Brand Header - Slim, Modern & Professional */}
+          <header className="bg-slate-900 text-white py-2 px-3 sm:px-4 flex items-center justify-between border-b border-slate-800/90 shadow-2xs sticky top-0 z-30">
             
-            {/* Left: Brand & Subtitle */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center font-black shadow-xs shrink-0">
-                <GraduationCap size={20} />
+            {/* Left: Brand & Subtitle (Slim & Single-line) */}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center font-bold shadow-2xs shrink-0">
+                <GraduationCap size={16} />
               </div>
-              <div className="leading-tight">
-                <a href="/" className="text-base sm:text-lg font-black tracking-tight text-white uppercase hover:text-orange-400 transition-colors">
+              <div className="leading-tight min-w-0">
+                <a href="/" className="text-xs sm:text-sm font-bold tracking-tight text-white hover:text-orange-400 transition-colors block whitespace-nowrap">
                   Unity Earning
                 </a>
-                <p className="text-[10px] text-slate-400 font-medium tracking-wide">
+                <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium tracking-wide whitespace-nowrap">
                   E-Learning Platform
                 </p>
               </div>
             </div>
 
-            {/* Right: Video Guide & Help Support Actions */}
-            <div className="flex items-center gap-2 shrink-0">
+            {/* Right: Slim Video Guide & Help Support Actions */}
+            <div className="flex items-center gap-1.5 shrink-0">
               
               {/* Video Tutorial Button */}
               <button
                 onClick={handleVideoClick}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 hover:text-white text-xs font-semibold border border-slate-700/80 transition cursor-pointer"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-slate-200 hover:text-white text-[10px] font-medium border border-slate-700/70 transition cursor-pointer"
                 title="Watch Video Tutorial"
               >
-                <PlayCircle size={15} className="text-rose-400" />
-                <span className="text-[11px] font-medium">Video</span>
+                <PlayCircle size={13} className="text-rose-400" />
+                <span>Video</span>
               </button>
 
               {/* Help & Support Button */}
               <button
                 onClick={() => setIsHelpOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-xs font-bold transition shadow-sm cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-[10px] font-bold transition shadow-2xs cursor-pointer"
                 title="Help, Telegram & WhatsApp Support"
               >
-                <Headphones size={14} />
-                <span className="text-[11px]">Help</span>
+                <Headphones size={12} />
+                <span>Help</span>
               </button>
 
             </div>

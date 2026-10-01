@@ -155,53 +155,59 @@ export const Home = () => {
   };
 
   return (
-    <div className="p-4 py-5 space-y-4">
+    <div className="p-3 sm:p-4 py-3 space-y-3">
       
-      {/* Welcome & Wallet Header */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 rounded-3xl p-5 text-white shadow-md relative overflow-hidden border border-slate-800">
-        <div className="flex justify-between items-start">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full inline-block mb-1.5">
-              Verified Student Account
-            </span>
-            <h1 className="text-xl font-extrabold tracking-tight">
+      {/* Welcome & Wallet Header - Slim, Compact & Modern (চিকন ও প্রফেশনাল) */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm relative overflow-hidden border border-slate-800/90">
+        
+        {/* Top Info Row: Student Info on Left, Balance on Right */}
+        <div className="flex justify-between items-center gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="text-[9px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Verified Student
+              </span>
+            </div>
+            
+            <h1 className="text-sm sm:text-base font-bold tracking-tight text-white leading-tight truncate">
               Welcome, {profile?.fullName?.split(' ')[0] || 'Member'}!
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
+            
+            <p className="text-[10px] text-slate-400 mt-0.5 font-sans">
               Student ID: <span className="font-mono text-slate-300 font-semibold">{profile?.studentIdCode || 'N/A'}</span>
             </p>
           </div>
 
-          <div className="text-right bg-slate-800/80 px-3.5 py-2 rounded-2xl border border-slate-700/80">
-            <div className="text-[10px] text-slate-400 uppercase font-semibold flex items-center justify-end gap-1">
-              <Wallet size={12} className="text-emerald-400" /> Balance
+          {/* Compact Balance Badge */}
+          <div className="text-right bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-700/80 shrink-0">
+            <div className="text-[9px] text-slate-400 uppercase font-semibold flex items-center justify-end gap-1">
+              <Wallet size={11} className="text-emerald-400" /> Balance
             </div>
-            <div className="text-lg font-mono font-bold text-white mt-0.5">
+            <div className="text-sm sm:text-base font-mono font-bold text-emerald-400 tabular-nums leading-tight mt-0.5">
               BDT {(profile?.balance || 0).toFixed(2)}
             </div>
           </div>
         </div>
 
-        {/* Assigned Task Highlight Bar */}
-        <div className="mt-4 pt-3.5 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-              Authorized Task Assignment:
-            </div>
-            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+        {/* Assigned Task Slim Highlight Bar */}
+        <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-[10px] text-slate-400 font-medium shrink-0">
+              Task:
+            </span>
+            <div className="truncate">
               {isPending ? (
-                <span className="text-amber-400 text-xs font-semibold bg-amber-500/10 px-2.5 py-0.5 rounded-md border border-amber-500/20">
-                  Account Pending Admin Approval & Task Assignment
+                <span className="text-amber-400 text-[10px] font-medium bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                  Pending Admin Assignment
                 </span>
               ) : authorizedModules.length > 0 ? (
-                authorizedModules.map(m => (
-                  <span key={m.id} className="text-xs font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                    <CheckCircle2 size={12} className="text-emerald-400" />
-                    <span>{m.title}</span>
-                  </span>
-                ))
+                <span className="text-[10px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                  <CheckCircle2 size={11} className="text-emerald-400" />
+                  <span className="truncate">{authorizedModules[0].title}</span>
+                </span>
               ) : (
-                <span className="text-slate-400 text-xs font-normal">Pending Administrator Assignment</span>
+                <span className="text-slate-400 text-[10px]">Pending Assignment</span>
               )}
             </div>
           </div>
@@ -209,12 +215,13 @@ export const Home = () => {
           {!isPending && authorizedModules.length > 0 && (
             <button
               onClick={() => navigate(authorizedModules[0].route)}
-              className="bg-orange-500 hover:bg-orange-400 active:scale-95 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1 cursor-pointer shrink-0"
+              className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg transition shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
             >
-              Start Work <ArrowRight size={14} />
+              Start <ArrowRight size={11} />
             </button>
           )}
         </div>
+
       </div>
 
       {/* Account Pending Notice Banner (if pending) */}
