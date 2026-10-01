@@ -1,0 +1,148 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile containing balances, registration details, and assigned work module",
+      "type": "object",
+      "properties": {
+        "whatsappNumber": { "type": "string" },
+        "fullName": { "type": "string" },
+        "studentIdCode": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "admin"] },
+        "status": { "type": "string", "enum": ["pending", "active", "blocked"] },
+        "balance": { "type": "number" },
+        "microjobPoints": { "type": "number" },
+        "assignedJob": { "type": "string" },
+        "assignedJobs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "preferredModules": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "courseCompleted": { "type": "boolean" },
+        "companyJoinDate": { "type": "string" },
+        "hasExperience": { "type": "boolean" },
+        "hasCertificate": { "type": "boolean" },
+        "certificateUrl": { "type": "string" },
+        "passwordText": { "type": "string" },
+        "teamLeaderName": { "type": "string" },
+        "teamTrainerName": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["whatsappNumber", "fullName", "studentIdCode", "role", "status", "balance", "microjobPoints"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "Global settings like access PIN and notices",
+      "type": "object",
+      "properties": {
+        "accessPin": { "type": "string" },
+        "message": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "url": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "WorkSubmission": {
+      "title": "Work Submission",
+      "description": "User work submissions for admin review",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "module": { "type": "string" },
+        "data": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "module", "status", "createdAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Products in the Unity Earning Shop",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "description": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "name", "price", "description", "photoUrl", "createdAt"]
+    },
+    "MicrojobLink": {
+      "title": "Microjob Link",
+      "description": "Links uploaded by users or admin for likes",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "platform": { "type": "string", "enum": ["Facebook", "YouTube"] },
+        "url": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "platform", "url", "isActive", "createdAt"]
+    },
+    "AdminInfo": {
+      "title": "Admin Info",
+      "description": "Admin configuration",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" }
+      },
+      "required": ["email"]
+    },
+    "Transfer": {
+      "title": "Balance Transfer",
+      "description": "Real-time balance transfers between student accounts",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderStudentId": { "type": "string" },
+        "recipientStudentId": { "type": "string" },
+        "recipientName": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["senderId", "senderStudentId", "recipientStudentId", "amount", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User accounts"
+    },
+    "settings/{settingId}": {
+      "schema": { "$ref": "#/entities/Setting" },
+      "description": "Global settings like access PIN and notices"
+    },
+    "submissions/{subId}": {
+      "schema": { "$ref": "#/entities/WorkSubmission" },
+      "description": "Work submitted by students"
+    },
+    "products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Shop products"
+    },
+    "microjobs/{jobId}": {
+      "schema": { "$ref": "#/entities/MicrojobLink" },
+      "description": "Microjob links to click"
+    },
+    "transfers/{transferId}": {
+      "schema": { "$ref": "#/entities/Transfer" },
+      "description": "Balance transfer transaction logs"
+    },
+    "admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminInfo" },
+      "description": "Authorized admin IDs/emails"
+    }
+  }
+}
