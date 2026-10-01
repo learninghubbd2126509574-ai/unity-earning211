@@ -2,10 +2,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, 
   BriefcaseBusiness, 
-  Store, 
-  MessageSquareQuote,
   User as UserIcon, 
-  LifeBuoy, 
   PlayCircle,
   Receipt,
   Headphones,
@@ -92,7 +89,7 @@ export const MobileLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex justify-center w-full">
+    <div className="min-h-screen bg-slate-100 flex justify-center w-full antialiased font-sans">
       
       {/* Promo Announcement Modal */}
       <PromoModal isOpen={isPromoOpen} onClose={handleClosePromo} />
@@ -106,24 +103,24 @@ export const MobileLayout = () => {
         videoUrl={supportChannels.videoUrl}
       />
 
-      {/* Mobile Frame Container */}
-      <div className="w-full max-w-[440px] bg-white shadow-2xl relative min-h-screen flex flex-col font-sans border-x border-slate-200/60">
+      {/* App Frame Container (Mobile First & Tablet/Desktop Scaled) */}
+      <div className="w-full max-w-[480px] bg-white shadow-2xl relative min-h-screen flex flex-col border-x border-slate-200/80">
         
-        {/* Scrollable Container with Content and Scrolling Top Header */}
+        {/* Main Content Area with Bottom Padding for Navigation Bar */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24 bg-slate-50 text-slate-800">
           
-          {/* Top Brand Header (Scrolls naturally with the page content) */}
-          <header className="bg-slate-900 text-white py-3.5 px-4 sm:px-5 flex items-center justify-between border-b border-slate-800/80 shadow-xs">
+          {/* Top Brand Header */}
+          <header className="bg-slate-900 text-white py-3.5 px-4 sm:px-5 flex items-center justify-between border-b border-slate-800/90 shadow-xs sticky top-0 z-30">
             
             {/* Left: Brand & Subtitle */}
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center font-black">
+              <div className="w-9 h-9 rounded-xl bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center font-black shadow-xs shrink-0">
                 <GraduationCap size={20} />
               </div>
               <div className="leading-tight">
-                <h1 className="text-base sm:text-lg font-black tracking-tight text-white uppercase">
+                <a href="/" className="text-base sm:text-lg font-black tracking-tight text-white uppercase hover:text-orange-400 transition-colors">
                   Unity Earning
-                </h1>
+                </a>
                 <p className="text-[10px] text-slate-400 font-medium tracking-wide">
                   E-Learning Platform
                 </p>
@@ -131,22 +128,22 @@ export const MobileLayout = () => {
             </div>
 
             {/* Right: Video Guide & Help Support Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               
               {/* Video Tutorial Button */}
               <button
                 onClick={handleVideoClick}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold border border-slate-700/80 transition cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 hover:text-white text-xs font-semibold border border-slate-700/80 transition cursor-pointer"
                 title="Watch Video Tutorial"
               >
                 <PlayCircle size={15} className="text-rose-400" />
-                <span className="hidden xs:inline text-[11px]">Video</span>
+                <span className="text-[11px] font-medium">Video</span>
               </button>
 
               {/* Help & Support Button */}
               <button
                 onClick={() => setIsHelpOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition shadow-sm cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-xs font-bold transition shadow-sm cursor-pointer"
                 title="Help, Telegram & WhatsApp Support"
               >
                 <Headphones size={14} />
@@ -157,13 +154,13 @@ export const MobileLayout = () => {
           </header>
 
           {/* Page Routed Content */}
-          <main>
+          <main className="w-full">
             <Outlet />
           </main>
         </div>
 
-        {/* Stable Fixed Bottom Navigation Bar - Distinctive Colorful Themes */}
-        <nav className="fixed bottom-0 left-0 right-0 max-w-[440px] mx-auto w-full bg-white/95 backdrop-blur-md border-t border-slate-200/80 flex justify-around items-center py-2 px-1 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+        {/* Stable Fixed Bottom Navigation Bar */}
+        <nav className="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto w-full bg-white/95 backdrop-blur-md border-t border-slate-200/90 flex justify-between items-center py-2 px-1.5 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
           <NavItem 
             to="/" 
             icon={<Home size={18} />} 
@@ -184,13 +181,6 @@ export const MobileLayout = () => {
             label="Payouts" 
             active={location.pathname === '/live-payments' || location.pathname === '/payouts'} 
             colorTheme="amber"
-          />
-          <NavItem 
-            to="/reviews" 
-            icon={<MessageSquareQuote size={18} />} 
-            label="Reviews" 
-            active={location.pathname === '/reviews'} 
-            colorTheme="rose"
           />
           <NavItem 
             to="/mentors" 
@@ -235,31 +225,31 @@ const NavItem = ({ to, icon, label, active, colorTheme }: NavItemProps) => {
     switch (colorTheme) {
       case 'blue':
         return active 
-          ? "text-blue-600 font-black bg-blue-50/80 border border-blue-200/80 shadow-xs" 
+          ? "text-blue-600 font-bold bg-blue-50/90 border border-blue-200/80 shadow-2xs" 
           : "text-slate-400 hover:text-blue-500";
       case 'emerald':
         return active 
-          ? "text-emerald-600 font-black bg-emerald-50/80 border border-emerald-200/80 shadow-xs" 
+          ? "text-emerald-600 font-bold bg-emerald-50/90 border border-emerald-200/80 shadow-2xs" 
           : "text-slate-400 hover:text-emerald-500";
       case 'amber':
         return active 
-          ? "text-amber-600 font-black bg-amber-50/80 border border-amber-200/80 shadow-xs" 
+          ? "text-amber-600 font-bold bg-amber-50/90 border border-amber-200/80 shadow-2xs" 
           : "text-slate-400 hover:text-amber-500";
       case 'rose':
         return active 
-          ? "text-rose-600 font-black bg-rose-50/80 border border-rose-200/80 shadow-xs" 
+          ? "text-rose-600 font-bold bg-rose-50/90 border border-rose-200/80 shadow-2xs" 
           : "text-slate-400 hover:text-rose-500";
       case 'purple':
         return active 
-          ? "text-purple-600 font-black bg-purple-50/80 border border-purple-200/80 shadow-xs" 
+          ? "text-purple-600 font-bold bg-purple-50/90 border border-purple-200/80 shadow-2xs" 
           : "text-slate-400 hover:text-purple-500";
       case 'teal':
         return active 
-          ? "text-teal-600 font-black bg-teal-50/80 border border-teal-200/80 shadow-xs" 
+          ? "text-teal-600 font-bold bg-teal-50/90 border border-teal-200/80 shadow-2xs" 
           : "text-slate-400 hover:text-teal-500";
       case 'indigo':
         return active 
-          ? "text-indigo-600 font-black bg-indigo-50/80 border border-indigo-200/80 shadow-xs" 
+          ? "text-indigo-600 font-bold bg-indigo-50/90 border border-indigo-200/80 shadow-2xs" 
           : "text-slate-400 hover:text-indigo-500";
     }
   };
@@ -268,14 +258,14 @@ const NavItem = ({ to, icon, label, active, colorTheme }: NavItemProps) => {
     <button
       onClick={() => navigate(to)}
       className={cn(
-        "flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer select-none",
+        "flex flex-col items-center justify-center flex-1 py-1.5 px-0.5 rounded-xl transition-all cursor-pointer select-none active:scale-95",
         getThemeClasses()
       )}
     >
-      <div className={cn("p-1 rounded-lg transition-transform", active && "scale-110")}>
+      <div className={cn("p-0.5 rounded-lg transition-transform", active && "scale-105")}>
         {icon}
       </div>
-      <span className="text-[10px] tracking-tight mt-0.5">{label}</span>
+      <span className="text-[10px] tracking-tight mt-0.5 font-medium whitespace-nowrap">{label}</span>
     </button>
   );
 };
