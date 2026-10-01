@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Radio } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { generate320RealisticChatPool, PresetMessage } from '../data/liveChatMessages';
+import { generate320RealisticChatPool } from '../data/liveChatMessages';
 
 interface ChatMessage {
   id: string;
@@ -77,7 +77,6 @@ export const LiveChat = () => {
     let timeoutId: any = null;
 
     const scheduleNextMessage = () => {
-      // Realistic variable delay: between 1200ms and 4000ms, occasionally 800ms quick burst
       const delays = [800, 1300, 1900, 2400, 3100, 3800, 4000];
       const randomDelay = delays[Math.floor(Math.random() * delays.length)];
 
@@ -96,7 +95,6 @@ export const LiveChat = () => {
         };
 
         setMessages((prev) => {
-          // Keep maximum latest 25 messages on screen for smooth 60fps rendering
           return [...prev.slice(-24), newMsg];
         });
 
@@ -133,24 +131,24 @@ export const LiveChat = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-135px)] max-w-4xl mx-auto pb-4 px-2 sm:px-4">
+    <div className="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto px-2 sm:px-3 pt-2 pb-1 space-y-2">
       
       {/* Top Header - Clean and Minimal with Member Counter Only */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white rounded-3xl p-4 shadow-md border border-slate-800 shrink-0 mb-2">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md">
-              <Radio size={20} className="animate-pulse" />
+      <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white rounded-2xl p-3 sm:p-3.5 shadow-md border border-slate-800 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="relative shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md">
+              <Radio size={18} className="animate-pulse" />
             </div>
-            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-slate-900 animate-ping" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-slate-900" />
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-slate-900 animate-ping" />
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-slate-900" />
           </div>
 
           <div>
-            <h1 className="text-base sm:text-lg font-black tracking-tight">
+            <h1 className="text-sm sm:text-base font-black tracking-tight">
               লাইভ স্টুডেন্ট চ্যাটরুম
             </h1>
-            <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
+            <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" />
               <span className="text-emerald-400 font-bold font-mono">{onlineCount} জন মেম্বার</span> সক্রিয় আছেন
             </p>
@@ -161,17 +159,17 @@ export const LiveChat = () => {
       {/* Main Chat Stream Container */}
       <div 
         ref={chatContainerRef}
-        className="flex-1 overflow-y-auto space-y-2.5 p-3 sm:p-4 bg-slate-100/80 rounded-3xl border border-slate-200/90 shadow-inner relative hide-scrollbar"
+        className="flex-1 overflow-y-auto space-y-2 p-3 bg-slate-100/90 rounded-2xl border border-slate-200/90 shadow-inner relative hide-scrollbar"
       >
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex items-start gap-2.5 transition-all duration-300 animate-in fade-in-50 slide-in-from-bottom-1 ${
+            className={`flex items-start gap-2 transition-all duration-300 animate-in fade-in-50 slide-in-from-bottom-1 ${
               msg.isUser ? 'flex-row-reverse' : ''
             }`}
           >
             {/* Circular Blank Silhouette Avatar */}
-            <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${msg.avatarColor} text-white flex items-center justify-center border-2 border-white shadow-sm shrink-0 overflow-hidden relative`}>
+            <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${msg.avatarColor} text-white flex items-center justify-center border-2 border-white shadow-xs shrink-0 overflow-hidden relative`}>
               <svg viewBox="0 0 100 100" className="w-full h-full bg-slate-900/40 fill-white p-0.5" title="Blank Student Avatar">
                 <circle cx="50" cy="38" r="20" className="fill-white/80" />
                 <path d="M16 95 C16 68, 30 58, 50 58 C70 58, 84 68, 84 95 Z" className="fill-white/80" />
@@ -180,16 +178,16 @@ export const LiveChat = () => {
 
             {/* Message Bubble */}
             <div
-              className={`max-w-[82%] sm:max-w-[75%] rounded-2xl p-3 shadow-xs space-y-1 relative ${
+              className={`max-w-[84%] sm:max-w-[78%] rounded-2xl px-3 py-2 shadow-2xs space-y-0.5 relative ${
                 msg.isUser
                   ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-tr-xs'
                   : 'bg-white text-slate-900 border border-slate-200/90 rounded-tl-xs'
               }`}
             >
               {/* Header Info */}
-              <div className="flex items-center justify-between gap-2 border-b border-black/5 pb-1">
+              <div className="flex items-center justify-between gap-2 border-b border-black/5 pb-0.5">
                 <div className="flex items-center gap-1.5">
-                  <span className={`font-bold text-[11px] sm:text-xs leading-none ${msg.isUser ? 'text-white' : 'text-slate-900'}`}>
+                  <span className={`font-bold text-[11px] leading-none ${msg.isUser ? 'text-white' : 'text-slate-900'}`}>
                     {msg.userName}
                   </span>
                   <span className={`text-[9px] px-1.5 py-0.2 rounded-md font-semibold ${
@@ -207,7 +205,7 @@ export const LiveChat = () => {
               </div>
 
               {/* Message Content */}
-              <p className={`text-xs sm:text-[13px] leading-relaxed font-sans ${msg.isUser ? 'text-white' : 'text-slate-700'}`}>
+              <p className={`text-xs leading-relaxed font-sans ${msg.isUser ? 'text-white' : 'text-slate-700'}`}>
                 {msg.text}
               </p>
             </div>
@@ -215,20 +213,20 @@ export const LiveChat = () => {
         ))}
       </div>
 
-      {/* Input Box */}
-      <form onSubmit={handleSendMessage} className="mt-2 flex items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm shrink-0">
+      {/* Input Box - Sits Cleanly Right Above Bottom Navigation Bar */}
+      <form onSubmit={handleSendMessage} className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200/90 shadow-xs shrink-0">
         <input
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder="আপনার মেসেজ বা কাজের অভিজ্ঞতা লিখুন..."
-          className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 font-sans"
+          className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 font-sans"
         />
 
         <button
           type="submit"
           disabled={!inputText.trim()}
-          className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white p-2.5 rounded-xl transition shadow-md active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
+          className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white p-2 rounded-xl transition shadow-xs active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
           title="Send message"
         >
           <Send size={15} />
