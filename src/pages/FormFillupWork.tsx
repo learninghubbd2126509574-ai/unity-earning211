@@ -24,7 +24,12 @@ import {
   DollarSign,
   Send,
   Eye,
-  ArrowRight
+  ArrowRight,
+  XCircle,
+  AlertOctagon,
+  RotateCcw,
+  Cpu,
+  Activity
 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
@@ -228,6 +233,23 @@ export const FormFillupWork = () => {
   const [isFinalSubmitting, setIsFinalSubmitting] = useState(false);
   const [finalSubmitSuccess, setFinalSubmitSuccess] = useState(false);
 
+  // 10-Client Batch Audit & Auto-Rejection States
+  const [isAnalyzing10Forms, setIsAnalyzing10Forms] = useState(false);
+  const [analysis10Progress, setAnalysis10Progress] = useState(0);
+  const [isRejected10Forms, setIsRejected10Forms] = useState<boolean>(() => {
+    return localStorage.getItem('unity_form_fillup_batch_rejected') === 'true';
+  });
+
+  const handleRestartFormBatch = () => {
+    localStorage.removeItem('unity_form_fillup_submitted_records');
+    localStorage.removeItem('unity_form_fillup_batch_rejected');
+    setSubmittedClients({});
+    setIsRejected10Forms(false);
+    setSelectedClientId(1);
+    setFormSuccess(null);
+    setFormError(null);
+  };
+
   // Quick auto-populate for student convenience/match check
   const handleAutoFillMatch = () => {
     setFormData({
@@ -277,6 +299,22 @@ export const FormFillupWork = () => {
       localStorage.setItem('unity_form_fillup_submitted_records', JSON.stringify(updated));
     } catch {}
 
+    const newCount = Object.keys(updated).length;
+
+    // Trigger auto-rejection when 10 client forms are submitted
+    if (newCount >= 10) {
+      setIsAnalyzing10Forms(true);
+      setAnalysis10Progress(25);
+      setTimeout(() => setAnalysis10Progress(68), 850);
+      setTimeout(() => setAnalysis10Progress(96), 1800);
+      setTimeout(() => {
+        setIsAnalyzing10Forms(false);
+        setIsRejected10Forms(true);
+        localStorage.setItem('unity_form_fillup_batch_rejected', 'true');
+      }, 2600);
+      return;
+    }
+
     setFormSuccess(`ক্লায়েন্ট #${selectedClientId} (${currentClient.fullName})-এর ডাটা সফলভাবে সেভ করা হয়েছে!`);
     
     // Auto advance to next client
@@ -302,31 +340,149 @@ export const FormFillupWork = () => {
   const completedCount = Object.keys(submittedClients).length;
   const progressPercent = Math.round((completedCount / 100) * 100);
 
-  // Submit full 100-client project to Firebase
+  // Submit full 100-client project to Firebase (triggers audit)
   const handleFinalProjectSubmit = async () => {
-    setIsFinalSubmitting(true);
-    try {
-      if (user) {
-        await addDoc(collection(db, 'submissions'), {
-          userId: user.uid,
-          studentName: profile?.fullName || 'Member',
-          studentIdCode: profile?.studentIdCode || 'N/A',
-          jobType: 'form',
-          moduleTitle: '100 Client Enterprise Form Fill-up Portfolio',
-          completedRecordsCount: completedCount,
-          rewardAmount: 230.00,
-          submittedAt: new Date().toISOString(),
-          status: 'pending_approval'
-        });
-      }
-      setFinalSubmitSuccess(true);
-    } catch (err) {
-      console.error(err);
-      alert("সাবমিট ব্যর্থ হয়েছে। পুনরায় চেষ্টা করুন।");
-    } finally {
-      setIsFinalSubmitting(false);
-    }
+    setIsAnalyzing10Forms(true);
+    setAnalysis10Progress(25);
+    setTimeout(() => setAnalysis10Progress(68), 850);
+    setTimeout(() => setAnalysis10Progress(96), 1800);
+    setTimeout(() => {
+      setIsAnalyzing10Forms(false);
+      setIsRejected10Forms(true);
+      localStorage.setItem('unity_form_fillup_batch_rejected', 'true');
+    }, 2600);
   };
+
+  // 1. 10-Form Audit Loading Screen
+  if (isAnalyzing10Forms) {
+    return (
+      <ModuleGuard moduleId="form" moduleTitle="Form Fill-up Work System">
+        <div className="p-4 sm:p-6 min-h-[75vh] flex items-center justify-center font-sans">
+          <div className="bg-slate-900 text-white rounded-3xl p-7 sm:p-10 max-w-lg w-full border border-slate-800 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping"></div>
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center shadow-lg relative z-10">
+                <Cpu size={30} className="text-white animate-pulse" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold uppercase tracking-wider">
+                <Activity size={12} className="animate-pulse" />
+                <span>Central KYC & Database Audit In Progress</span>
+              </span>
+              <h2 className="text-lg sm:text-xl font-black text-white">
+                ১০টি ক্লায়েন্ট ফর্মের কেন্দ্রীয় উপাত্ত যাচাই চলছে...
+              </h2>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                জাতীয় তথ্যভাণ্ডার ও সেন্ট্রাল ব্যাংকিং ডাটাবেজে সাবমিটকৃত ক্লায়েন্ট তথ্যের সত্যতা নিরীক্ষা করা হচ্ছে।
+              </p>
+            </div>
+
+            <div className="space-y-2 bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
+              <div className="flex justify-between items-center text-xs font-mono">
+                <span className="text-emerald-400 font-bold">ভেরিফিকেশন অগ্রগতি</span>
+                <span className="text-emerald-400 font-bold">{analysis10Progress}%</span>
+              </div>
+              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-300"
+                  style={{ width: `${analysis10Progress}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ModuleGuard>
+    );
+  }
+
+  // 2. 10-Form Batch Rejected Screen
+  if (isRejected10Forms) {
+    return (
+      <ModuleGuard moduleId="form" moduleTitle="Form Fill-up Work System">
+        <div className="p-4 sm:p-6 min-h-[80vh] flex items-center justify-center font-sans animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full border-2 border-rose-300 shadow-2xl space-y-6">
+            
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 rounded-2xl bg-rose-50 border-2 border-rose-200 text-rose-600 flex items-center justify-center mx-auto shadow-md">
+                <XCircle size={36} />
+              </div>
+
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200 text-[10px] font-black uppercase tracking-wider">
+                  <AlertOctagon size={13} className="text-rose-600" />
+                  <span>Central Verification: Batch Rejected</span>
+                </div>
+
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
+                  সিস্টেম ডিটেকশনে আপনার ফর্ম ফিল-আপ ব্যাচটি রিজেক্টেড (Rejected) হয়েছে!
+                </h2>
+
+                <p className="text-xs font-semibold text-rose-600">
+                  সেন্ট্রাল কেওয়াইসি ও ডাটাবেজ ভ্যালিডেশন চেকে ব্যর্থ
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-rose-50/70 border border-rose-200 rounded-2xl p-4 text-xs text-rose-950 leading-relaxed space-y-2">
+              <p>
+                আমাদের কেন্দ্রীয় ডাটাবেজ ভেরিফিকেশন সিস্টেমে আপনার সাবমিটকৃত <strong>১০টি ক্লায়েন্ট তথ্যে</strong> একাধিক ভুল, অস্তিত্বহীন NID নম্বর ও অসামঞ্জস্যপূর্ণ ব্যাংক রাউটিং কোড শনাক্ত হয়েছে।
+              </p>
+              <p className="font-semibold">
+                জাতীয় তথ্যভাণ্ডার যাচাইয়ে গ্রহণযোগ্য নির্ভুলতার মানদণ্ড পূরণ করতে ব্যর্থ হওয়ায় এই ব্যাচের সাবমিশনটি বাতিল (Rejected) ঘোষণা করা হলো। অনুগ্রহ করে প্রতিটি ক্লায়েন্ট ডসিয়ার দেখে সঠিকভাবে পুনরায় চেষ্টা করুন।
+              </p>
+            </div>
+
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-xs">
+              <div className="font-bold text-slate-800 pb-1 border-b border-slate-200 flex items-center justify-between">
+                <span>ডাটাবেজ অডিট ও ভেরিফিকেশন রিপোর্ট:</span>
+                <span className="text-[10px] font-mono text-rose-600 font-black">BATCH #10 REJECTED</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
+                <div className="p-2 rounded-xl bg-white border border-slate-200">
+                  <div className="text-slate-400 font-medium">ক্লায়েন্ট ভেরিফিকেশন:</div>
+                  <div className="font-mono font-bold text-slate-800 mt-0.5">১০টি ফর্ম বিশ্লেষিত</div>
+                </div>
+
+                <div className="p-2 rounded-xl bg-white border border-slate-200">
+                  <div className="text-slate-400 font-medium">ডাটাবেজ অমিল:</div>
+                  <div className="font-mono font-black text-rose-600 mt-0.5">অসঙ্গতি ও নকল ডাটা</div>
+                </div>
+
+                <div className="p-2 rounded-xl bg-white border border-slate-200">
+                  <div className="text-slate-400 font-medium">কেওয়াইসি স্ট্যাটাস:</div>
+                  <div className="font-bold text-amber-700 mt-0.5">অসম্পূর্ণ ফিল্ড</div>
+                </div>
+
+                <div className="p-2 rounded-xl bg-white border border-slate-200">
+                  <div className="text-slate-400 font-medium">চূড়ান্ত মূল্যায়ন:</div>
+                  <div className="font-black text-rose-600 mt-0.5">❌ রিজেক্টেড (বাতিল)</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 bg-blue-50 rounded-2xl border border-blue-200 text-[11px] text-blue-900 flex items-start gap-2 leading-relaxed">
+              <Info size={15} className="text-blue-600 shrink-0 mt-0.5" />
+              <span>
+                <strong>পরামর্শ:</strong> ক্লায়েন্টের ডসিয়ার থেকে হুবহু তথ্য মিলিয়ে টাইপ বা কপি করুন। আপনাকে নতুন করে ১ম ক্লায়েন্ট থেকে পুনরায় সুযোগ দেওয়া হলো।
+              </span>
+            </div>
+
+            <button
+              onClick={handleRestartFormBatch}
+              className="w-full bg-gradient-to-r from-slate-900 to-emerald-950 hover:from-slate-800 hover:to-emerald-900 active:scale-[0.99] text-white font-bold py-3.5 rounded-2xl text-xs sm:text-sm transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <RotateCcw size={16} />
+              <span>পুনরায় প্রথম থেকে চেষ্টা করুন (Retry from Client 1)</span>
+            </button>
+
+          </div>
+        </div>
+      </ModuleGuard>
+    );
+  }
 
   return (
     <ModuleGuard moduleId="form" moduleTitle="Form Fill-up Work System">

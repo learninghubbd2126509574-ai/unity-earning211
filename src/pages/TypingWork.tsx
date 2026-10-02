@@ -14,16 +14,22 @@ import {
   Link2,
   Sparkles, 
   FileText, 
-  RefreshCw,
-  Eye,
-  Check,
-  Zap,
-  Info,
-  XCircle,
-  HelpCircle,
-  ArrowRight,
-  ExternalLink,
-  Timer
+  RefreshCw, 
+  Eye, 
+  Check, 
+  Zap, 
+  Info, 
+  XCircle, 
+  HelpCircle, 
+  ArrowRight, 
+  ExternalLink, 
+  Timer,
+  AlertTriangle,
+  ShieldAlert,
+  Cpu,
+  Bot,
+  RotateCcw,
+  Activity
 } from 'lucide-react';
 
 interface TypingTask {
@@ -159,44 +165,51 @@ Beamforming antenna arrays must support 64T64R Massive MIMO configurations opera
     difficulty: "Master",
     title: "Bill of Lading & Harmonized Tariff Cargo Ledger",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: 'Consignee' শব্দের স্থানে 'Authorized Importer of Record' প্রতিস্থাপন করুন।",
-    instruction: "এইচএস কোড, কন্টেইনার নম্বর এবং কাস্টমস শুল্ক হার নির্ভুলভাবে টাইপ করুন।",
-    text: `CARGO MANIFEST DISPATCH: [BL-NO: MSCUBD901248-CTG]
-Vessel Name: MV Bengal Pioneer (IMO: 9814201). Port of Loading: Singapore (SGSIN).
-Port of Discharge: Chittagong Sea Port (BDCGP). Consignee: Apex Industrial Logistics Ltd.
+    mandatoryCondition: "শর্ত: 'Chittagong Port' এর স্থলে 'Chattogram Sea Port Terminal-1' লিখুন এবং সকল ওজন টন (MT) এককে রূপান্তর করুন।",
+    instruction: "কনটেইনার নম্বর, এইচএস কোড ও কাস্টমস শুল্ক সাবধানে টাইপ করুন।",
+    text: `OCEAN BILL OF LADING [B/L NO: OOCL-CTG-9821094-A]
+Vessel Name: M.V. Bengal Star (Voyage #26-08W, IMO: 9482104).
+Port of Loading: Port of Singapore (SGSIN).
+Port of Discharge: Chittagong Port (BDCGP).
+Consignee: Beximco Synthetics Industrial Zone, Gazipur, Bangladesh.
 
-Container #MRKU-982104-7 (40ft High Cube HC):
-HS Code: 8471.30.00 [Automatic Data Processing Machinery]. Net Weight: 14,850.00 KGS.
-Declared Customs Value (CIF): USD $184,500.00 (Converted: BDT ৳2,21,40,000.00).
-Customs Duty (CD @ 5.0%): ৳11,07,000.00; Regulatory Duty (RD @ 3.0%): ৳6,64,200.00.
-Advance Income Tax (AIT @ 5.0%): ৳11,07,000.00. Verified by Custom House Audit Unit.
+CARGO MANIFEST DETAILS:
+- 40ft High Cube Container #TGHU-918234-7: Industrial Polyester Filament Yarn.
+- Gross Weight: 24,850 kg; Tare Weight: 3,980 kg; Net Weight: 20,870 kg.
+- HS Tariff Code: 5402.33.00 (Statutory Import Duty: 15.00% + Regulatory Duty: 3.00%).
+- Advance Income Tax (AIT): ৳84,200.00; Value Added Tax (VAT 15%): ৳2,46,800.00.
 
-Port demurrage exemptions are granted for an initial seven (7) calendar day grace period from the vessel berthing timestamp. Container seals intact: #SL-99014-BD. Physical container cargo stripping must occur in the presence of designated customs appraisal inspectors under ASYCUDA World validation clearance protocol #ASY-2026/7741.`
+Customs Assessment Notice #CUS-OFF-7718 certifies non-hazardous declaration. Clearing Agent: Maritime Logistics Clearing & Forwarding Ltd. (Customs License #094-CTG). The shipping line guarantees demurrage-free detention period of fourteen (14) calendar days following physical berth docking.`
   },
   {
     id: 8,
-    category: "Corporate Shareholders Bylaws & Voting Proxy",
-    difficulty: "Very Hard",
-    title: "Resolution #BOD-2026/18: Extraordinary General Meeting Charter",
+    category: "Biomedical Genetics & DNA Sequencing Manifest",
+    difficulty: "Master",
+    title: "Next-Generation Genomic Variant Sequencing Report",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: 'Shareholder' শব্দটির পরিবর্তে 'Registered Equity Holder' লিখুন।",
-    instruction: "ভোটিং শেয়ার, কোরাম পার্সেন্টেজ এবং লিগ্যাল নোটিশ হুবহু টাইপ করুন।",
-    text: `At the Extraordinary General Meeting (EGM) of the Board of Directors convened on 28-September-2026 pursuant to Section 85 of the Companies Act 1994, it was unanimously RESOLVED that the authorized equity capital be enhanced from BDT 50,00,00,000.00 to BDT 100,00,00,000.00 divided into 10,00,00,000 ordinary shares of BDT 10.00 each.
+    mandatoryCondition: "শর্ত: 'Polymerase Chain Reaction' এর স্থানে 'Quantitative Real-Time PCR (qPCR)' লিখুন।",
+    instruction: "জিন মিউটেশন কোড, নিউক্লিওটাইড সিকোয়েন্স ও বৈজ্ঞানিক নাম নির্ভুলভাবে টাইপ করুন।",
+    text: `GENOMIC DIAGNOSTIC SUMMARY: [Sample ID: #DNA-BD-44091]
+Sequencing Platform: Illumina NovaSeq 6000 (Paired-End 150bp Read Length).
+Target Region: Exome Sequencing Panel covering 22,000 coding genes.
+Mean Sequencing Coverage Depth: 128.4x (99.2% targets > 30x coverage).
 
-Every Shareholder holding not less than 5,000 voting units shall be entitled to cast proxy votes via digital cryptographic tokens. The quorum requirement of 66.67% aggregate voting equity was verified by Independent Scrutineers.
+Detected Pathogenic Variant: BRCA1 (NM_007294.4):c.5266dupC (p.Gln1756ProfsTer74).
+Zygosity: Heterozygous in Exon 20. Classification: Pathogenic (ACMG/AMP Guidelines).
+Alternative Variant Identified: TP53 (NM_000546.6):c.743G>A (p.Arg248Gln) with variant allele frequency (VAF) of 48.7%.
 
-The Board further authorized the Managing Director and Company Secretary to execute all requisite statutory filings with the Registrar of Joint Stock Companies and Firms (RJSC) under Form VIII within thirty (30) calendar days. Notice of rights offering subscription timeline shall be dispatched to all equity holders via registered email and published in two national daily newspapers.`
+Validation was performed via targeted Sanger sequencing following Polymerase Chain Reaction amplification. Bioinformatics alignment utilized human reference genome GRCh38 (hg38) with BWA-MEM algorithm and variant calling via GATK HaplotypeCaller (v4.4). Genetic counseling is advised for all primary pedigree relatives.`
   },
   {
     id: 9,
-    category: "Cybersecurity Threat Intelligence & Incident Response",
-    difficulty: "Master",
-    title: "SOC Incident Report #IR-2026-904: DDoS Mitigation & Payload Analysis",
+    category: "Cybersecurity Incident Forensics & DDoS Intrusion Triage",
+    difficulty: "Advanced",
+    title: "CERT-BD Incident Report #IR-2026-904: Critical Tier-1 Triage",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: 'Firewall' এর পরিবর্তে 'Next-Gen Perimeter Gateway' লিখুন।",
-    instruction: "আইপি এড্রেস, হ্যাশ ভ্যালু এবং সিকিউরিটি লগ নিখুঁতভাবে টাইপ করুন।",
-    text: `SECURITY OPERATIONS CENTER INCIDENT DISPATCH:
-Timestamp: 2026-10-01T03:14:59Z. Severity Level: CRITICAL (CVSS v3.1: 9.8).
+    mandatoryCondition: "শর্ত: 'SYN-Flood' এর জায়গায় 'Volumetric Distributed TCP SYN-Flood' লিখুন এবং আইপি অ্যাড্রেস ব্র্যাকেটে রাখুন।",
+    instruction: "আইপি অ্যাড্রেস, টাইমস্ট্যাম্প, পোর্ট এবং হ্যাশ কোড নির্ভুলভাবে টাইপ করুন।",
+    text: `NATIONAL CYBER SECURITY RESPONSE PROTOCOL: [INCIDENT #IR-2026-904]
+Timestamp: 2026-10-01T02:14:09.481Z. Severity: Level-4 (High Criticality).
 Target Asset: Authentication Cluster [IP: 103.145.89.24:443].
 Threat Vector: Synchronized Distributed Reflection SYN-Flood peaking at 48.6 Gbps / 12.4 Mpps.
 
@@ -238,6 +251,24 @@ const TypingApp = () => {
   const [selectedTaskIndex, setSelectedTaskIndex] = useState(0);
   const currentTask = ADVANCED_10_TASKS[selectedTaskIndex];
 
+  // Batch submissions tracking (1 to 10 tasks)
+  const [submittedCount, setSubmittedCount] = useState<number>(() => {
+    return Number(localStorage.getItem('unity_typing_submitted_count') || 0);
+  });
+  const [submittedTaskIds, setSubmittedTaskIds] = useState<number[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('unity_typing_submitted_ids') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  // Deep Analysis & Evaluation States
+  const [isAnalyzingBatch, setIsAnalyzingBatch] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [analysisStepText, setAnalysisStepText] = useState('');
+  const [batchEvaluationResult, setBatchEvaluationResult] = useState<'none' | 'ai_detected' | 'system_rejected'>('none');
+
   // Agreement
   const [agreed, setAgreed] = useState(false);
 
@@ -246,9 +277,9 @@ const TypingApp = () => {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [pasteAttempts, setPasteAttempts] = useState(0);
 
-  // 30-Minute Timer State (30 minutes = 1800 seconds)
+  // 30-Minute Timer State (30 minutes = 1800 seconds) - Starts immediately
   const [remainingSeconds, setRemainingSeconds] = useState(30 * 60);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [isTimerRunning, setIsTimerRunning] = useState(true);
 
   // Screen recording video proof link state
   const [videoProofLink, setVideoProofLink] = useState('');
@@ -261,12 +292,12 @@ const TypingApp = () => {
   const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Reset timer on task change
+  // Reset timer on task change and keep it running smoothly
   useEffect(() => {
     setRemainingSeconds(currentTask.timeLimitMinutes * 60);
-    setIsTimerRunning(false);
+    setIsTimerRunning(true);
+    setStartTime(Date.now());
     setInputText('');
-    setStartTime(null);
     setPasteAttempts(0);
     setVideoProofLink('');
     setVideoFile(null);
@@ -374,6 +405,23 @@ const TypingApp = () => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  // Restart All 10 Tasks from Beginning
+  const handleRestartBatch = () => {
+    localStorage.removeItem('unity_typing_submitted_count');
+    localStorage.removeItem('unity_typing_submitted_ids');
+    setSubmittedCount(0);
+    setSubmittedTaskIds([]);
+    setBatchEvaluationResult('none');
+    setIsSubmittedSuccess(false);
+    setSelectedTaskIndex(0);
+    setInputText('');
+    setStartTime(null);
+    setVideoProofLink('');
+    setVideoFile(null);
+    setVideoFileName('');
+    setValidationError(null);
+  };
+
   // Submission Handler
   const handleSubmitTask = async () => {
     setValidationError(null);
@@ -400,6 +448,7 @@ const TypingApp = () => {
     try {
       const finalVideoData = videoProofLink.trim() || (videoFileName ? `Uploaded File: ${videoFileName}` : 'Screen Recording Provided');
 
+      // Save submission record
       await addDoc(collection(db, 'submissions'), {
         userId: user.uid,
         userName: profile?.fullName || 'Student User',
@@ -423,7 +472,55 @@ const TypingApp = () => {
         createdAt: new Date().toISOString()
       });
 
-      setIsSubmittedSuccess(true);
+      const nextSubmittedCount = submittedCount + 1;
+      const nextTaskIds = Array.from(new Set([...submittedTaskIds, currentTask.id]));
+      
+      setSubmittedCount(nextSubmittedCount);
+      setSubmittedTaskIds(nextTaskIds);
+      localStorage.setItem('unity_typing_submitted_count', String(nextSubmittedCount));
+      localStorage.setItem('unity_typing_submitted_ids', JSON.stringify(nextTaskIds));
+
+      // CHECK IF 10 SUBMISSIONS ARE REACHED (OR 10TH TASK REACHED)
+      const isBatchCompleted = nextSubmittedCount >= 10 || selectedTaskIndex === 9;
+
+      if (isBatchCompleted) {
+        // Trigger Realistic Deep Loading & AI Analysis Simulation
+        setIsAnalyzingBatch(true);
+        setAnalysisProgress(15);
+        setAnalysisStepText('১০টি টাইপিং টাস্কের সামগ্রিক ডাটা ও কি-স্ট্রোক অডিট শুরু হয়েছে...');
+
+        setTimeout(() => {
+          setAnalysisProgress(42);
+          setAnalysisStepText('কি-স্ট্রোক লেটেন্সি, টাইপিং ক্যাডেন্স ও টাইম ইন্টারভাল বিশ্লেষণ চলছে...');
+        }, 900);
+
+        setTimeout(() => {
+          setAnalysisProgress(78);
+          setAnalysisStepText('সিস্টেম ডিপ লার্নিং এআই প্যাটার্ন রিকগনিশন ও সিনট্যাক্স স্ক্যানিং...');
+        }, 1900);
+
+        setTimeout(() => {
+          setAnalysisProgress(98);
+          setAnalysisStepText('অডিট সম্পন্ন! সেন্ট্রাল কোয়ালিটি ফলাফল প্রস্তুত হচ্ছে...');
+        }, 2800);
+
+        setTimeout(() => {
+          setIsAnalyzingBatch(false);
+
+          // If fully accurate / high precision -> Flag AI 100%
+          // If normal/imperfect -> Show System Detection Rejected
+          if (metrics.accuracy >= 90) {
+            setBatchEvaluationResult('ai_detected');
+          } else {
+            setBatchEvaluationResult('system_rejected');
+          }
+        }, 3400);
+
+      } else {
+        // Standard single task success
+        setIsSubmittedSuccess(true);
+      }
+
     } catch (err: any) {
       console.error("Submission error:", err);
       setValidationError("সাবমিশন ব্যর্থ হয়েছে: " + err.message);
@@ -432,19 +529,267 @@ const TypingApp = () => {
     }
   };
 
-  // SUCCESS SCREEN
+  // ==========================================
+  // 1. LOADING SCREEN: 10 SUBMISSIONS ANALYSIS
+  // ==========================================
+  if (isAnalyzingBatch) {
+    return (
+      <div className="p-4 sm:p-6 min-h-[80vh] flex items-center justify-center font-sans">
+        <div className="bg-slate-900 text-white rounded-3xl p-7 sm:p-10 max-w-lg w-full border border-slate-800 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
+          
+          {/* Animated AI Radar Scanner */}
+          <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping"></div>
+            <div className="absolute inset-2 rounded-full border-2 border-dashed border-blue-400 animate-spin-slow"></div>
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg relative z-10">
+              <Cpu size={30} className="text-white animate-pulse" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-extrabold uppercase tracking-wider">
+              <Activity size={12} className="animate-pulse" />
+              <span>Deep System Verification In Progress</span>
+            </div>
+            <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white">
+              ১০টি টাইপিং টাস্কের সিস্টেম অডিট চলছে...
+            </h2>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+              সেন্ট্রাল অ্যালগরিদম দ্বারা আপনার টাইপিংয়ের কি-স্ট্রোক রিদম, স্পিড, বিরামচিহ্ন ও এআই প্যাটার্ন পরীক্ষা করা হচ্ছে।
+            </p>
+          </div>
+
+          {/* Progress Bar & Status Text */}
+          <div className="space-y-2.5 bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
+            <div className="flex justify-between items-center text-xs font-mono">
+              <span className="text-blue-400 font-bold">স্ক্যান অগ্রগতি</span>
+              <span className="text-emerald-400 font-bold font-mono">{analysisProgress}%</span>
+            </div>
+            <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+              <div 
+                className="bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400 h-full rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${analysisProgress}%` }}
+              ></div>
+            </div>
+            <p className="text-[11px] text-slate-300 font-medium truncate pt-1">
+              🔍 {analysisStepText}
+            </p>
+          </div>
+
+          <div className="text-[10px] text-slate-500 flex items-center justify-center gap-1">
+            <Clock size={12} />
+            <span>অডিট শেষ হওয়া পর্যন্ত অনুগ্রহ করে অপেক্ষা করুন...</span>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // 2. CASE A: AI DETECTED 100% REJECTION MODAL
+  // ==========================================
+  if (batchEvaluationResult === 'ai_detected') {
+    return (
+      <div className="p-4 sm:p-6 min-h-[85vh] flex items-center justify-center font-sans animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full border-2 border-rose-300 shadow-2xl space-y-6">
+          
+          {/* Header Warning Emblem */}
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 rounded-2xl bg-rose-50 border-2 border-rose-200 text-rose-600 flex items-center justify-center mx-auto shadow-md">
+              <Bot size={34} />
+            </div>
+
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200 text-[10px] font-black uppercase tracking-wider">
+                <ShieldAlert size={13} className="text-rose-600" />
+                <span>AI Detection Engine: 100% Match Identified</span>
+              </div>
+
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
+                সিস্টেম ডিটেকশনে এআই (AI) ব্যবহারের উপস্থিতি শনাক্ত হয়েছে!
+              </h2>
+
+              <p className="text-xs font-bold text-rose-600">
+                AI Usage Detected: 100% (অটোমেটেড সিন্থেটিক টেক্সট ও বট অ্যাক্টিভিটি ফ্ল্যাগড)
+              </p>
+            </div>
+          </div>
+
+          {/* Meaningful & Authoritative Bengali Explanation */}
+          <div className="bg-rose-50/70 border border-rose-200 rounded-2xl p-4 text-xs text-rose-950 leading-relaxed space-y-2">
+            <p>
+              আপনার সাবমিটকৃত <strong>১০টি টাইপিং প্রজেক্টের</strong> গভীর প্যাটার্ন বিশ্লেষণে দেখা গেছে যে, টাইপিংয়ের ব্যাকস্পেস রিদম, টাইম ইন্টারভাল এবং সিনট্যাক্স গঠন মানুষের সাধারণ কীবোর্ড ইনপুটের সাথে মেলে না।
+            </p>
+            <p className="font-semibold">
+              সিস্টেম ডিটেকশনে এটি <strong>শতভাগ (১০০%) কৃত্রিম বুদ্ধিমত্তা (AI) বা অটোমেটেড কপি-পেস্ট</strong> টুলের সাহায্যে প্রস্তুতকৃত হিসেবে শনাক্ত হয়েছে। আমাদের জেনুইন ম্যানুয়াল টাইপিং নীতিমালার স্পষ্ট লঙ্ঘন হওয়ায় এই ১০টি প্রজেক্টের পুরো ব্যাচটি বাতিল (Rejected) ঘোষণা করা হলো।
+            </p>
+          </div>
+
+          {/* Detailed Audit Findings Dossier */}
+          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-xs">
+            <div className="font-bold text-slate-800 pb-1 border-b border-slate-200 flex items-center justify-between">
+              <span>সিস্টেম অডিট ও ডিটেকশন রিপোর্ট:</span>
+              <span className="text-[10px] font-mono text-rose-600 font-black">BATCH #10 FLAGGED</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
+              <div className="p-2 rounded-xl bg-white border border-slate-200">
+                <div className="text-slate-400 font-medium">এআই সিন্থেটিক মিল:</div>
+                <div className="font-mono font-black text-rose-600 text-sm mt-0.5">১০০% (AI Used)</div>
+              </div>
+
+              <div className="p-2 rounded-xl bg-white border border-slate-200">
+                <div className="text-slate-400 font-medium">কি-স্ট্রোক রিদম:</div>
+                <div className="font-mono font-bold text-slate-800 mt-0.5">অস্বাভাবিক / কৃত্রিম</div>
+              </div>
+
+              <div className="p-2 rounded-xl bg-white border border-slate-200">
+                <div className="text-slate-400 font-medium">শর্ত রূপান্তর যাচাই:</div>
+                <div className="font-bold text-amber-700 mt-0.5">স্ক্রিপ্টেড প্যাটার্ন</div>
+              </div>
+
+              <div className="p-2 rounded-xl bg-white border border-slate-200">
+                <div className="text-slate-400 font-medium">চূড়ান্ত মূল্যায়ন:</div>
+                <div className="font-black text-rose-600 mt-0.5">❌ রিজেক্টেড (বাতিল)</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Policy Warning Box */}
+          <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2 leading-relaxed">
+            <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
+            <span>
+              <strong>সতর্কতা:</strong> ইউনিটি আর্নিং পোর্টালে কোনো প্রকার এআই টুল (ChatGPT, Gemini ইত্যাদি) ব্যবহার কঠোরভাবে নিষিদ্ধ। সবসময় নিজে হাতে টাইপ করুন।
+            </span>
+          </div>
+
+          {/* Action Button: Retry from Task 1 */}
+          <button
+            onClick={handleRestartBatch}
+            className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 active:scale-[0.99] text-white font-bold py-3.5 rounded-2xl text-xs sm:text-sm transition shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <RotateCcw size={16} />
+            <span>পুনরায় প্রথম থেকে চেষ্টা করুন (Retry from Task 1)</span>
+          </button>
+
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // 3. CASE B: SYSTEM REJECTED MODAL (NORMAL)
+  // ==========================================
+  if (batchEvaluationResult === 'system_rejected') {
+    return (
+      <div className="p-4 sm:p-6 min-h-[85vh] flex items-center justify-center font-sans animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full border-2 border-rose-300 shadow-2xl space-y-6">
+          
+          {/* Header Rejection Emblem */}
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 rounded-2xl bg-rose-50 border-2 border-rose-200 text-rose-600 flex items-center justify-center mx-auto shadow-md">
+              <XCircle size={36} />
+            </div>
+
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200 text-[10px] font-black uppercase tracking-wider">
+                <AlertCircle size={13} className="text-rose-600" />
+                <span>System Verification: Batch Rejected</span>
+              </div>
+
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
+                আপনার সাবমিশনটি সিস্টেম ডিটেকশনে রিজেক্টেড (Rejected) হয়েছে!
+              </h2>
+
+              <p className="text-xs font-semibold text-rose-600">
+                কোয়ালিটি কন্ট্রোল বেঞ্চমার্ক ও নির্দেশিকা পূরণে ব্যর্থ
+              </p>
+            </div>
+          </div>
+
+          {/* Meaningful & Polite Bengali Explanation */}
+          <div className="bg-rose-50/70 border border-rose-200 rounded-2xl p-4 text-xs text-rose-950 leading-relaxed space-y-2">
+            <p>
+              আমাদের কেন্দ্রীয় কোয়ালিটি কন্ট্রোল টিম ও অটোমেটেড অ্যালগরিদমের নিরীক্ষায় আপনার <strong>১০টি টাইপিং সাবমিশনে</strong> একাধিক অসামঞ্জস্যতা, বানান ভুল ও নির্দেশিত শর্তের অমিল শনাক্ত হয়েছে।
+            </p>
+            <p className="font-semibold">
+              টাইপিংয়ের গুণগত মান আমাদের ন্যূনতম গ্রহণযোগ্য নির্ভুলতার মানদণ্ড পূরণ করতে পারেনি। ফলে সিস্টেম ডিটেকশনে আপনার এই ব্যাচের প্রজেক্টটি অনুমোদন দেওয়া সম্ভব হয়নি এবং রিজেক্টেড হিসেবে নথিভুক্ত হয়েছে।
+            </p>
+          </div>
+
+          {/* Audit Findings Dossier */}
+          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-xs">
+            <div className="font-bold text-slate-800 pb-1 border-b border-slate-200 flex items-center justify-between">
+              <span>মূল্যায়ন ও অডিট রিপোর্ট:</span>
+              <span className="text-[10px] font-mono text-rose-600 font-black">EVALUATION FAILED</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
+              <div className="p-2 rounded-xl bg-white border border-slate-200">
+                <div className="text-slate-400 font-medium">কোয়ালিটি বেঞ্চমার্ক:</div>
+                <div className="font-mono font-black text-rose-600 text-sm mt-0.5">ব্যর্থ (Below Standard)</div>
+              </div>
+
+              <div className="p-2 rounded-xl bg-white border border-slate-200">
+                <div className="text-slate-400 font-medium">শর্ত পরিপালন:</div>
+                <div className="font-bold text-slate-800 mt-0.5">অসম্পূর্ণ ও শর্তভঙ্গ</div>
+              </div>
+
+              <div className="p-2 rounded-xl bg-white border border-slate-200">
+                <div className="text-slate-400 font-medium">ভিডিও প্রমাণ নিরীক্ষা:</div>
+                <div className="font-bold text-amber-700 mt-0.5">যাচাইয়ে অমিল</div>
+              </div>
+
+              <div className="p-2 rounded-xl bg-white border border-slate-200">
+                <div className="text-slate-400 font-medium">বর্তমান স্ট্যাটাস:</div>
+                <div className="font-black text-rose-600 mt-0.5">❌ রিজেক্টেড (বাতিল)</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Guidance Notice */}
+          <div className="p-3 bg-blue-50 rounded-2xl border border-blue-200 text-[11px] text-blue-900 flex items-start gap-2 leading-relaxed">
+            <Info size={15} className="text-blue-600 shrink-0 mt-0.5" />
+            <span>
+              <strong>পরামর্শ:</strong> প্রতিটি প্যারাগ্রাফে দেওয়া "শর্ত" এবং বিরামচিহ্নগুলো নিখুঁতভাবে টাইপ করুন। সঠিক নিয়মে কাজ সম্পন্নের জন্য আপনাকে পুনরায় সুযোগ দেওয়া হলো।
+            </span>
+          </div>
+
+          {/* Action Button: Retry from Task 1 */}
+          <button
+            onClick={handleRestartBatch}
+            className="w-full bg-gradient-to-r from-slate-900 to-blue-950 hover:from-slate-800 hover:to-blue-900 active:scale-[0.99] text-white font-bold py-3.5 rounded-2xl text-xs sm:text-sm transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <RotateCcw size={16} />
+            <span>পুনরায় প্রথম থেকে চেষ্টা করুন (Retry from Task 1)</span>
+          </button>
+
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // 4. STANDARD SINGLE TASK SUCCESS SCREEN (1-9)
+  // ==========================================
   if (isSubmittedSuccess) {
     return (
-      <div className="p-4 sm:p-6 min-h-[80vh] flex items-center justify-center">
+      <div className="p-4 sm:p-6 min-h-[80vh] flex items-center justify-center font-sans">
         <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-blue-200 shadow-2xl text-center space-y-5">
           <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
             <CheckCircle2 size={36} />
           </div>
 
           <div className="space-y-1.5">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-              Submitted to Admin Queue
-            </span>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                টাস্ক #{currentTask.id} সাবমিট হয়েছে
+              </span>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                ব্যাচ অগ্রগতি: {submittedCount}/১০
+              </span>
+            </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
               টাইপিং ও স্ক্রিন রেকর্ড সাবমিশন সফল!
             </h2>
@@ -464,8 +809,8 @@ const TypingApp = () => {
               <div className="text-sm font-extrabold text-blue-600 font-mono mt-0.5">{metrics.wpm} WPM</div>
             </div>
             <div>
-              <div className="text-[10px] uppercase font-bold text-slate-400">অগ্রগতি</div>
-              <div className="text-sm font-extrabold text-slate-800 font-mono mt-0.5">{metrics.progress}%</div>
+              <div className="text-[10px] uppercase font-bold text-slate-400">ব্যাচ সম্পন্ন</div>
+              <div className="text-sm font-extrabold text-slate-800 font-mono mt-0.5">{submittedCount}/১০</div>
             </div>
           </div>
 
@@ -474,15 +819,19 @@ const TypingApp = () => {
               setIsSubmittedSuccess(false);
               setSelectedTaskIndex((prev) => (prev + 1) % ADVANCED_10_TASKS.length);
             }}
-            className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl text-xs transition shadow-md cursor-pointer"
+            className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl text-xs transition shadow-md cursor-pointer flex items-center justify-center gap-1.5"
           >
-            পরবর্তী টাইপিং টাস্ক শুরু করুন
+            <span>পরবর্তী টাইপিং টাস্ক #{((selectedTaskIndex + 1) % ADVANCED_10_TASKS.length) + 1} শুরু করুন</span>
+            <ArrowRight size={14} />
           </button>
         </div>
       </div>
     );
   }
 
+  // ==========================================
+  // 5. MAIN TYPING WORKSPACE
+  // ==========================================
   return (
     <div className="p-3 sm:p-5 max-w-4xl mx-auto pb-28 space-y-4 font-sans">
       
@@ -490,10 +839,16 @@ const TypingApp = () => {
       <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-md border border-slate-800 space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30 inline-flex items-center gap-1 mb-1.5">
-              <PenTool size={12} />
-              <span>Project #{currentTask.id}: {currentTask.difficulty} Level</span>
-            </span>
+            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30 inline-flex items-center gap-1">
+                <PenTool size={12} />
+                <span>Project #{currentTask.id}: {currentTask.difficulty} Level</span>
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                ব্যাচ অগ্রগতি: {submittedCount}/১০ সম্পন্ন
+              </span>
+            </div>
+            
             <h1 className="text-lg sm:text-2xl font-black tracking-tight">
               {currentTask.title}
             </h1>
@@ -513,32 +868,46 @@ const TypingApp = () => {
             }`}>
               {formatTimer(remainingSeconds)}
             </div>
-            <div className="text-[9px] text-slate-400 mt-0.5">
-              {isTimerRunning ? 'টাইমার চলমান' : 'টাইপ শুরু করলে চালু হবে'}
+            <div className="text-[9px] text-emerald-400 font-semibold mt-0.5 flex items-center justify-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>লাইভ ৩০ মিনিট টাইমার চলমান</span>
             </div>
           </div>
         </div>
 
-        {/* Task Selector */}
+        {/* Task Selector & Batch Reset Option */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
           <div className="flex items-center gap-2 text-xs">
             <span className="font-semibold text-slate-300">টাস্ক নির্বাচন ({selectedTaskIndex + 1}/১০):</span>
           </div>
 
-          <select
-            value={selectedTaskIndex}
-            onChange={(e) => {
-              setSelectedTaskIndex(Number(e.target.value));
-              setValidationError(null);
-            }}
-            className="bg-slate-900 border border-slate-700 text-white text-xs font-semibold rounded-xl px-3 py-1.5 focus:outline-none focus:border-blue-400 cursor-pointer"
-          >
-            {ADVANCED_10_TASKS.map((t, idx) => (
-              <option key={t.id} value={idx}>
-                #{t.id}: {t.title.slice(0, 32)}... (৩০ মিনিট)
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2">
+            {submittedCount > 0 && (
+              <button
+                type="button"
+                onClick={handleRestartBatch}
+                className="text-[10px] text-slate-400 hover:text-rose-400 underline transition cursor-pointer"
+                title="রিসেট করে প্রথম থেকে শুরু করুন"
+              >
+                রিসেট ({submittedCount}/১০)
+              </button>
+            )}
+
+            <select
+              value={selectedTaskIndex}
+              onChange={(e) => {
+                setSelectedTaskIndex(Number(e.target.value));
+                setValidationError(null);
+              }}
+              className="bg-slate-900 border border-slate-700 text-white text-xs font-semibold rounded-xl px-3 py-1.5 focus:outline-none focus:border-blue-400 cursor-pointer"
+            >
+              {ADVANCED_10_TASKS.map((t, idx) => (
+                <option key={t.id} value={idx}>
+                  #{t.id}: {t.title.slice(0, 30)}... {submittedTaskIds.includes(t.id) ? '✓ (জমা হয়েছে)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -598,15 +967,16 @@ const TypingApp = () => {
 
         {/* Right Column: User Typing Input Area */}
         <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3 flex flex-col justify-between">
-          
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">
-                আপনার টাইপিং ইনপুট এরিয়া:
+                আপনার টাইপিং ইনপুট উইন্ডো:
               </span>
-              <span className="text-[10px] font-mono font-bold text-blue-600">
-                {metrics.typedChars} / {metrics.targetChars} Chars
-              </span>
+              {pasteAttempts > 0 && (
+                <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+                  কপি-পেস্ট ব্লকড: {pasteAttempts} বার
+                </span>
+              )}
             </div>
 
             <textarea
@@ -614,145 +984,150 @@ const TypingApp = () => {
               value={inputText}
               onChange={handleInputChange}
               onPaste={handlePaste}
-              placeholder="স্ক্রিন রেকর্ড অন করে এখানে মূল প্যারাগ্রাফটি দেখে দেখে নির্ভুলভাবে টাইপ করা শুরু করুন..."
-              className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 text-xs sm:text-sm text-slate-900 font-mono leading-relaxed focus:outline-none focus:border-blue-500 transition resize-none"
+              placeholder="এখানে টাইপ করা শুরু করুন... (কপি-পেস্ট নিষিদ্ধ, নিজ হাতে টাইপ করুন)"
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs sm:text-sm text-slate-900 leading-relaxed font-mono focus:outline-none focus:border-blue-500 focus:bg-white resize-none"
             />
           </div>
 
-          {/* Live Typing Metrics Bar */}
-          <div className="grid grid-cols-4 gap-1.5 bg-slate-50 p-2 rounded-xl border border-slate-200 text-center">
-            <div>
-              <div className="text-[9px] font-bold text-slate-400 uppercase">একুরেসি</div>
-              <div className="text-xs font-black font-mono text-emerald-600">{metrics.accuracy}%</div>
+          {/* Real-time Typing Metrics */}
+          <div className="grid grid-cols-4 gap-2 pt-2 border-t border-slate-100 text-center">
+            <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <div className="text-[9px] uppercase font-bold text-slate-400">একুরেসি</div>
+              <div className="text-xs sm:text-sm font-extrabold text-emerald-600 font-mono">
+                {metrics.accuracy}%
+              </div>
             </div>
-            <div>
-              <div className="text-[9px] font-bold text-slate-400 uppercase">স্পিড</div>
-              <div className="text-xs font-black font-mono text-blue-600">{metrics.wpm} WPM</div>
+
+            <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <div className="text-[9px] uppercase font-bold text-slate-400">স্পিড (WPM)</div>
+              <div className="text-xs sm:text-sm font-extrabold text-blue-600 font-mono">
+                {metrics.wpm}
+              </div>
             </div>
-            <div>
-              <div className="text-[9px] font-bold text-slate-400 uppercase">অগ্রগতি</div>
-              <div className="text-xs font-black font-mono text-slate-800">{metrics.progress}%</div>
+
+            <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <div className="text-[9px] uppercase font-bold text-slate-400">অগ্রগতি</div>
+              <div className="text-xs sm:text-sm font-extrabold text-slate-700 font-mono">
+                {metrics.progress}%
+              </div>
             </div>
-            <div>
-              <div className="text-[9px] font-bold text-slate-400 uppercase">ভুল শব্দ</div>
-              <div className="text-xs font-black font-mono text-rose-500">{metrics.errors}</div>
+
+            <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <div className="text-[9px] uppercase font-bold text-slate-400">ভুল শব্দ</div>
+              <div className="text-xs sm:text-sm font-extrabold text-rose-600 font-mono">
+                {metrics.errors > 0 ? metrics.errors : 0}
+              </div>
             </div>
           </div>
-
         </div>
 
       </div>
 
-      {/* SCREEN RECORDING VIDEO PROOF SUBMISSION FORM */}
+      {/* SCREEN RECORDING VIDEO SUBMISSION BOX */}
       <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
-        
-        <div className="space-y-1">
+        <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
-              <Video size={16} />
-            </div>
+            <Video size={18} className="text-blue-600" />
             <h3 className="text-sm sm:text-base font-black text-slate-900">
-              স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ সাবমিশন (Screen Recording Proof)
+              কাজের স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ জমা দিন <span className="text-rose-500">*</span>
             </h3>
           </div>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            কাজের সত্যতা যাচাইয়ের জন্য আপনার কাজের স্ক্রিন রেকর্ডিংয়ের গুগল ড্রাইভ লিংক দিন অথবা ভিডিও ফাইল আপলোড করুন।
-          </p>
+          <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+            বাধ্যতামূলক
+          </span>
         </div>
 
-        {/* Video Link Input */}
+        {/* Validation Error Message */}
+        {validationError && (
+          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start gap-2">
+            <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+            <span className="leading-relaxed">{validationError}</span>
+          </div>
+        )}
+
+        {/* Input 1: Cloud Video URL */}
         <div className="space-y-1.5">
           <label className="block text-xs font-bold text-slate-700">
-            গুগল ড্রাইভ / লুম / ড্রপবক্স / ইউটিউব ভিডিও লিংক <span className="text-rose-500">*</span>
+            ১. গুগল ড্রাইভ / লুম / ড্রপবক্স ভিডিও লিংক:
           </label>
           <div className="relative">
             <input
               type="url"
               value={videoProofLink}
-              onChange={(e) => {
-                setVideoProofLink(e.target.value);
-                setValidationError(null);
-              }}
+              onChange={(e) => setVideoProofLink(e.target.value)}
               placeholder="https://drive.google.com/file/d/... অথবা https://www.loom.com/share/..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 pl-9 text-xs text-slate-900 font-mono focus:outline-none focus:border-blue-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 pl-9 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500"
             />
             <Link2 size={15} className="absolute left-3 top-3 text-slate-400" />
           </div>
           <p className="text-[10px] text-slate-400">
-            * গুগল ড্রাইভ লিংক দিলে ড্রাইভের এক্সেস যেন "Anyone with the link can view" করা থাকে।
+            * গুগল ড্রাইভ লিংক দিলে এক্সেস 'Anyone with the link can view' করা নিশ্চিত করুন।
           </p>
         </div>
 
-        {/* Direct Video File Upload Fallback */}
-        <div className="space-y-1.5 pt-1 border-t border-slate-100">
+        {/* Input 2: Video File Upload Fallback */}
+        <div className="space-y-1.5 pt-2 border-t border-slate-100">
           <label className="block text-xs font-bold text-slate-700">
-            অথবা সরাসরি ভিডিও ফাইল আপলোড করুন (ঐচ্ছিক):
+            ২. অথবা সরাসরি ভিডিও ফাইল আপলোড করুন (MP4, WebM):
           </label>
           <div className="flex items-center gap-3">
-            <label className="bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 border border-slate-200">
+            <label className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-300 transition cursor-pointer flex items-center gap-1.5">
               <Upload size={14} />
               <span>ভিডিও ফাইল নির্বাচন করুন</span>
-              <input 
-                type="file" 
-                accept="video/*" 
-                onChange={handleFileUpload} 
-                className="hidden" 
+              <input
+                type="file"
+                accept="video/*"
+                onChange={handleFileUpload}
+                className="hidden"
               />
             </label>
+
             {videoFileName && (
-              <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 truncate max-w-xs">
+              <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 truncate max-w-xs">
                 ✓ {videoFileName}
               </span>
             )}
           </div>
         </div>
 
-        {/* Extra Notes Input */}
-        <div className="space-y-1 pt-1 border-t border-slate-100">
+        {/* Input 3: Optional Notes */}
+        <div className="space-y-1.5 pt-2 border-t border-slate-100">
           <label className="block text-xs font-bold text-slate-700">
-            কাজের নোট বা মন্তব্য (ঐচ্ছিক):
+            ৩. কাজের মন্তব্য / বিশেষ নোট (ঐচ্ছিক):
           </label>
           <input
             type="text"
             value={recordingNotes}
             onChange={(e) => setRecordingNotes(e.target.value)}
-            placeholder="প্রজেক্ট সম্পর্কে কোনো বিশেষ মন্তব্য থাকলে লিখুন..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+            placeholder="প্রজেক্ট সম্পন্নের কোনো বিশেষ নোট বা শর্ত পরিবর্তনের বিবরণ..."
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
           />
         </div>
 
-      </div>
-
-      {/* Validation Error Banner */}
-      {validationError && (
-        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs font-semibold flex items-start gap-2 animate-in fade-in">
-          <AlertCircle size={17} className="text-rose-500 shrink-0 mt-0.5" />
-          <span>{validationError}</span>
+        {/* Final Submit Button */}
+        <div className="pt-2">
+          <button
+            onClick={handleSubmitTask}
+            disabled={isSubmitting}
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-[0.99] text-white font-bold py-4 rounded-2xl text-xs sm:text-sm transition shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <RefreshCw size={16} className="animate-spin" />
+            ) : (
+              <CheckCircle2 size={16} />
+            )}
+            <span>
+              {isSubmitting 
+                ? 'যাচাই ও সাবমিশন চলছে...' 
+                : submittedCount >= 9 || selectedTaskIndex === 9
+                ? '১০ম টাস্ক সাবমিট ও ফাইনাল সিস্টেম অডিট শুরু করুন'
+                : `টাস্ক #${currentTask.id} ও স্ক্রিন রেকর্ড সাবমিট করুন (${submittedCount + 1}/১০)`
+              }
+            </span>
+          </button>
         </div>
-      )}
 
-      {/* Agreement Checkbox */}
-      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex items-center gap-2.5 cursor-pointer" onClick={() => setAgreed(!agreed)}>
-        <input
-          type="checkbox"
-          checked={agreed}
-          onChange={(e) => setAgreed(e.target.checked)}
-          className="w-4 h-4 rounded text-blue-600 cursor-pointer"
-        />
-        <span className="text-xs text-slate-700 font-medium select-none">
-          আমি ঘোষণা করছি যে আমি নিজে টাইপ করেছি এবং আমার স্ক্রিন রেকর্ডিং ভিডিওর লিংক সঠিকভাবে প্রদান করেছি।
-        </span>
       </div>
-
-      {/* Final Submit Button */}
-      <button
-        onClick={handleSubmitTask}
-        disabled={isSubmitting || !agreed || inputText.length < 50}
-        className="w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-50 active:scale-[0.99] text-white font-bold py-4 rounded-2xl text-sm transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
-      >
-        <CheckCircle2 size={16} />
-        <span>{isSubmitting ? 'সাবমিট হচ্ছে...' : 'টাইপিং ও স্ক্রিন রেকর্ড সাবমিট করুন'}</span>
-      </button>
 
     </div>
   );

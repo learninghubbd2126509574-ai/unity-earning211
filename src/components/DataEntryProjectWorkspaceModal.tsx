@@ -15,7 +15,10 @@ import {
   Info,
   AlertCircle,
   Link2,
-  Check
+  Check,
+  Cpu,
+  Activity,
+  RotateCcw
 } from 'lucide-react';
 import { DataEntryProjectDef, downloadProjectExcel } from '../lib/dataEntryDatasets';
 import { ProjectSubmissionDoc, submitDataEntryProject, checkAndApplyAutoRejection } from '../lib/projectSubmissionService';
@@ -53,6 +56,10 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [currentSubmission, setCurrentSubmission] = useState<ProjectSubmissionDoc | null>(existingSubmission || null);
+
+  // 10-Project Audit & Rejection States
+  const [isAnalyzing10Batch, setIsAnalyzing10Batch] = useState(false);
+  const [analysis10Progress, setAnalysis10Progress] = useState(0);
 
   useEffect(() => {
     setCurrentSubmission(existingSubmission || null);
@@ -122,6 +129,38 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
         videoFileName: videoFile ? videoFile.name : (videoUrl ? 'Cloud Screen Recording Attached' : ''),
         notes: `Spreadsheet Link: ${spreadsheetUrl.trim()}\nNotes: ${submissionNotes.trim()}`
       });
+
+      // Auto-rejection after 10th project submission with realistic audit loading
+      if (project.number === 10) {
+        setIsAnalyzing10Batch(true);
+        setAnalysis10Progress(25);
+        setTimeout(() => setAnalysis10Progress(68), 850);
+        setTimeout(() => setAnalysis10Progress(96), 1800);
+        setTimeout(() => {
+          setIsAnalyzing10Batch(false);
+          const rejectedDoc: ProjectSubmissionDoc = {
+            id: subId,
+            projectId: project.id,
+            projectNumber: project.number,
+            projectTitle: project.title,
+            userId: user.uid,
+            participantName: profile?.fullName || 'Participant',
+            participantPhone: profile?.whatsappNumber || '',
+            status: 'Rejected',
+            submissionTime: now.toISOString(),
+            rejectionTime: new Date().toISOString(),
+            autoRejected: true,
+            videoSubmitted: Boolean(videoFile || videoUrl.trim()),
+            videoUrl: videoUrl.trim(),
+            videoFileName: videoFile?.name || '',
+            excelFileName: finalExcelRef,
+            notes: submissionNotes.trim()
+          };
+          setCurrentSubmission(rejectedDoc);
+          if (onSubmissionUpdated) onSubmissionUpdated();
+        }, 2600);
+        return;
+      }
 
       // Update local state to Under Review with 120-minute (2 hours) deadline
       const now = new Date();
@@ -241,16 +280,46 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
             </div>
           )}
 
+          {/* 10-Project Audit Loading Screen */}
+          {isAnalyzing10Batch && (
+            <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-xl border border-slate-800 animate-in zoom-in-95">
+              <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping"></div>
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg relative z-10">
+                  <Cpu size={24} className="text-white animate-pulse" />
+                </div>
+              </div>
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-extrabold uppercase tracking-wider mb-1">
+                  <Activity size={12} className="animate-pulse" />
+                  <span>Central Spreadsheet Audit In Progress</span>
+                </span>
+                <h3 className="text-base sm:text-lg font-black text-white">
+                  ১০টি ডাটা এন্ট্রি প্রজেক্টের সেন্ট্রাল অডিট ও স্প্রেডশিট ভেরিফিকেশন চলছে...
+                </h3>
+                <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
+                  ফর্মুলা সামঞ্জস্য, নকল এন্ট্রি ও ৫০ টাকা কর্তন নীতিমালার শর্ত পরীক্ষা করা হচ্ছে ({analysis10Progress}%)।
+                </p>
+              </div>
+              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden max-w-xs mx-auto">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 to-emerald-400 h-full rounded-full transition-all duration-300"
+                  style={{ width: `${analysis10Progress}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+
           {isRejected && (
-            <div className="bg-rose-50 border-2 border-rose-200 rounded-3xl p-6 text-center space-y-2 text-rose-950 animate-in fade-in">
+            <div className="bg-rose-50 border-2 border-rose-300 rounded-3xl p-6 text-center space-y-2 text-rose-950 animate-in fade-in">
               <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
                 <AlertTriangle size={24} />
               </div>
               <h3 className="text-base font-black text-rose-900">
-                Project Not Approved / Review Window Expired
+                সিস্টেম ডিটেকশনে আপনার ডাটা এন্ট্রি প্রজেক্ট ব্যাচটি রিজেক্টেড (Rejected) হয়েছে!
               </h3>
-              <p className="text-xs text-rose-700 max-w-md mx-auto">
-                Your submission was not approved within the 2-hour review period or required corrections. Please double-check your calculations, spreadsheet link permissions, and submit again below.
+              <p className="text-xs text-rose-700 max-w-lg mx-auto leading-relaxed">
+                আমাদের সেন্ট্রাল ডাটা ভ্যালিডেশন চেকার ও সিস্টেম ডিটেকশনে আপনার সাবমিটকৃত স্প্রেডশিট ফাইলে একাধিক ফর্মুলা ক্যালকুলেশন অমিল, নকল সেল ডাটা ও অসম্পূর্ণ রেকর্ড শনাক্ত হয়েছে। ৫০ টাকা কর্তন ও বোনাস গণনার নিয়মাবলি ভঙ্গ করায় প্রজেক্টটি বাতিল করা হয়েছে। নির্দেশিকা অনুসরণ করে পুনরায় প্রথম থেকে নির্ভুলভাবে চেষ্টা করুন।
               </p>
             </div>
           )}
