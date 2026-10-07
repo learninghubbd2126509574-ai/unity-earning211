@@ -22,7 +22,8 @@ import {
   ShieldCheck,
   Eye,
   EyeOff,
-  Lock
+  Lock,
+  MessageCircle
 } from 'lucide-react';
 
 export const UnifiedAuth: React.FC = () => {
@@ -53,6 +54,10 @@ export const UnifiedAuth: React.FC = () => {
   const [hasExperience, setHasExperience] = useState<boolean>(false);
   const [hasSelectedWorkKnowledge, setHasSelectedWorkKnowledge] = useState<boolean | null>(null);
   const [selectedModule, setSelectedModule] = useState<string>('typing');
+  const [unlockCode, setUnlockCode] = useState('');
+  const [isAllUnlocked, setIsAllUnlocked] = useState(false);
+  const [codeError, setCodeError] = useState('');
+  
   const [hasCertificate, setHasCertificate] = useState<boolean>(false);
   const [certificateDataUrl, setCertificateDataUrl] = useState<string>('');
   const [certFileName, setCertFileName] = useState<string>('');
@@ -422,23 +427,23 @@ export const UnifiedAuth: React.FC = () => {
 
   return (
     <div className="p-4 py-8 min-h-screen bg-slate-50 flex items-center justify-center">
-      <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-xl">
+      <div className="w-full max-w-lg bg-white rounded-3xl p-8 sm:p-10 border border-slate-100 shadow-2xl">
         
         {/* Portal Branding */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-8">
           {logoUrl ? (
-            <div className="flex justify-center mb-3">
-              <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-md border border-slate-100 flex items-center justify-center bg-slate-50 p-0.5">
-                <img src={logoUrl} alt="Company Logo" className="w-full h-full object-cover rounded-xl" />
+            <div className="flex justify-center mb-4">
+              <div className="w-20 h-20 rounded-3xl overflow-hidden shadow-lg border border-slate-100 flex items-center justify-center bg-slate-50 p-1">
+                <img src={logoUrl} alt="Company Logo" className="w-full h-full object-cover rounded-2xl" />
               </div>
             </div>
           ) : (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 border border-orange-100 rounded-full text-orange-600 text-xs font-semibold uppercase tracking-wider mb-2">
-              <Sparkles size={14} /> Unity Earning Portal
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-orange-50 border border-orange-100 rounded-full text-orange-600 text-sm font-semibold uppercase tracking-wider mb-3">
+              <Sparkles size={16} /> Unity Earning Portal
             </div>
           )}
-          <h1 className="text-2xl font-bold text-slate-800">Task Earning System</h1>
-          <p className="text-xs text-slate-400 mt-1 font-medium">Single Registration for all tasks</p>
+          <h1 className="text-3xl font-black text-slate-900">Task Earning System</h1>
+          <p className="text-sm text-slate-500 mt-2 font-medium">Single Registration for all tasks</p>
         </div>
 
         {/* Tab Switcher */}
@@ -586,6 +591,9 @@ export const UnifiedAuth: React.FC = () => {
                   {studentId.length}/7 digits
                 </span>
               </div>
+              <p className="text-[10px] text-rose-600 font-bold mb-1 bg-rose-50 p-2 rounded-lg border border-rose-100">
+                অবশ্যই স্টুডেন্ট আইডির সাথে এই আইডি কোডের মিল থাকতে হবে। সতর্কতা: একই আইডি কোড দিয়ে দুইবার রেজিস্ট্রেশন করলে আইডি ব্লক হয়ে যাবে এবং পেমেন্ট ট্রান্সফার করার সময় পেমেন্ট রিজেক্টেড হয়ে যাবে।
+              </p>
               <input
                 type="text"
                 required
@@ -753,9 +761,39 @@ export const UnifiedAuth: React.FC = () => {
                 Choose the work category you wish to undertake. Access will be granted immediately.
               </p>
 
+              <div className="mb-4 bg-slate-100 p-3 rounded-xl border border-slate-200">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Unlock All Tasks (Optional Code):</label>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    maxLength={4}
+                    value={unlockCode}
+                    onChange={(e) => setUnlockCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Enter 4-digit code"
+                    className="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (unlockCode === '1234') {
+                        setIsAllUnlocked(true);
+                        setCodeError('');
+                      } else {
+                        setCodeError('রং কোড!');
+                        setIsAllUnlocked(false);
+                      }
+                    }}
+                    className="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold cursor-pointer"
+                  >
+                    Verify
+                  </button>
+                </div>
+                {codeError && <p className="text-[10px] text-rose-600 font-bold mt-1">{codeError}</p>}
+              </div>
+
               <div className="grid grid-cols-1 gap-2">
                 {WORK_MODULES.map((mod) => {
-                  const isEnabled = ['typing', 'form', 'data'].includes(mod.id);
+                  const isEnabled = isAllUnlocked || ['typing', 'form', 'data'].includes(mod.id);
                   const isSelected = selectedModule === mod.id;
                   
                   return (

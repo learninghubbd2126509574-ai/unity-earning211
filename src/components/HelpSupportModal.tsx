@@ -71,6 +71,23 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
             <ExternalLink size={15} className="text-sky-500" />
           </button>
 
+          {/* WhatsApp Channel */}
+          <button
+            onClick={() => handleOpenLink('https://whatsapp.com/channel/0029VbB4RqI3mFY5nkzbCs0p', 'WhatsApp channel link is being updated.')}
+            className="w-full p-3.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-100 rounded-2xl flex items-center justify-between transition cursor-pointer group text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <MessageCircle size={20} />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-emerald-950 group-hover:text-emerald-800">WhatsApp Channel</h4>
+                <p className="text-[10px] text-emerald-600">Join for official announcements</p>
+              </div>
+            </div>
+            <ExternalLink size={15} className="text-emerald-500" />
+          </button>
+
           {/* WhatsApp Support */}
           <button
             onClick={() => handleOpenLink(whatsappUrl || 'https://wa.me/8801919012426', 'WhatsApp support link is being updated.')}
