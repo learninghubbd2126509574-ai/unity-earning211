@@ -307,25 +307,25 @@ export const Home = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-3.5">
-          {WORK_MODULES.filter(m => ['typing', 'form', 'data'].includes(m.id)).map((mod) => {
+          {WORK_MODULES.map((mod) => {
             const isAssigned = !isPending && authorizedModuleIds.includes(mod.id);
             const visuals = getModuleVisuals(mod.id);
 
             return (
               <button
                 key={mod.id}
-                onClick={() => setSelectedWarnModule({ id: mod.id, title: mod.title, route: mod.route })}
+                onClick={() => isAssigned ? setSelectedWarnModule({ id: mod.id, title: mod.title, route: mod.route }) : null}
                 className={cn(
-                  "flex items-center gap-3.5 p-4 rounded-2xl transition-all text-left relative cursor-pointer group",
+                  "flex items-center gap-3.5 p-4 rounded-2xl transition-all text-left relative group",
                   "bg-gradient-to-br from-white via-slate-50/60 to-slate-100/70 border border-slate-200/70",
                   "shadow-[4px_4px_10px_rgba(203,213,225,0.45),-4px_-4px_10px_rgba(255,255,255,0.9)]",
-                  "hover:shadow-[6px_6px_14px_rgba(203,213,225,0.55),-5px_-5px_12px_rgba(255,255,255,1)] active:scale-[0.99]",
-                  isAssigned && "border-orange-400/60 ring-1 ring-orange-500/20"
+                  isAssigned ? "cursor-pointer hover:shadow-[6px_6px_14px_rgba(203,213,225,0.55),-5px_-5px_12px_rgba(255,255,255,1)] active:scale-[0.99] border-orange-400/60 ring-1 ring-orange-500/20" : "cursor-not-allowed opacity-70"
                 )}
               >
                 {/* Neumorphic Left Logo / Emblem */}
                 <div className={cn(
-                  "w-13 h-13 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-white shrink-0 transition-transform group-hover:scale-105",
+                  "w-13 h-13 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-white shrink-0 transition-transform",
+                  isAssigned && "group-hover:scale-105",
                   `bg-gradient-to-br ${visuals.gradient} ${visuals.ring}`,
                   "shadow-[inset_1px_1px_3px_rgba(255,255,255,0.4),3px_3px_8px_rgba(15,23,42,0.15)]"
                 )}>
@@ -336,7 +336,7 @@ export const Home = () => {
                 <div className="flex-1 min-w-0 pr-1">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug break-words">
-                      {mod.title}
+                      {mod.title} {!isAssigned && '(Locked)'}
                     </h3>
                     
                     {isAssigned && (
@@ -352,7 +352,7 @@ export const Home = () => {
                   </p>
                 </div>
 
-                {/* Right Action / Lock Icon (Single Clean Neumorphic Lock/Arrow) */}
+                {/* Right Action / Lock Icon */}
                 <div className="shrink-0 pl-1">
                   {isAssigned ? (
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-[2px_2px_6px_rgba(249,115,22,0.35),-1px_-1px_3px_rgba(255,255,255,0.6)] group-hover:from-orange-600 group-hover:to-amber-600 transition">
@@ -439,21 +439,21 @@ export const Home = () => {
                 </p>
               </div>
 
-              {/* 3. Form Fillup Work */}
-              <div className="bg-gradient-to-r from-emerald-50/80 to-teal-50/80 p-3.5 rounded-2xl border border-emerald-100 space-y-1">
+              {/* 3. Digital Marketing & Lead Generation */}
+              <div className="bg-gradient-to-r from-teal-50/80 to-emerald-50/80 p-3.5 rounded-2xl border border-teal-100 space-y-1">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
-                      <FileText size={14} />
+                    <div className="w-7 h-7 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-xs">
+                      <Target size={14} />
                     </div>
-                    <span className="font-extrabold text-xs text-emerald-950">Form Fillup Work</span>
+                    <span className="font-extrabold text-xs text-teal-950">Social Media & Lead Generation</span>
                   </div>
-                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs">
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-teal-600 text-white shadow-2xs">
                     +20% Extra
                   </span>
                 </div>
-                <p className="text-[11px] text-emerald-900/90 leading-relaxed pl-9">
-                  Earn +20% extra payout on verified multi-field standardized forms, data validation tasks, and verified customer inquiry submissions.
+                <p className="text-[11px] text-teal-900/90 leading-relaxed pl-9">
+                  Earn +20% extra payout on verified corporate B2B executive prospects, direct phone contacts, and targeted decision-maker email databases.
                 </p>
               </div>
             </div>
@@ -472,7 +472,7 @@ export const Home = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
               <button
                 onClick={() => {
                   setShowOfferModal(false);
@@ -480,7 +480,8 @@ export const Home = () => {
                 }}
                 className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>Data Entry</span>
+                <span>Start Data Entry</span>
+                <ArrowRight size={14} />
               </button>
 
               <button
@@ -490,17 +491,8 @@ export const Home = () => {
                 }}
                 className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>Typing</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowOfferModal(false);
-                  navigate('/module/form');
-                }}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <span>Form Fill</span>
+                <span>Start Typing Work</span>
+                <ArrowRight size={14} />
               </button>
             </div>
 
