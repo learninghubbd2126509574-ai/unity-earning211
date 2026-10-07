@@ -26,7 +26,8 @@ import {
   X,
   Target,
   ShieldCheck,
-  Flame
+  Flame,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { WORK_MODULES } from '../lib/modules';
@@ -36,6 +37,7 @@ export const Home = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const [showOfferModal, setShowOfferModal] = useState(false);
+  const [selectedWarnModule, setSelectedWarnModule] = useState<{ id: string; title: string; route: string } | null>(null);
 
   const isPending = profile?.status === 'pending';
   const authorizedModuleIds: string[] = (profile?.assignedJobs && profile.assignedJobs.length > 0)
@@ -214,7 +216,11 @@ export const Home = () => {
 
           {!isPending && authorizedModules.length > 0 && (
             <button
-              onClick={() => navigate(authorizedModules[0].route)}
+              onClick={() => setSelectedWarnModule({ 
+                id: authorizedModules[0].id, 
+                title: authorizedModules[0].title, 
+                route: authorizedModules[0].route 
+              })}
               className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg transition shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
             >
               Start <ArrowRight size={11} />
@@ -308,7 +314,7 @@ export const Home = () => {
             return (
               <button
                 key={mod.id}
-                onClick={() => navigate(mod.route)}
+                onClick={() => setSelectedWarnModule({ id: mod.id, title: mod.title, route: mod.route })}
                 className={cn(
                   "flex items-center gap-3.5 p-4 rounded-2xl transition-all text-left relative cursor-pointer group",
                   "bg-gradient-to-br from-white via-slate-50/60 to-slate-100/70 border border-slate-200/70",
@@ -487,6 +493,63 @@ export const Home = () => {
               >
                 <span>Start Typing Work</span>
                 <ArrowRight size={14} />
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Dynamic Task Click Warning Modal */}
+      {selectedWarnModule && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5 relative animate-in zoom-in-95 duration-150 text-center">
+            
+            {/* Warning Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-amber-50 border-2 border-amber-200 text-amber-500 flex items-center justify-center mx-auto shadow-sm">
+              <AlertTriangle size={36} className="animate-bounce" />
+            </div>
+
+            {/* Modal Heading & Custom Message */}
+            <div className="space-y-2">
+              <span className="text-[10px] font-extrabold uppercase bg-amber-100 text-amber-800 px-3 py-1 rounded-full border border-amber-200">
+                জরুরী সতর্কতা ও নির্দেশিকা
+              </span>
+              <h3 className="text-lg font-black text-slate-900 leading-snug">
+                {selectedWarnModule.title} সংক্রান্ত সতর্কীকরণ নোটিশ!
+              </h3>
+              
+              <div className="text-xs text-slate-700 leading-relaxed text-left bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2">
+                <p className="font-semibold text-slate-800">
+                  এই কাজটি শুধুমাত্র যারা কোর্স সম্পন্ন করেছে বা যাদের কাজ সম্পর্কে খুব ভালো দক্ষতা ও ধারণা রয়েছে শুধু তাদের জন্য।
+                </p>
+                <p className="text-rose-600 font-bold">
+                  আপনার যদি {selectedWarnModule.title} সম্পর্কে কোনো পূর্ব অভিজ্ঞতা বা ধারণা না থাকে অথবা কাজ যদি আপনি না পেরে থাকেন, তবে এই কাজ আপনার জন্য নয়।
+                </p>
+                <p className="text-slate-650 font-medium border-t border-dashed border-slate-200 pt-2 text-[11px]">
+                  ⚠️ ভুল উপাত্ত বা ভুল কাজ সাবমিট করলে আপনার সম্পূর্ণ প্রজেক্ট ব্যাচটি সিস্টেম অডিটে স্বয়ংক্রিয়ভাবে রিজেক্টেড (Rejected) হয়ে যাবে এবং কোনো পারিশ্রমিক যোগ হবে না।
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <button
+                onClick={() => setSelectedWarnModule(null)}
+                className="w-full bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold py-3 rounded-xl text-xs transition cursor-pointer"
+              >
+                বন্ধ করুন (Close)
+              </button>
+              
+              <button
+                onClick={() => {
+                  const targetRoute = selectedWarnModule.route;
+                  setSelectedWarnModule(null);
+                  navigate(targetRoute);
+                }}
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 active:scale-95 text-white font-bold py-3 rounded-xl text-xs transition shadow-md shadow-orange-500/10 cursor-pointer"
+              >
+                আমি রাজি ও দক্ষ (Proceed)
               </button>
             </div>
 

@@ -38,10 +38,12 @@ import {
   Video,
   ExternalLink,
   Layers,
-  Clock
+  Clock,
+  Megaphone
 } from 'lucide-react';
 import { DATA_ENTRY_PROJECTS, downloadProjectExcel, DataEntryProjectDef } from '../lib/dataEntryDatasets';
 import { ProjectSubmissionDoc, checkAndApplyAutoRejection } from '../lib/projectSubmissionService';
+import { CustomAdminPopupModal } from '../components/CustomAdminPopupModal';
 import { ProjectCountdownTimer } from '../components/ProjectCountdownTimer';
 import { getDoc } from 'firebase/firestore';
 
@@ -72,6 +74,31 @@ export const AdminDashboard = () => {
   const [telegramInput, setTelegramInput] = useState('https://t.me/unityearning');
   const [whatsappInput, setWhatsappInput] = useState('https://wa.me/8801919012426');
   const [videoInput, setVideoInput] = useState('https://youtube.com');
+  const [logoInput, setLogoInput] = useState('');
+  const logoFileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Custom User Popup Settings
+  const [customPopupTitleInput, setCustomPopupTitleInput] = useState('গুরুত্বপূর্ণ নোটিশ');
+  const [customPopupMessageInput, setCustomPopupMessageInput] = useState('');
+  const [customPopupButtonTextInput, setCustomPopupButtonTextInput] = useState('বুঝেছি / ঠিক আছে');
+  const [customPopupIsActive, setCustomPopupIsActive] = useState(false);
+  const [showCustomPopupPreview, setShowCustomPopupPreview] = useState(false);
+
+  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 4 * 1024 * 1024) {
+        alert('Logo image must be smaller than 4MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoInput(reader.result as string);
+        showNotification('Company Logo uploaded! Click save button below to update.');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Multi-job assignment map: userId -> string[] (selected module IDs)
   const [selectedJobsMap, setSelectedJobsMap] = useState<Record<string, string[]>>({});
@@ -141,6 +168,7 @@ export const AdminDashboard = () => {
         setTelegramInput(d.telegramUrl || 'https://t.me/unityearning');
         setWhatsappInput(d.whatsappUrl || 'https://wa.me/8801919012426');
         setVideoInput(d.videoUrl || d.url || 'https://youtube.com');
+        setLogoInput(d.logoUrl || '');
       }
     });
 
@@ -160,6 +188,16 @@ export const AdminDashboard = () => {
       }
     });
 
+    const unsubCustomPopup = onSnapshot(doc(db, 'settings', 'customPopup'), (snap) => {
+      if (snap.exists()) {
+        const d = snap.data();
+        setCustomPopupTitleInput(d.title || 'অফিশিয়াল জরুরি নোটিশ');
+        setCustomPopupMessageInput(d.message || '');
+        setCustomPopupButtonTextInput(d.buttonText || 'বুঝেছি / ঠিক আছে');
+        setCustomPopupIsActive(d.isActive || false);
+      }
+    });
+
     return () => {
       unsubUsers();
       unsubSubs();
@@ -169,6 +207,7 @@ export const AdminDashboard = () => {
       unsubReviews();
       unsubDataEntry();
       unsubDataEntryConfig();
+      unsubCustomPopup();
     };
   }, [isAdminLogin, navigate]);
 
@@ -366,9 +405,26 @@ export const AdminDashboard = () => {
       whatsappUrl: whatsappInput.trim(),
       videoUrl: videoInput.trim(),
       url: videoInput.trim(),
+      logoUrl: logoInput.trim(),
       updatedAt: new Date().toISOString()
     });
-    showNotification('Official support channels & video tutorial updated successfully!');
+    showNotification('Official support channels, video tutorial & logo updated successfully!');
+  };
+
+  const updateCustomPopup = async (isActive: boolean) => {
+    try {
+      await setDoc(doc(db, 'settings', 'customPopup'), {
+        isActive,
+        title: customPopupTitleInput.trim() || 'গুরুত্বপূর্ণ নোটিশ',
+        message: customPopupMessageInput.trim(),
+        buttonText: customPopupButtonTextInput.trim() || 'বুঝেছি / ঠিক আছে',
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      setCustomPopupIsActive(isActive);
+      showNotification(isActive ? 'ইউজারদের জন্য স্পেশাল পপআপ সক্রিয় করা হয়েছে।' : 'স্পেশাল পপআপ বন্ধ করা হয়েছে।');
+    } catch (err: any) {
+      showNotification('পপআপ আপডেট ব্যর্থ: ' + err.message);
+    }
   };
 
   const handleSubmissionReview = async (subId: string, userId: string, isApproved: boolean, customAmount?: number) => {
@@ -1216,6 +1272,122 @@ export const AdminDashboard = () => {
               </div>
             </div>
 
+            {/* Custom User Announcement Popup Card (Second Popup on Login) */}
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-5 shadow-xl">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center font-bold shadow-lg shadow-orange-500/20">
+                    <Megaphone size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      <span>ইউজার স্পেশাল নোটিশ পপআপ (Custom User Popup)</span>
+                      {customPopupIsActive ? (
+                        <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-bold">
+                          ● লাইভ সক্রিয় আছে
+                        </span>
+                      ) : (
+                        <span className="text-[10px] bg-slate-800 text-slate-400 px-2.5 py-0.5 rounded-full border border-slate-700 font-bold">
+                          ○ বন্ধ আছে
+                        </span>
+                      )}
+                    </h2>
+                    <p className="text-xs text-slate-400">
+                      এখানে যা লিখে দিবেন তা প্রত্যেক শিক্ষার্থীর লগইনের সময় স্ক্রিনের সামনে সুন্দর পপআপে শো করবে
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* 1. Popup Title */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-orange-400"></span>
+                    <span>পপআপের শিরোনাম (Popup Title)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={customPopupTitleInput}
+                    onChange={e => setCustomPopupTitleInput(e.target.value)}
+                    placeholder="যেমন: গুরুত্বপূর্ণ নোটিশ / গুরুত্বপূর্ণ বার্তা"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                {/* 2. Popup Message / Body Text */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                      <span>পপআপে প্রদর্শিত বার্তা (Detailed Announcement Message)</span>
+                    </label>
+                    <span className="text-[11px] text-amber-300/80">
+                      লাইন ভাঙতে Enter চাপুন, টেক্সট সুন্দরভাবে ফ্রেমের ভেতর থাকবে
+                    </span>
+                  </div>
+                  <textarea
+                    rows={8}
+                    value={customPopupMessageInput}
+                    onChange={e => setCustomPopupMessageInput(e.target.value)}
+                    placeholder="আপনার নোটিশ বা নির্দেশনা এখানে বিস্তারিত লিখুন। প্রতিটি লাইন সুন্দরভাবে নিচে নিচে সাজিয়ে ফ্রেমের ভেতরে প্রদর্শিত হবে..."
+                    className="w-full bg-slate-950 border-2 border-slate-700 rounded-2xl p-5 text-sm text-white focus:outline-none focus:border-orange-500 leading-relaxed font-sans min-h-[200px]"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    ℹ️ টেক্সট স্বয়ংক্রিয়ভাবে লাইনের নিচে লাইন হয়ে গুছিয়ে শো করবে। ফ্রেমের বাইরে কোনো টেক্সট যাবে না।
+                  </p>
+                </div>
+
+                {/* 3. Button Text */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>বাটনের লেখা (Confirm Button Text)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={customPopupButtonTextInput}
+                    onChange={e => setCustomPopupButtonTextInput(e.target.value)}
+                    placeholder="যেমন: বুঝেছি / ধন্যবাদ / ঠিক আছে"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <button
+                    onClick={() => updateCustomPopup(true)}
+                    className="flex-1 min-w-[200px] bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold py-3 rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20 cursor-pointer"
+                  >
+                    <CheckCircle size={15} /> সংরক্ষণ ও পপআপ চালু করুন (Enable Popup)
+                  </button>
+                  <button
+                    onClick={() => setShowCustomPopupPreview(true)}
+                    className="px-5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-semibold py-3 rounded-xl transition text-xs cursor-pointer border border-amber-500/30 flex items-center gap-1.5"
+                  >
+                    <Eye size={15} /> লাইভ প্রিভিউ দেখুন
+                  </button>
+                  <button
+                    onClick={() => updateCustomPopup(false)}
+                    className="px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3 rounded-xl transition text-xs cursor-pointer border border-slate-700"
+                  >
+                    পপআপ বন্ধ রাখুন (Disable)
+                  </button>
+                </div>
+
+                {/* Live Preview Modal for Admin */}
+                <CustomAdminPopupModal
+                  isOpen={showCustomPopupPreview}
+                  onClose={() => setShowCustomPopupPreview(false)}
+                  popupData={{
+                    title: customPopupTitleInput.trim() || 'অফিশিয়াল জরুরি নোটিশ',
+                    message: customPopupMessageInput || 'এখানে আপনার নোটিশের লেখা দেখা যাবে।',
+                    buttonText: customPopupButtonTextInput.trim() || 'বুঝেছি / ঠিক আছে'
+                  }}
+                />
+              </div>
+            </div>
+
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-5 shadow-xl">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold">
@@ -1272,13 +1444,71 @@ export const AdminDashboard = () => {
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-orange-500"
                   />
                 </div>
+
+                {/* 4. Company Logo (Upload File or URL) */}
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
+                      <span>Company Logo (Upload Image or paste URL)</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => logoFileInputRef.current?.click()}
+                      className="text-[11px] font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-3 py-1 rounded-lg border border-orange-500/30 transition cursor-pointer flex items-center gap-1"
+                    >
+                      <span>📁 Upload Logo File</span>
+                    </button>
+                  </div>
+                  
+                  <input
+                    type="file"
+                    ref={logoFileInputRef}
+                    onChange={handleLogoFileUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={logoInput}
+                      onChange={e => setLogoInput(e.target.value)}
+                      placeholder="Paste image URL or click 'Upload Logo File' button above..."
+                      className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-orange-500"
+                    />
+                    {logoInput && (
+                      <button
+                        type="button"
+                        onClick={() => setLogoInput('')}
+                        className="px-3 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-rose-400 rounded-xl text-xs font-bold transition"
+                        title="Remove Logo"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {logoInput.trim() && (
+                    <div className="mt-3.5 p-3.5 bg-slate-950 rounded-2xl border border-slate-800 flex items-center gap-3">
+                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider block shrink-0">Logo Preview:</span>
+                      <div className="w-14 h-14 rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center bg-slate-900 p-0.5 shadow-sm">
+                        <img src={logoInput.trim()} alt="Custom Logo Preview" className="w-full h-full object-contain rounded-lg" onError={(e) => { (e.target as any).src = "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=80&fit=crop"; }} />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-emerald-400 block">✓ Logo Loaded Ready</span>
+                        <span className="text-[10px] text-slate-500 font-mono truncate block max-w-xs">{logoInput.startsWith('data:') ? 'Custom uploaded image asset' : logoInput}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <button
                 onClick={updateSupport}
                 className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-xs uppercase tracking-wider cursor-pointer"
               >
-                Save Support Channels & Video URL
+                Save Support Channels, Video & Company Logo
               </button>
             </div>
           </div>

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { WORK_MODULES, getModuleTitle } from '../lib/modules';
 import { useNavigate } from 'react-router-dom';
-import { Lock, ArrowRight, ShieldAlert, Clock, AlertTriangle } from 'lucide-react';
+import { Lock, ArrowRight, ShieldAlert, Clock, AlertTriangle, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { UnifiedAuth } from './UnifiedAuth';
 
 interface ModuleGuardProps {
@@ -18,6 +18,11 @@ export const ModuleGuard: React.FC<ModuleGuardProps> = ({
 }) => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Skill warning modal state
+  const [acknowledgedWarning, setAcknowledgedWarning] = useState<boolean>(() => {
+    return sessionStorage.getItem(`unity_warning_${moduleId}`) === 'true';
+  });
 
   if (loading) {
     return (
@@ -77,7 +82,7 @@ export const ModuleGuard: React.FC<ModuleGuardProps> = ({
     return <>{children}</>;
   }
 
-  // User is active: Check if user is assigned to this module (supports single or multiple assigned jobs)
+  // User is active: Check if user is assigned to this module
   const authorizedModules: string[] = (profile.assignedJobs && profile.assignedJobs.length > 0)
     ? profile.assignedJobs
     : (profile.assignedJob ? [profile.assignedJob] : []);
@@ -128,7 +133,7 @@ export const ModuleGuard: React.FC<ModuleGuardProps> = ({
                 <button
                   key={mod.id}
                   onClick={() => navigate(mod.route)}
-                  className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-md text-xs"
+                  className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-md text-xs cursor-pointer"
                 >
                   Open {mod.title} <ArrowRight size={14} />
                 </button>
@@ -138,7 +143,7 @@ export const ModuleGuard: React.FC<ModuleGuardProps> = ({
 
           <button
             onClick={() => navigate('/')}
-            className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-3 rounded-xl transition text-xs"
+            className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-3 rounded-xl transition text-xs cursor-pointer"
           >
             Back to Home
           </button>
@@ -147,6 +152,48 @@ export const ModuleGuard: React.FC<ModuleGuardProps> = ({
     );
   }
 
-  // Authorized for this module!
+  // Authorized! Show Mandatory Skill & Competency Warning Popup if not yet acknowledged
+  if (!acknowledgedWarning) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-slate-200 shadow-2xl space-y-5 text-center animate-in zoom-in-95">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto shadow-inner">
+            <AlertTriangle size={32} />
+          </div>
+
+          <div className="space-y-2">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+              Mandatory Skill & Competency Notice
+            </span>
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+              সতর্কতা ও কাজের নির্দেশিকা
+            </h2>
+          </div>
+
+          <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 text-xs sm:text-sm text-amber-950 leading-relaxed text-left space-y-2 font-medium">
+            <p>
+              এই কাজটি শুধুমাত্র যারা কোর্স করেছে বা যাদের কাজ সম্পর্কে ভালো দক্ষতা রয়েছে শুধু তাদের জন্য।
+            </p>
+            <p>
+              আপনার যদি কাজ সম্পর্কে কোনো ধারণা না থাকে বা কাজ যদি আপনি না পেরে থাকেন (যেমন ডাটা এন্ট্রি বা টাইপিং জব), ভুল কাজ সাবমিট করলে আপনার কাজটি রিজেক্ট হয়ে যাবে।
+            </p>
+          </div>
+
+          <button
+            onClick={() => {
+              setAcknowledgedWarning(true);
+              sessionStorage.setItem(`unity_warning_${moduleId}`, 'true');
+            }}
+            className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl text-xs sm:text-sm transition shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <CheckCircle2 size={16} />
+            <span>আমি বুঝেছি, কাজ শুরু করুন</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Authorized & Acknowledged!
   return <>{children}</>;
 };

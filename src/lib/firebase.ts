@@ -1,8 +1,29 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import firebaseConfig from '../../firebase-applet-config.json';
-
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId); // Required per skill instructions
-export const auth = getAuth(app);
+// Firebase has been completely removed and replaced with Supabase PostgreSQL & Adapter.
+// All exports below bridge existing components to Supabase.
+export { 
+  db, 
+  auth, 
+  collection, 
+  doc, 
+  addDoc, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc,
+  getDoc, 
+  getDocs,
+  onSnapshot, 
+  query, 
+  where, 
+  orderBy, 
+  limit,
+  increment,
+  serverTimestamp,
+  arrayUnion,
+  arrayRemove,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup
+} from './supabaseAdapter';

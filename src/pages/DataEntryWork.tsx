@@ -46,12 +46,24 @@ const DataEntrySystem: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<DataEntryProjectDef | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Lock Warning state
+  const [lockWarning, setLockWarning] = useState<string | null>(null);
+
   // Submissions map: projectId -> ProjectSubmissionDoc
   const [userSubmissions, setUserSubmissions] = useState<Record<string, ProjectSubmissionDoc>>({});
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // Settings from Admin (e.g., video upload requirement)
   const [isVideoRequired, setIsVideoRequired] = useState(true);
+
+  // Check if project is unlocked sequentially (1 to 10)
+  const isProjectUnlocked = (proj: DataEntryProjectDef) => {
+    if (proj.number === 1) return true;
+    const prevProj = DATA_ENTRY_PROJECTS.find(p => p.number === proj.number - 1);
+    if (!prevProj) return true;
+    const prevSub = userSubmissions[prevProj.id];
+    return Boolean(prevSub);
+  };
 
   // Fetch user's submissions in real-time
   useEffect(() => {
@@ -107,12 +119,24 @@ const DataEntrySystem: React.FC = () => {
   }, [userSubmissions]);
 
   const handleOpenWorkspace = (proj: DataEntryProjectDef) => {
+    if (!isProjectUnlocked(proj)) {
+      setLockWarning(`⚠️ অনুগ্রহ করে পূর্ববর্তী প্রজেক্টটি (Project #${proj.number - 1}) সম্পূর্ণ করে সাবমিট করুন। আগের কাজ জমা দেওয়া হলে এই প্রজেক্টটি স্বয়ংক্রিয়ভাবে আনলক হয়ে যাবে।`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    setLockWarning(null);
     setSelectedProject(proj);
     setIsModalOpen(true);
   };
 
   const handleFastDownload = (e: React.MouseEvent, proj: DataEntryProjectDef) => {
     e.stopPropagation();
+    if (!isProjectUnlocked(proj)) {
+      setLockWarning(`⚠️ অনুগ্রহ করে পূর্ববর্তী প্রজেক্টটি (Project #${proj.number - 1}) সম্পূর্ণ করে সাবমিট করুন। আগের কাজ জমা দেওয়া হলে এই প্রজেক্টটি স্বয়ংক্রিয়ভাবে আনলক হয়ে যাবে।`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    setLockWarning(null);
     setDownloadingId(proj.id);
     try {
       downloadProjectExcel(proj);
@@ -125,6 +149,17 @@ const DataEntrySystem: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-6 pb-16 font-sans">
+      
+      {/* Lock Warning Banner */}
+      {lockWarning && (
+        <div className="p-4 bg-rose-50 border-2 border-rose-200 text-rose-800 text-xs sm:text-sm font-bold rounded-2xl flex items-start justify-between gap-3 shadow-sm animate-bounce">
+          <div className="flex items-start gap-2">
+            <span>⚠️</span>
+            <span>{lockWarning}</span>
+          </div>
+          <button onClick={() => setLockWarning(null)} className="text-rose-500 hover:text-rose-800 font-extrabold px-1 cursor-pointer">X</button>
+        </div>
+      )}
       
       {/* 1. HERO HEADER: Professional White with Blue & Green Accents */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md relative overflow-hidden space-y-5">
@@ -209,12 +244,15 @@ const DataEntrySystem: React.FC = () => {
             const isAccepted = status === 'Accepted';
             const isRejected = status === 'Rejected';
             const isDownloading = downloadingId === proj.id;
+            const isUnlocked = isProjectUnlocked(proj);
 
             return (
               <div
                 key={proj.id}
                 onClick={() => handleOpenWorkspace(proj)}
-                className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 group relative overflow-hidden"
+                className={`bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 group relative overflow-hidden ${
+                  !isUnlocked ? 'opacity-65 bg-slate-50/50' : ''
+                }`}
               >
                 {/* Top Row: Category, Difficulty, & Live Status */}
                 <div className="space-y-3">
@@ -225,25 +263,26 @@ const DataEntrySystem: React.FC = () => {
 
                     {/* Status Chip */}
                     <div className="flex items-center gap-1.5">
-                      {isAccepted && (
+                      {!isUnlocked ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-slate-200 text-slate-500 border border-slate-300">
+                          🔒 Locked
+                        </span>
+                      ) : isAccepted ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
                           <CheckCircle2 size={13} className="text-emerald-600" />
                           Accepted
                         </span>
-                      )}
-                      {isUnderReview && (
+                      ) : isUnderReview ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 border border-blue-300 animate-pulse">
                           <Clock size={13} className="text-blue-600" />
                           Under Review
                         </span>
-                      )}
-                      {isRejected && (
+                      ) : isRejected ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-800 border border-rose-300">
                           <AlertTriangle size={13} className="text-rose-600" />
                           Rejected
                         </span>
-                      )}
-                      {!isAccepted && !isUnderReview && !isRejected && (
+                      ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
                           Not Started
                         </span>

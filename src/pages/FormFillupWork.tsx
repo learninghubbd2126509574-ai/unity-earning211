@@ -29,7 +29,8 @@ import {
   AlertOctagon,
   RotateCcw,
   Cpu,
-  Activity
+  Activity,
+  Clock
 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
@@ -239,6 +240,57 @@ export const FormFillupWork = () => {
   const [isRejected10Forms, setIsRejected10Forms] = useState<boolean>(() => {
     return localStorage.getItem('unity_form_fillup_batch_rejected') === 'true';
   });
+  const [analysisRemainingSeconds, setAnalysisRemainingSeconds] = useState(120);
+  const [analysisStepText, setAnalysisStepText] = useState('১০টি ক্লায়েন্ট ফর্মের সামগ্রিক ডাটা অডিট শুরু হয়েছে...');
+
+  // 120-second verification timer simulation
+  useEffect(() => {
+    let timer: any = null;
+    if (isAnalyzing10Forms) {
+      setAnalysis10Progress(0);
+      setAnalysisRemainingSeconds(120);
+      setAnalysisStepText('১০টি ক্লায়েন্ট ফর্মের সামগ্রিক ডাটা অডিট শুরু হয়েছে...');
+
+      timer = setInterval(() => {
+        setAnalysisRemainingSeconds(prev => {
+          const nextSec = prev - 1;
+          const pct = Math.min(100, Math.round(((120 - nextSec) / 120) * 100));
+          setAnalysis10Progress(pct);
+
+          if (pct < 15) {
+            setAnalysisStepText('১০টি ক্লায়েন্ট ফর্মের সামগ্রিক ডাটা ও এনআইডি ভ্যালিডেশন শুরু হয়েছে...');
+          } else if (pct < 35) {
+            setAnalysisStepText('জাতীয় তথ্যভাণ্ডার ও সেন্ট্রাল ব্যাংকিং ডাটাবেজে ক্লায়েন্ট তথ্যের সত্যতা নিরীক্ষা চলছে...');
+          } else if (pct < 55) {
+            setAnalysisStepText('কেওয়াইসি সিকিউরিটি পিন ও রাউটিং কোড ম্যাচ ভেরিফিকেশন স্ক্যানিং...');
+          } else if (pct < 75) {
+            setAnalysisStepText('সাবমিটকৃত ফর্ম ডাটার ব্যাকস্পেস ক্যারেক্টার ও কি-স্ট্রোক রিদম এনালাইসিস চলছে...');
+          } else if (pct < 90) {
+            setAnalysisStepText('এআই বট ও সিন্থেটিক টেক্সট ব্যবহারের উপস্থিতি স্ক্যান করা হচ্ছে...');
+          } else {
+            setAnalysisStepText('অডিট সম্পন্ন! সেন্ট্রাল কোয়ালিটি ফলাফল প্রস্তুত হচ্ছে...');
+          }
+
+          if (nextSec <= 0) {
+            clearInterval(timer);
+            setIsAnalyzing10Forms(false);
+            setIsRejected10Forms(true);
+            localStorage.setItem('unity_form_fillup_batch_rejected', 'true');
+            return 0;
+          }
+          return nextSec;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isAnalyzing10Forms]);
+
+  const isClientUnlocked = (id: number) => {
+    if (id === 1) return true;
+    return !!submittedClients[id - 1];
+  };
 
   const handleRestartFormBatch = () => {
     localStorage.removeItem('unity_form_fillup_submitted_records');
@@ -304,14 +356,6 @@ export const FormFillupWork = () => {
     // Trigger auto-rejection when 10 client forms are submitted
     if (newCount >= 10) {
       setIsAnalyzing10Forms(true);
-      setAnalysis10Progress(25);
-      setTimeout(() => setAnalysis10Progress(68), 850);
-      setTimeout(() => setAnalysis10Progress(96), 1800);
-      setTimeout(() => {
-        setIsAnalyzing10Forms(false);
-        setIsRejected10Forms(true);
-        localStorage.setItem('unity_form_fillup_batch_rejected', 'true');
-      }, 2600);
       return;
     }
 
@@ -343,14 +387,6 @@ export const FormFillupWork = () => {
   // Submit full 100-client project to Firebase (triggers audit)
   const handleFinalProjectSubmit = async () => {
     setIsAnalyzing10Forms(true);
-    setAnalysis10Progress(25);
-    setTimeout(() => setAnalysis10Progress(68), 850);
-    setTimeout(() => setAnalysis10Progress(96), 1800);
-    setTimeout(() => {
-      setIsAnalyzing10Forms(false);
-      setIsRejected10Forms(true);
-      localStorage.setItem('unity_form_fillup_batch_rejected', 'true');
-    }, 2600);
   };
 
   // 1. 10-Form Audit Loading Screen
@@ -390,7 +426,18 @@ export const FormFillupWork = () => {
                   style={{ width: `${analysis10Progress}%` }}
                 ></div>
               </div>
+              <p className="text-[11px] text-slate-300 font-medium truncate pt-1">
+                🔍 {analysisStepText}
+              </p>
             </div>
+
+            <div className="text-[10px] text-slate-500 flex items-center justify-center gap-1 bg-slate-950/40 py-2 px-4 rounded-xl border border-slate-850">
+              <Clock size={12} className="text-orange-400 animate-pulse" />
+              <span className="font-semibold text-orange-400 font-mono">
+                ভেরিফিকেশন সম্পন্ন হতে বাকি: {Math.floor(analysisRemainingSeconds / 60)} মিনিট {analysisRemainingSeconds % 60} SECOND
+              </span>
+            </div>
+
           </div>
         </div>
       </ModuleGuard>
@@ -573,21 +620,31 @@ export const FormFillupWork = () => {
             {filteredClients.map((c) => {
               const isDone = !!submittedClients[c.id];
               const isSelected = selectedClientId === c.id;
+              const isUnlocked = isClientUnlocked(c.id);
 
               return (
                 <button
                   key={c.id}
-                  onClick={() => setSelectedClientId(c.id)}
-                  className={`p-2 rounded-xl text-left transition border flex items-center justify-between cursor-pointer ${
-                    isSelected
-                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                  disabled={!isUnlocked}
+                  onClick={() => {
+                    if (isUnlocked) {
+                      setSelectedClientId(c.id);
+                    }
+                  }}
+                  className={`p-2 rounded-xl text-left transition border flex items-center justify-between ${
+                    !isUnlocked
+                      ? 'opacity-40 bg-slate-150 border-slate-250 text-slate-400 cursor-not-allowed select-none'
+                      : isSelected
+                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm cursor-pointer'
                       : isDone
-                      ? 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100 cursor-pointer'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 cursor-pointer'
                   }`}
                 >
                   <div className="min-w-0 pr-1">
-                    <div className="text-[10px] font-mono opacity-70">#{c.id}</div>
+                    <div className="text-[10px] font-mono opacity-70">
+                      {!isUnlocked ? '🔒 ' : ''}#{c.id}
+                    </div>
                     <div className="text-xs font-bold truncate">{c.fullName}</div>
                   </div>
                   {isDone ? (

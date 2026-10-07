@@ -28,8 +28,8 @@ const ALL_320_MESSAGES = generate320RealisticChatPool();
 export const LiveChat = () => {
   const { profile } = useAuth();
 
-  // Active online student counter around 476 members
-  const [onlineCount, setOnlineCount] = useState(476);
+  // Active online student counter under 150 (fluctuates between 39 and 150)
+  const [onlineCount, setOnlineCount] = useState(() => Math.floor(Math.random() * (120 - 78 + 1)) + 78);
 
   // Input message
   const [inputText, setInputText] = useState('');
@@ -61,23 +61,25 @@ export const LiveChat = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Online count slight realistic oscillation around 476 (472-488)
+  // Online count slight realistic oscillation under 150 (between 39 and 150)
   useEffect(() => {
     const countInterval = setInterval(() => {
       setOnlineCount((prev) => {
-        const delta = Math.floor(Math.random() * 5) - 2;
-        return Math.max(468, Math.min(489, prev + delta));
+        const delta = Math.floor(Math.random() * 11) - 5; // -5 to +5
+        return Math.max(39, Math.min(150, prev + delta));
       });
-    }, 15000);
+    }, 10000);
     return () => clearInterval(countInterval);
   }, []);
 
-  // Organic irregular message stream: variable 1s, 2s, 3.5s, 4s delays, sometimes rapid bursts
+  // Active real-time message stream: 5 to 20 seconds intervals continuously
   useEffect(() => {
     let timeoutId: any = null;
+    let burstTimeoutId: any = null;
 
     const scheduleNextMessage = () => {
-      const delays = [800, 1300, 1900, 2400, 3100, 3800, 4000];
+      // Delays fluctuating between 5s and 20s (minimum 5-6s) as requested
+      const delays = [5000, 6000, 7500, 9000, 11000, 13000, 15000, 18000, 20000];
       const randomDelay = delays[Math.floor(Math.random() * delays.length)];
 
       timeoutId = setTimeout(() => {
@@ -94,9 +96,27 @@ export const LiveChat = () => {
           avatarColor: AVATAR_COLORS[nextIdx % AVATAR_COLORS.length]
         };
 
-        setMessages((prev) => {
-          return [...prev.slice(-24), newMsg];
-        });
+        setMessages((prev) => [...prev.slice(-50), newMsg]);
+
+        // 35% chance to emit a quick second reply message after 1.5 seconds!
+        if (Math.random() < 0.35) {
+          burstTimeoutId = setTimeout(() => {
+            const burstIdx = poolIndexRef.current % ALL_320_MESSAGES.length;
+            const burstData = ALL_320_MESSAGES[burstIdx];
+            poolIndexRef.current += 1;
+
+            const secondMsg: ChatMessage = {
+              id: `stream-burst-${Date.now()}-${burstIdx}`,
+              userName: burstData.userName,
+              district: burstData.district,
+              text: burstData.text,
+              timeString: 'এইমাত্র',
+              avatarColor: AVATAR_COLORS[burstIdx % AVATAR_COLORS.length]
+            };
+
+            setMessages((prev) => [...prev.slice(-50), secondMsg]);
+          }, 1500);
+        }
 
         scheduleNextMessage();
       }, randomDelay);
@@ -106,6 +126,7 @@ export const LiveChat = () => {
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
+      if (burstTimeoutId) clearTimeout(burstTimeoutId);
     };
   }, []);
 
@@ -190,13 +211,11 @@ export const LiveChat = () => {
                   <span className={`font-bold text-[11px] leading-none ${msg.isUser ? 'text-white' : 'text-slate-900'}`}>
                     {msg.userName}
                   </span>
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded-md font-semibold ${
-                    msg.isUser
-                      ? 'bg-black/20 text-white'
-                      : 'bg-slate-100 text-slate-500 border border-slate-200'
-                  }`}>
-                    {msg.district}
-                  </span>
+                  {msg.isUser && (
+                    <span className="text-[9px] px-1.5 py-0.2 rounded-md font-semibold bg-black/20 text-white">
+                      You
+                    </span>
+                  )}
                 </div>
 
                 <span className={`text-[9px] font-mono ${msg.isUser ? 'text-white/80' : 'text-slate-400'}`}>

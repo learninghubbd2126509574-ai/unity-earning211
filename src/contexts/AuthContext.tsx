@@ -87,6 +87,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           let profileData: UserProfile | null = null;
           if (docSnap.exists()) {
             profileData = docSnap.data() as UserProfile;
+          } else {
+            // Fallback default profile if doc doesn't exist yet (set to pending and zero balance for safety)
+            profileData = {
+              whatsappNumber: authUser.phoneNumber || '',
+              fullName: authUser.displayName || 'Pending Student',
+              studentIdCode: 'PENDING',
+              email: authUser.email || 'student@unityearning.com',
+              role: 'student',
+              status: 'pending',
+              balance: 0.00,
+              microjobPoints: 0,
+              assignedJobs: [],
+              assignedJob: '',
+              courseCompleted: false
+            };
           }
           setAuthState({
             user: authUser,
@@ -94,14 +109,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             loading: false
           });
         }, (error) => {
-          console.error("Profile listener error:", error);
+          console.warn("Firestore listener error (likely quota exhausted or offline):", error);
+          // Graceful fallback profile on quota exhaustion - set to pending and zero balance for safety
+          const fallbackProfile: UserProfile = {
+            whatsappNumber: authUser.phoneNumber || '',
+            fullName: authUser.displayName || 'Pending Student',
+            studentIdCode: 'PENDING',
+            email: authUser.email || 'student@unityearning.com',
+            role: 'student',
+            status: 'pending',
+            balance: 0.00,
+            microjobPoints: 0,
+            assignedJobs: [],
+            assignedJob: '',
+            courseCompleted: false
+          };
           setAuthState({
             user: authUser,
-            profile: null,
+            profile: fallbackProfile,
             loading: false
           });
         });
       } else {
+        sessionStorage.removeItem('promo_shown_this_session');
+        sessionStorage.removeItem('admin_popup_shown_this_session');
         setAuthState({
           user: null,
           profile: null,
@@ -119,6 +150,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, profile, loading } = authState;
 
   const logout = React.useCallback(async () => {
+    sessionStorage.removeItem('promo_shown_this_session');
+    sessionStorage.removeItem('admin_popup_shown_this_session');
     await signOut(auth);
   }, []);
 

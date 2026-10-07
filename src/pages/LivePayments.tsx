@@ -130,18 +130,25 @@ export const LivePayments: React.FC = () => {
       status: 'Completed'
     });
 
-    for (let i = 6; i < 130; i++) {
+    const PAYMENT_AMOUNTS = [
+      120, 130, 150, 200, 250, 320, 450, 500, 600, 700, 750, 850, 920, 1000, 
+      1150, 1200, 1350, 1400, 1500, 1650, 1750, 1850, 1920, 1980, 2100, 2500
+    ];
+
+    for (let i = 6; i < 420; i++) {
       const name = INITIAL_NAMES[i % INITIAL_NAMES.length];
       const randomId = (1000000 + ((i * 73939 + 18273) % 8999999)).toString();
       const amount = PAYMENT_AMOUNTS[(i * 7 + 3) % PAYMENT_AMOUNTS.length];
       const type = METHODS[(i * 3 + 1) % METHODS.length];
       
-      const minsAgo = (i * 9) + ((i * 3) % 15);
+      const minsAgo = (i * 3) + ((i * 2) % 11);
       let timeAgo = `${minsAgo} mins ago`;
-      if (minsAgo > 60 && minsAgo < 1440) {
+      if (minsAgo === 1) timeAgo = '1 min ago';
+      else if (minsAgo === 0) timeAgo = 'Just now';
+      else if (minsAgo > 60 && minsAgo < 1440) {
         timeAgo = `${Math.floor(minsAgo / 60)}h ${minsAgo % 60}m ago`;
       } else if (minsAgo >= 1440) {
-        timeAgo = 'Yesterday';
+        timeAgo = '1 day ago';
       }
 
       generated.push({
@@ -187,35 +194,47 @@ export const LivePayments: React.FC = () => {
     }
   }, []);
 
-  // Dynamic live auto-update ticker every 6 seconds to rotate / shift items dynamically
+  // Dynamic live auto-update ticker every 1 to 3 minutes randomly
   useEffect(() => {
-    const interval = setInterval(() => {
-      setRecords((prev) => {
-        if (prev.length < 5) return prev;
-        // Pick a random user from list and generate a new live transaction at the top
-        const randomName = INITIAL_NAMES[Math.floor(Math.random() * INITIAL_NAMES.length)];
-        const randomId = (1000000 + Math.floor(Math.random() * 9000000)).toString();
-        const randomAmount = PAYMENT_AMOUNTS[Math.floor(Math.random() * PAYMENT_AMOUNTS.length)];
-        const randomType = METHODS[Math.floor(Math.random() * METHODS.length)];
+    let timeoutId: any = null;
 
-        const newRecord: PaymentRecord = {
-          id: `live-${Date.now()}`,
-          name: randomName,
-          studentId: randomId,
-          amount: randomAmount,
-          type: randomType,
-          timeAgo: 'Just now',
-          status: 'Completed'
-        };
+    const runTicker = () => {
+      // Pick a random interval between 60 and 180 seconds (1 to 3 minutes)
+      const randomSeconds = Math.floor(Math.random() * (180 - 60 + 1)) + 60;
+      
+      timeoutId = setTimeout(() => {
+        setRecords((prev) => {
+          if (prev.length < 5) return prev;
+          // Pick a random user from list and generate a new live transaction at the top
+          const randomName = INITIAL_NAMES[Math.floor(Math.random() * INITIAL_NAMES.length)];
+          const randomId = (1000000 + Math.floor(Math.random() * 9000000)).toString();
+          const randomAmount = PAYMENT_AMOUNTS[Math.floor(Math.random() * PAYMENT_AMOUNTS.length)];
+          const randomType = METHODS[Math.floor(Math.random() * METHODS.length)];
 
-        const updated = [newRecord, ...prev.slice(0, 129)];
-        return updated;
-      });
+          const newRecord: PaymentRecord = {
+            id: `live-${Date.now()}`,
+            name: randomName,
+            studentId: randomId,
+            amount: randomAmount,
+            type: randomType,
+            timeAgo: 'Just now',
+            status: 'Completed'
+          };
 
-      setLastUpdated('Updated just now');
-    }, 7000);
+          const updated = [newRecord, ...prev.slice(0, 420)];
+          return updated;
+        });
 
-    return () => clearInterval(interval);
+        setLastUpdated('Updated just now');
+        runTicker();
+      }, randomSeconds * 1000);
+    };
+
+    runTicker();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   const combinedRecords = [...realTransfers, ...records];
@@ -255,22 +274,15 @@ export const LivePayments: React.FC = () => {
             </p>
           </div>
 
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-3 gap-2.5 pt-3 border-t border-slate-800 text-center">
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60">
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">Today's Payouts</div>
-              <div className="text-sm font-bold text-emerald-400 font-mono mt-0.5">BDT 148,650</div>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60">
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">Live Queue</div>
-              <div className="text-sm font-bold text-orange-400 font-mono mt-0.5">130+ Active</div>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60">
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">Avg. Speed</div>
-              <div className="text-sm font-bold text-sky-400 font-mono mt-0.5">&lt; 2 Mins</div>
-            </div>
+          {/* Balance Transfer Instant Action */}
+          <div className="pt-3 border-t border-slate-800/90 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('open_balance_transfer'))}
+              className="w-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 active:scale-[0.98] text-white py-2.5 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20 transition cursor-pointer border border-orange-400/30"
+            >
+              <ArrowRightLeft size={15} />
+              <span>Instant Balance Transfer (P2P)</span>
+            </button>
           </div>
         </div>
       </div>

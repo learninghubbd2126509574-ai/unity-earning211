@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../lib/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { auth, db, onSnapshot } from '../lib/firebase';
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { WORK_MODULES } from '../lib/modules';
 import { 
@@ -51,6 +51,7 @@ export const UnifiedAuth: React.FC = () => {
     return new Date().toISOString().split('T')[0];
   });
   const [hasExperience, setHasExperience] = useState<boolean>(false);
+  const [hasSelectedWorkKnowledge, setHasSelectedWorkKnowledge] = useState<boolean | null>(null);
   const [selectedModules, setSelectedModules] = useState<string[]>(['typing']);
   const [hasCertificate, setHasCertificate] = useState<boolean>(false);
   const [certificateDataUrl, setCertificateDataUrl] = useState<string>('');
@@ -59,6 +60,17 @@ export const UnifiedAuth: React.FC = () => {
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerError, setRegisterError] = useState('');
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('');
+
+  // Load custom logo if configured
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'support'), (snap) => {
+      if (snap.exists()) {
+        setLogoUrl(snap.data().logoUrl || '');
+      }
+    });
+    return () => unsub();
+  }, []);
 
   // Toggle Module Selection (1 to max 3)
   const toggleModule = (modId: string) => {
@@ -146,8 +158,8 @@ export const UnifiedAuth: React.FC = () => {
         }
       }
 
-      // Check 2: Phone / WhatsApp lookup
-      if (!targetUserDoc && cleanPhoneDigits.length >= 8) {
+      // Check 2: Phone / WhatsApp lookup (strict phone matching)
+      if (!targetUserDoc && cleanPhoneDigits.length >= 10) {
         const phoneSnap = await getDocs(query(usersRef, where('whatsappNumber', '==', cleanIdent)));
         if (!phoneSnap.empty) {
           targetUserDoc = phoneSnap.docs[0].data();
@@ -176,7 +188,7 @@ export const UnifiedAuth: React.FC = () => {
         }
       }
 
-      // Check 4: Deep scan across users collection for complete fallback
+      // Check 4: Deep scan across users collection with strict matching only
       if (!targetUserDoc) {
         const allUsersSnap = await getDocs(usersRef);
         for (const uDoc of allUsersSnap.docs) {
@@ -186,11 +198,18 @@ export const UnifiedAuth: React.FC = () => {
           const uEmail = (data.email || '').trim().toLowerCase();
           const qDigits = cleanPhoneDigits;
 
-          if (
-            (uId && uId === cleanIdent) ||
-            (uEmail && (uEmail === cleanIdent.toLowerCase() || uEmail === cleanIdent)) ||
-            (uPhone && qDigits && (uPhone === qDigits || uPhone.endsWith(qDigits) || qDigits.endsWith(uPhone)))
-          ) {
+          const isIdMatch = Boolean(uId && /^\d{7}$/.test(cleanIdent) && uId === cleanIdent);
+          const isEmailMatch = Boolean(uEmail && cleanIdent.includes('@') && uEmail === cleanIdent.toLowerCase());
+          const isPhoneMatch = Boolean(
+            qDigits.length >= 10 && uPhone.length >= 10 &&
+            (uPhone === qDigits ||
+             ('88' + qDigits) === uPhone ||
+             qDigits === ('88' + uPhone) ||
+             (qDigits.startsWith('0') && uPhone === qDigits.slice(1)) ||
+             (uPhone.startsWith('0') && qDigits === uPhone.slice(1)))
+          );
+
+          if (isIdMatch || isEmailMatch || isPhoneMatch) {
             targetUserDoc = data;
             if (data.email) {
               targetAuthEmail = data.email.trim().toLowerCase();
@@ -198,6 +217,18 @@ export const UnifiedAuth: React.FC = () => {
             break;
           }
         }
+      }
+
+      if (!targetUserDoc) {
+        setLoginError('কোনো নিবন্ধিত অ্যাকাউন্ট পাওয়া যায়নি। অনুগ্রহ করে সঠিক ফোন নম্বর, ৭-সংখ্যার আইডি বা ইমেইল দিন অথবা নতুন আবেদন করুন।');
+        setLoginLoading(false);
+        return;
+      }
+
+      if (targetUserDoc.passwordText && targetUserDoc.passwordText !== cleanPass) {
+        setLoginError('ভুল পাসওয়ার্ড! অনুগ্রহ করে পাসওয়ার্ড চেক করে পুনরায় চেষ্টা করুন।');
+        setLoginLoading(false);
+        return;
       }
 
       // Fallback auth email construction if not found in Firestore
@@ -316,6 +347,12 @@ export const UnifiedAuth: React.FC = () => {
       return;
     }
 
+    if (hasSelectedWorkKnowledge === null) {
+      setRegisterError('দয়া করে নির্বাচিত কাজ সম্পর্কে আপনার কোনো ধারণা আছে কিনা তা নির্ধারণ করুন (Yes/No)।');
+      setRegisterLoading(false);
+      return;
+    }
+
     if (hasCertificate && !certificateDataUrl) {
       setRegisterError('You selected that you have a company certificate. Please upload your certificate document.');
       setRegisterLoading(false);
@@ -340,6 +377,7 @@ export const UnifiedAuth: React.FC = () => {
         courseCompleted: Boolean(courseCompleted),
         companyJoinDate: companyJoinDate || new Date().toISOString().split('T')[0],
         hasExperience: Boolean(hasExperience),
+        hasSelectedWorkKnowledge: Boolean(hasSelectedWorkKnowledge),
         hasCertificate: Boolean(hasCertificate),
         certificateUrl: hasCertificate ? certificateDataUrl : '',
         balance: 0,
@@ -350,6 +388,7 @@ export const UnifiedAuth: React.FC = () => {
       };
 
       await setDoc(doc(db, 'users', cred.user.uid), newUserData);
+      await signOut(auth);
       setSubmittedSuccess(true);
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
@@ -405,11 +444,19 @@ export const UnifiedAuth: React.FC = () => {
         
         {/* Portal Branding */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 border border-orange-100 rounded-full text-orange-600 text-xs font-semibold uppercase tracking-wider mb-2">
-            <Sparkles size={14} /> Unity Earning Portal
-          </div>
+          {logoUrl ? (
+            <div className="flex justify-center mb-3">
+              <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-md border border-slate-100 flex items-center justify-center bg-slate-50 p-0.5">
+                <img src={logoUrl} alt="Company Logo" className="w-full h-full object-cover rounded-xl" />
+              </div>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 border border-orange-100 rounded-full text-orange-600 text-xs font-semibold uppercase tracking-wider mb-2">
+              <Sparkles size={14} /> Unity Earning Portal
+            </div>
+          )}
           <h1 className="text-2xl font-bold text-slate-800">Task Earning System</h1>
-          <p className="text-xs text-slate-400 mt-1">Single Registration for all tasks</p>
+          <p className="text-xs text-slate-400 mt-1 font-medium">Single Registration for all tasks</p>
         </div>
 
         {/* Tab Switcher */}
@@ -686,11 +733,11 @@ export const UnifiedAuth: React.FC = () => {
 
             {/* 10. Prior Experience / Knowledge */}
             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200/80">
-              <label className="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
-                <Briefcase size={16} className="text-orange-500" /> Do you have prior knowledge/experience of the work?
+              <label className="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                <Briefcase size={16} className="text-orange-500" /> কাজ সম্পর্কে কোন প্রকার ধারণা আছে কিনা? <span className="text-rose-500">*</span>
               </label>
               <div className="flex gap-4">
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                   <input
                     type="radio"
                     name="hasExperience"
@@ -698,9 +745,9 @@ export const UnifiedAuth: React.FC = () => {
                     onChange={() => setHasExperience(true)}
                     className="accent-orange-500"
                   />
-                  <span>Yes, I have experience</span>
+                  <span>হ্যাঁ, আমার ধারণা আছে (Yes)</span>
                 </label>
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                   <input
                     type="radio"
                     name="hasExperience"
@@ -708,7 +755,7 @@ export const UnifiedAuth: React.FC = () => {
                     onChange={() => setHasExperience(false)}
                     className="accent-orange-500"
                   />
-                  <span>No prior experience</span>
+                  <span>না, আমার কোনো ধারণা নেই (No)</span>
                 </label>
               </div>
             </div>
@@ -737,7 +784,7 @@ export const UnifiedAuth: React.FC = () => {
                       onClick={() => toggleModule(mod.id)}
                       className={`p-2.5 rounded-xl border text-left text-xs font-medium transition-all ${
                         isSelected
-                          ? 'border-orange-500 bg-orange-50/50 text-orange-950 font-bold shadow-sm'
+                           ? 'border-orange-500 bg-orange-50/50 text-orange-950 font-bold shadow-sm'
                           : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
                       }`}
                     >
@@ -748,6 +795,35 @@ export const UnifiedAuth: React.FC = () => {
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Question: Do you have any experience/idea about the selected tasks? */}
+              <div className="mt-3 p-3 bg-orange-50/40 rounded-2xl border border-orange-200/50 space-y-2">
+                <label className="block text-xs font-bold text-slate-800 leading-relaxed">
+                  নির্বাচিত কাজ সম্পর্কে আপনার কি কোনো ধারণা আছে? <span className="text-rose-500">*</span>
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="hasSelectedWorkKnowledge"
+                      checked={hasSelectedWorkKnowledge === true}
+                      onChange={() => setHasSelectedWorkKnowledge(true)}
+                      className="accent-orange-500"
+                    />
+                    <span>হ্যাঁ (Yes)</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="hasSelectedWorkKnowledge"
+                      checked={hasSelectedWorkKnowledge === false}
+                      onChange={() => setHasSelectedWorkKnowledge(false)}
+                      className="accent-orange-500"
+                    />
+                    <span>না (No)</span>
+                  </label>
+                </div>
               </div>
             </div>
 

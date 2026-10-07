@@ -38,9 +38,9 @@ interface TypingTask {
   difficulty: 'Very Hard' | 'Complex' | 'Advanced' | 'Master';
   title: string;
   timeLimitMinutes: number;
-  mandatoryCondition: string;
-  instruction: string;
+  instructionSteps: string[];
   text: string;
+  mandatoryCondition?: string;
 }
 
 const ADVANCED_10_TASKS: TypingTask[] = [
@@ -50,13 +50,23 @@ const ADVANCED_10_TASKS: TypingTask[] = [
     difficulty: "Complex",
     title: "Section 14(c) Commercial Lease & Escrow Indemnity Agreement",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: লেখার মধ্যে যেখানে 'Lessee' শব্দটি রয়েছে তা পরিবর্তন করে 'Authorized Tenant' লিখুন এবং সকল টাকার অংক প্রথম বন্ধনীতে (Parentheses) রাখুন।",
-    instruction: "হুবহু নির্ভুলভাবে বিরামচিহ্ন, ব্র্যাকেট এবং ক্লজ কোড টাইপ করুন এবং উপরের শর্ত অনুযায়ী শব্দ পরিবর্তন করুন। স্ক্রিন রেকর্ড চালু রেখে টাইপ করুন।",
-    text: `Pursuant to Section 14(c) of the Master Commercial Lease Agreement (Ref: #LSE-2026/894-BD), the Lessee shall irrevocably deposit the aggregate sum of BDT 4,87,500.00 (Four Lakh Eighty-Seven Thousand Five Hundred Taka Only) into the designated Escrow Account [IBAN: BD92-SBIN-0004-9812-7634] no later than 17:00 BST on 15-November-2026. 
+    instructionSteps: [
+      "১. মূল নথির ফরম্যাট বজায় রেখে অনুচ্ছেদটি টাইপ করুন।",
+      "২. 'Lessee' শব্দটি প্রতিস্থাপন করে 'Authorized Tenant' লিখুন।",
+      "৩. সকল টাকার অংক প্রথম বন্ধনীতে (Parentheses) আবদ্ধ করুন।",
+      "৪. তারিখের ফরম্যাট DD-Month-YYYY অনুযায়ী লিখুন।",
+      "৫. সকল অংকীয় মান কমা (,) দিয়ে পৃথক করুন।",
+      "৬. বিরামচিহ্ন ও ব্র্যাকেটের নির্ভুলতা যাচাই করুন।",
+      "৭. 'Section 14(c)' অংশটি সম্পূর্ণ বোল্ড করুন।",
+      "৮. 'Escrow Account' এর পর সঠিক IBAN নম্বরটি বসান।",
+      "৯. সকল শতাংশের (%) মান দশমিকের পর দুই ঘর পর্যন্ত রাখুন।",
+      "১০. অনুচ্ছেদের শেষে কোনো বাড়তি স্পেস রাখবেন না।"
+    ],
+    text: `Pursuant to Section 14(c) of the Master Commercial Lease Agreement (Ref: #LSE-2026/894-BD), the Authorized Tenant shall irrevocably deposit the aggregate sum of BDT 4,87,500.00 into the designated Escrow Account [IBAN: BD92-SBIN-0004-9812-7634] no later than 17:00 BST on 15-November-2026. 
 
 Failure to remit said escrow collateral within five (5) statutory business days shall trigger an automatic liquidated damage surcharge of 2.75% per diem, compounded weekly under Clause 22.4(a). Neither party may assign, novate, or hypothecate its respective rights hereunder without prior written unanimous consent of the Board of Arbitrators (§ 9.2). All formal communications must be dispatched via registered courier with verifiable proof-of-delivery receipts.
 
-Furthermore, the Lessee agrees to maintain comprehensive general liability insurance coverage with minimum single-limit indemnity of BDT 25,00,000.00 throughout the entire five-year lease tenure. Any structural alterations or electrical retrofitting must receive structural engineering compliance certificates under the Bangladesh National Building Code (BNBC-2020). The Lessor covenants peaceful possession subject to regular quarterly safety inspections with forty-eight (48) hours prior notification.`
+Furthermore, the Authorized Tenant agrees to maintain comprehensive general liability insurance coverage with minimum single-limit indemnity of BDT 25,00,000.00 throughout the entire five-year lease tenure. Any structural alterations or electrical retrofitting must receive structural engineering compliance certificates under the Regional Building Code (RBC-2020). The Lessor covenants peaceful possession subject to regular quarterly safety inspections with forty-eight (48) hours prior notification.`
   },
   {
     id: 2,
@@ -64,8 +74,18 @@ Furthermore, the Lessee agrees to maintain comprehensive general liability insur
     difficulty: "Advanced",
     title: "Protocol #CT-8092-B: In Vitro Bio-Equivalence & Solvency Assay",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: লেখার মধ্যে 'Acetylsalicylic Acid' এর স্থানে 'Compound-ASA (BP/USP)' লিখুন এবং সকল তাপমাত্রার মান বোল্ড ক্যাপিটালে রাখুন।",
-    instruction: "রাসায়নিক সংকেত, দশমিক মান, বৈজ্ঞানিক তাপমাত্রা এবং ব্র্যাকেট নিখুঁতভাবে টাইপ করুন।",
+    instructionSteps: [
+      "১. 'Acetylsalicylic Acid' এর স্থানে 'Compound-ASA (BP/USP)' লিখুন।",
+      "২. সকল তাপমাত্রার মান বোল্ড ক্যাপিটালে রাখুন।",
+      "৩. রাসায়নিক সংকেতগুলো হুবহু টাইপ করুন।",
+      "৪. দশমিকের মান নিখুঁতভাবে টাইপ করুন।",
+      "৫. 'lambda_max' শব্দটি ইটালিক করুন।",
+      "৬. সকল শতাংশের (%) মান দশমিকের পর দুই ঘর পর্যন্ত রাখুন।",
+      "৭. 'Batch #BX-0914-K' অংশটি হাইলাইট করুন।",
+      "৮. ব্র্যাকেটের ভেতরের মানগুলো সঠিক রাখুন।",
+      "৯. HPLC রিপোর্ট ফরম্যাট বজায় রাখুন।",
+      "১০. নির্ভুলতা যাচাইয়ের জন্য রিচেক দিন।"
+    ],
     text: `During Phase-II clinical bio-equivalence screening (Trial Code #CT-8092-B), analytical samples of Acetylsalicylic Acid (C9H8O4, Molecular Weight: 180.16 g/mol) were subjected to rigorous chromatographic dissolution testing at 37.0°C (±0.25°C) within a buffered aqueous medium maintained strictly at pH 7.40.
 
 Spectrophotometric absorbance measured at lambda_max = 278.4 nm yielded an active therapeutic solvency coefficient of 98.42% (SD: ±0.18%). Batch #BX-0914-K demonstrated zero particulate precipitate after 72 hours of continuous agitation at 120 RPM. Chromatographic retention time peaked at 4.62 minutes, conforming to USP-NF Monograph standards (Rev. 2026). Technicians must archive raw chromatogram spectra in non-volatile read-only storage.
@@ -78,8 +98,18 @@ High-Performance Liquid Chromatography (HPLC) validation assays demonstrated lin
     difficulty: "Master",
     title: "Daily Cross-Border Swift Ledger & Tax Deduction Audit",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: 'Standard Chartered' এর পরিবর্তে 'Global Clearing Partner' লিখুন এবং সকল তারিখ DD/MM/YYYY ফরম্যাটে রূপান্তর করুন।",
-    instruction: "টাকার অংক, ট্রানজেকশন হ্যাশ, একাউন্ট নাম্বার এবং অডিট রেফারেন্স সতর্কতার সাথে টাইপ করুন।",
+    instructionSteps: [
+      "১. 'Standard Chartered' এর পরিবর্তে 'Global Clearing Partner' লিখুন।",
+      "২. সকল তারিখ DD/MM/YYYY ফরম্যাটে রূপান্তর করুন।",
+      "৩. টাকার অংকগুলো বাংলায় লিখুন।",
+      "৪. অডিট রেফারেন্স সঠিক ভাবে টাইপ করুন।",
+      "৫. ট্রানজেকশন হ্যাশ হুবহু টাইপ করুন।",
+      "৬. শতাংশের (%) মান দশমিকের পর দুই ঘর রাখুন।",
+      "৭. এনবিআর রুল নম্বরটি বোল্ড করুন।",
+      "৮. ব্যাংক রাউটিং নম্বর সঠিক রাখুন।",
+      "৯. কোনো প্রকার বাড়তি স্পেস দেবেন না।",
+      "১০. ডেটাগুলো নির্ভুল কি না যাচাই করুন।"
+    ],
     text: `AUDIT RECONCILIATION DISPATCH: [ID: TXN-BD-98201-CLR]
 Originating Branch: Motijheel Corporate Central (Routing: 095271894).
 Counterparty Institution: Standard Chartered Global Clearing (BIC: SCBLBDDX).
@@ -98,8 +128,18 @@ Interbank Foreign Exchange Settlement confirmation was completed through Banglad
     difficulty: "Very Hard",
     title: "স্মারক নং: ৪৬.০২.০০০০.০১২.১৪.০০১.২৬ — সরকারি প্রজ্ঞাপন ও বাজেট নথি",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: 'পাবলিক প্রকিউরমেন্ট বিধিমালা' এর স্থলে 'পিপিআর-২০০৮ সরকারি বিধিমালা' লিখুন এবং স্মারক কোড বড় হাতের রাখুন।",
-    instruction: "বাংলা যুক্তাক্ষর, স্মারক নম্বর, দাঁড়ি ও কমা হুবহু বজায় রেখে টাইপ করুন।",
+    instructionSteps: [
+      "১. 'পাবলিক প্রকিউরমেন্ট বিধিমালা' এর স্থলে 'পিপিআর-২০০৮ সরকারি বিধিমালা' লিখুন।",
+      "২. স্মারক কোড এবং নম্বর বড় হাতের অক্ষরে রাখুন।",
+      "৩. বাংলা যুক্তাক্ষরগুলো সঠিকভাবে টাইপ করুন।",
+      "৪. দাঁড়ি ও কমা হুবহু বজায় রাখুন।",
+      "৫. টাকার অংকটি বন্ধনীতে আবদ্ধ করুন।",
+      "৬. এডিপি খাতটি হাইলাইট করুন।",
+      "৭. তারিখের ফরম্যাট ঠিক রাখুন।",
+      "৮. প্রজ্ঞাপনের আদেশ অংশটি বোল্ড করুন।",
+      "৯. কোনো বানান ভুল করবেন না।",
+      "১০. পুরো নথিটি একবার রিভিউ করুন।"
+    ],
     text: `গণপ্রজাতন্ত্রী বাংলাদেশ সরকার
 সংস্থাপন ও প্রশাসনিক সংস্কার বিভাগ
 স্মারক নং: ৪৬.০২.০০০০.০১২.১৪.০০১.২৬; তারিখ: ১৫ আশ্বিন ১৪৩৩ বঙ্গাব্দ / ০১ অক্টোবর ২০২৬ খ্রিস্টাব্দ।
@@ -116,8 +156,18 @@ Interbank Foreign Exchange Settlement confirmation was completed through Banglad
     difficulty: "Complex",
     title: "API-Gateway Configuration: Distributed TLS & Rate Limit Specification",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: 'Strict-Origin' এর স্থানে 'Strict-Transport-Security' লিখুন এবং কার্লি ব্র্যাকেটের ভেতরের ইন্ডেন্টেশন ঠিক রাখুন।",
-    instruction: "কোডিং সিনট্যাক্স, কোটেশন মার্ক, কার্লি ব্র্যাকেট এবং এন্ডপয়েন্ট ইউআরএল নিখুঁতভাবে টাইপ করুন।",
+    instructionSteps: [
+      "১. 'Strict-Origin' এর স্থানে 'Strict-Transport-Security' লিখুন।",
+      "২. কার্লি ব্র্যাকেটের ভেতরের ইন্ডেন্টেশন ঠিক রাখুন।",
+      "৩. কোডিং সিনট্যাক্স সঠিকভাবে টাইপ করুন।",
+      "৪. কোটেশন মার্কগুলো হুবহু দিন।",
+      "৫. এন্ডপয়েন্ট ইউআরএল পরিবর্তন করবেন না।",
+      "৬. কনফিগুরেশন কি-গুলো লোয়ারকেসে রাখুন।",
+      "৭. নম্বরগুলো কমা দিয়ে পৃথক করুন।",
+      "৮. লগিং টেলিমেট্রি অংশটি বোল্ড করুন।",
+      "৯. বাড়তি স্পেস ও ট্যাব ঠিক রাখুন।",
+      "১০. কোড ফরম্যাট যাচাই করুন।"
+    ],
     text: `SCHEMA_VERSION = "2.4.0-STABLE";
 CLUSTER_CONFIG: {
   "cluster_id": "bd-central-edge-01",
@@ -151,8 +201,18 @@ CLUSTER_CONFIG: {
     difficulty: "Advanced",
     title: "Spectrum Licensing & Carrier Aggregation Spectrum Manifest",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: 'Bandwidth' শব্দটির পরিবর্তে 'Throughput Capacity' লিখুন এবং মেগাহার্টজ (MHz) মানগুলো ব্র্যাকেটে রাখুন।",
-    instruction: "ফ্রিকোয়েন্সি রেঞ্জ, স্পেকট্রাম কোড ও ডেসিমেল মান সঠিকভাবে টাইপ করুন।",
+    instructionSteps: [
+      "১. 'Bandwidth' শব্দটির পরিবর্তে 'Throughput Capacity' লিখুন।",
+      "২. মেগাহার্টজ (MHz) মানগুলো ব্র্যাকেটে রাখুন।",
+      "৩. ফ্রিকোয়েন্সি রেঞ্জ নির্ভুলভাবে টাইপ করুন।",
+      "৪. স্পেকট্রাম কোড বড় হাতের অক্ষরে রাখুন।",
+      "৫. ডেসিমেল মানগুলো ঠিক রাখুন।",
+      "৬. EIRP এর মান বোল্ড করুন।",
+      "৭. 3GPP রিলিজ নম্বর ঠিক রাখুন।",
+      "৮. 64T64R অংশটি হাইলাইট করুন।",
+      "৯. কোনো স্পেলিং মিস্টেক করবেন না।",
+      "১০. রিপোর্টটি ফাইনাল চেক করুন।"
+    ],
     text: `Under BTRC Spectrum Allocation Directive #BTRC/LL-2026/091, the National 5G Mid-Band Carrier License is provisionally assigned in the 3.5 GHz spectrum band (3400 MHz to 3600 MHz) with contiguous carrier bandwidth of 100 MHz.
 
 Maximum permissible Effective Isotropic Radiated Power (EIRP) is capped strictly at +62 dBm/sector. Synchronization protocols must adhere to 3GPP Release-18 standards with an inter-operator guard band buffer of 5 MHz to prevent cross-carrier inter-modulation distortion across adjacent base stations.
@@ -165,8 +225,18 @@ Beamforming antenna arrays must support 64T64R Massive MIMO configurations opera
     difficulty: "Master",
     title: "Bill of Lading & Harmonized Tariff Cargo Ledger",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: 'Chittagong Port' এর স্থলে 'Chattogram Sea Port Terminal-1' লিখুন এবং সকল ওজন টন (MT) এককে রূপান্তর করুন।",
-    instruction: "কনটেইনার নম্বর, এইচএস কোড ও কাস্টমস শুল্ক সাবধানে টাইপ করুন।",
+    instructionSteps: [
+      "১. 'Chittagong Port' এর স্থলে 'Chattogram Sea Port Terminal-1' লিখুন।",
+      "২. সকল ওজন টন (MT) এককে রূপান্তর করুন।",
+      "৩. কনটেইনার নম্বর হুবহু টাইপ করুন।",
+      "৪. এইচএস কোড সঠিক ভাবে লিখুন।",
+      "৫. কাস্টমস শুল্ক শতাংশগুলো ঠিক রাখুন।",
+      "৬. ভ্যাট মানগুলো বন্ধনীতে রাখুন।",
+      "৭. কার্গো ম্যানিফেস্ট অংশটি বোল্ড করুন।",
+      "৮. তারিখের ফরম্যাট ঠিক রাখুন।",
+      "৯. কোনো বাড়তি কমা বা ডট দেবেন না।",
+      "১০. পুরো বিল অব ল্যাডিং রিভিউ করুন।"
+    ],
     text: `OCEAN BILL OF LADING [B/L NO: OOCL-CTG-9821094-A]
 Vessel Name: M.V. Bengal Star (Voyage #26-08W, IMO: 9482104).
 Port of Loading: Port of Singapore (SGSIN).
@@ -187,8 +257,18 @@ Customs Assessment Notice #CUS-OFF-7718 certifies non-hazardous declaration. Cle
     difficulty: "Master",
     title: "Next-Generation Genomic Variant Sequencing Report",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: 'Polymerase Chain Reaction' এর স্থানে 'Quantitative Real-Time PCR (qPCR)' লিখুন।",
-    instruction: "জিন মিউটেশন কোড, নিউক্লিওটাইড সিকোয়েন্স ও বৈজ্ঞানিক নাম নির্ভুলভাবে টাইপ করুন।",
+    instructionSteps: [
+      "১. 'Polymerase Chain Reaction' এর স্থানে 'Quantitative Real-Time PCR (qPCR)' লিখুন।",
+      "২. জিন মিউটেশন কোড বোল্ড করুন।",
+      "৩. নিউক্লিওটাইড সিকোয়েন্স হুবহু টাইপ করুন।",
+      "৪. বৈজ্ঞানিক নাম ইটালিক রাখুন।",
+      "৫. ক্রোমোজোম নম্বর ঠিক রাখুন।",
+      "৬. VAF মান দশমিকের পর এক ঘর রাখুন।",
+      "৭. সিকোয়েন্সিং প্লাটফর্মের নাম ঠিক রাখুন।",
+      "৮. কোনো প্রকার বানান ভুল করবেন না।",
+      "৯. সব নম্বর কমা দিয়ে পৃথক করুন।",
+      "১০. রিপোর্টটি একবার চেক করুন।"
+    ],
     text: `GENOMIC DIAGNOSTIC SUMMARY: [Sample ID: #DNA-BD-44091]
 Sequencing Platform: Illumina NovaSeq 6000 (Paired-End 150bp Read Length).
 Target Region: Exome Sequencing Panel covering 22,000 coding genes.
@@ -206,8 +286,18 @@ Validation was performed via targeted Sanger sequencing following Polymerase Cha
     difficulty: "Advanced",
     title: "CERT-BD Incident Report #IR-2026-904: Critical Tier-1 Triage",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: 'SYN-Flood' এর জায়গায় 'Volumetric Distributed TCP SYN-Flood' লিখুন এবং আইপি অ্যাড্রেস ব্র্যাকেটে রাখুন।",
-    instruction: "আইপি অ্যাড্রেস, টাইমস্ট্যাম্প, পোর্ট এবং হ্যাশ কোড নির্ভুলভাবে টাইপ করুন।",
+    instructionSteps: [
+      "১. 'SYN-Flood' এর জায়গায় 'Volumetric Distributed TCP SYN-Flood' লিখুন।",
+      "২. আইপি অ্যাড্রেস ব্র্যাকেটে রাখুন।",
+      "৩. টাইমস্ট্যাম্প হুবহু টাইপ করুন।",
+      "৪. হ্যাশ কোড নির্ভুলভাবে টাইপ করুন।",
+      "৫. পোর্ট নম্বর ঠিক রাখুন।",
+      "৬. Severity লেভেল বোল্ড করুন।",
+      "৭. Firewall রেট লিমিটিং অংশটি হাইলাইট করুন।",
+      "৮. কোনো প্রকার বাড়তি কমা দেবেন না।",
+      "৯. ইনগ্রেস ACL ফিল্টার ঠিক রাখুন।",
+      "১০. রিপোর্টটি ফাইনাল রিভিউ করুন।"
+    ],
     text: `NATIONAL CYBER SECURITY RESPONSE PROTOCOL: [INCIDENT #IR-2026-904]
 Timestamp: 2026-10-01T02:14:09.481Z. Severity: Level-4 (High Criticality).
 Target Asset: Authentication Cluster [IP: 103.145.89.24:443].
@@ -226,8 +316,18 @@ Post-incident root cause forensics identified distributed botnet nodes initiatin
     difficulty: "Complex",
     title: "Sundarbans Mangrove Afforestation Carbon Offset Audit",
     timeLimitMinutes: 30,
-    mandatoryCondition: "শর্ত: 'Carbon Offset' এর স্থানে 'Verified Carbon Unit (VCU)' লিখুন।",
-    instruction: "হেক্টর পরিমাপ, বায়োমাস ডেনসিটি এবং কিউবিক মিটার মান সঠিকভাবে টাইপ করুন।",
+    instructionSteps: [
+      "১. 'Carbon Offset' এর স্থানে 'Verified Carbon Unit (VCU)' লিখুন।",
+      "২. হেক্টর পরিমাপ বোল্ড করুন।",
+      "৩. বায়োমাস ডেনসিটি হুবহু লিখুন।",
+      "৪. কিউবিক মিটার মান ঠিক রাখুন।",
+      "৫. REDD+ প্রজেক্ট রেফারেন্স ঠিক রাখুন।",
+      "৬. শতাংশের (%) মান সঠিক রাখুন।",
+      "৭. soil organic carbon অংশটি হাইলাইট করুন।",
+      "৮. কোনো প্রকার স্পেলিং ভুল করবেন না।",
+      "৯. সব নম্বর কমা দিয়ে পৃথক করুন।",
+      "১০. পুরো রিপোর্টটি চেক করুন।"
+    ],
     text: `Under the United Nations REDD+ Framework (Project Ref: #BD-MANGROVE-2026), third-party ecological auditors conducted comprehensive canopy density LiDAR assessments across 14,500 hectares of the Sundarbans Mangrove Reserve.
 
 Total estimated above-ground biomass carbon sequestration reached 384.5 tCO2e/hectare per annum. The Carbon Offset credits generated for FY 2025-2026 totaled 1,48,500 VCUs, verified under Verra Verified Carbon Standard (VCS-v4.3). Zero deforestation encroachments were recorded along the baseline perimeter.
@@ -268,6 +368,7 @@ const TypingApp = () => {
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisStepText, setAnalysisStepText] = useState('');
   const [batchEvaluationResult, setBatchEvaluationResult] = useState<'none' | 'ai_detected' | 'system_rejected'>('none');
+  const [analysisRemainingSeconds, setAnalysisRemainingSeconds] = useState(120);
 
   // Agreement
   const [agreed, setAgreed] = useState(false);
@@ -360,6 +461,56 @@ const TypingApp = () => {
       errors: typed.length - matchingChars
     };
   }, [inputText, currentTask.text, startTime]);
+
+  // 120-second batch verification timer hook
+  useEffect(() => {
+    let timer: any = null;
+    if (isAnalyzingBatch) {
+      setAnalysisProgress(0);
+      setAnalysisRemainingSeconds(120);
+      setAnalysisStepText('১০টি টাইপিং টাস্কের সামগ্রিক ডাটা ও কি-স্ট্রোক অডিট শুরু হয়েছে...');
+
+      timer = setInterval(() => {
+        setAnalysisRemainingSeconds(prev => {
+          const nextSec = prev - 1;
+          const pct = Math.min(100, Math.round(((120 - nextSec) / 120) * 100));
+          setAnalysisProgress(pct);
+
+          // Update message dynamically based on progress percent
+          if (pct < 15) {
+            setAnalysisStepText('১০টি টাইপিং টাস্কের সামগ্রিক ডাটা ও কি-স্ট্রোক অডিট শুরু হয়েছে...');
+          } else if (pct < 35) {
+            setAnalysisStepText('কি-স্ট্রোক লেটেন্সি, টাইপিং ক্যাডেন্স ও টাইম ইন্টারভাল বিশ্লেষণ চলছে...');
+          } else if (pct < 55) {
+            setAnalysisStepText('সিস্টেম ডিপ লার্নিং এআই প্যাটার্ন রিকগনিশন ও সিনট্যাক্স স্ক্যানিং...');
+          } else if (pct < 75) {
+            setAnalysisStepText('স্ক্রিন রেকর্ড ভিডিও এবং জমা দেওয়া প্রমাণের সত্যতা স্ক্যান করা হচ্ছে...');
+          } else if (pct < 90) {
+            setAnalysisStepText('গুগল ড্রাইভ/লুম লিংকের কনটেন্ট এনালাইসিস ভেরিফিকেশন চলছে...');
+          } else {
+            setAnalysisStepText('অডিট সম্পন্ন! সেন্ট্রাল কোয়ালিটি ফলাফল প্রস্তুত হচ্ছে...');
+          }
+
+          if (nextSec <= 0) {
+            clearInterval(timer);
+            setIsAnalyzingBatch(false);
+            // If accuracy is exactly 100% -> Flag AI 100%
+            // If normal/imperfect -> Show System Detection Rejected
+            if (metrics.accuracy >= 100) {
+              setBatchEvaluationResult('ai_detected');
+            } else {
+              setBatchEvaluationResult('system_rejected');
+            }
+            return 0;
+          }
+          return nextSec;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isAnalyzingBatch, metrics.accuracy]);
 
   // Handle typing input
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -486,36 +637,6 @@ const TypingApp = () => {
       if (isBatchCompleted) {
         // Trigger Realistic Deep Loading & AI Analysis Simulation
         setIsAnalyzingBatch(true);
-        setAnalysisProgress(15);
-        setAnalysisStepText('১০টি টাইপিং টাস্কের সামগ্রিক ডাটা ও কি-স্ট্রোক অডিট শুরু হয়েছে...');
-
-        setTimeout(() => {
-          setAnalysisProgress(42);
-          setAnalysisStepText('কি-স্ট্রোক লেটেন্সি, টাইপিং ক্যাডেন্স ও টাইম ইন্টারভাল বিশ্লেষণ চলছে...');
-        }, 900);
-
-        setTimeout(() => {
-          setAnalysisProgress(78);
-          setAnalysisStepText('সিস্টেম ডিপ লার্নিং এআই প্যাটার্ন রিকগনিশন ও সিনট্যাক্স স্ক্যানিং...');
-        }, 1900);
-
-        setTimeout(() => {
-          setAnalysisProgress(98);
-          setAnalysisStepText('অডিট সম্পন্ন! সেন্ট্রাল কোয়ালিটি ফলাফল প্রস্তুত হচ্ছে...');
-        }, 2800);
-
-        setTimeout(() => {
-          setIsAnalyzingBatch(false);
-
-          // If fully accurate / high precision -> Flag AI 100%
-          // If normal/imperfect -> Show System Detection Rejected
-          if (metrics.accuracy >= 90) {
-            setBatchEvaluationResult('ai_detected');
-          } else {
-            setBatchEvaluationResult('system_rejected');
-          }
-        }, 3400);
-
       } else {
         // Standard single task success
         setIsSubmittedSuccess(true);
@@ -576,9 +697,11 @@ const TypingApp = () => {
             </p>
           </div>
 
-          <div className="text-[10px] text-slate-500 flex items-center justify-center gap-1">
-            <Clock size={12} />
-            <span>অডিট শেষ হওয়া পর্যন্ত অনুগ্রহ করে অপেক্ষা করুন...</span>
+          <div className="text-[10px] text-slate-500 flex items-center justify-center gap-1 bg-slate-950/40 py-2 px-4 rounded-xl border border-slate-850">
+            <Clock size={12} className="text-orange-400 animate-pulse" />
+            <span className="font-semibold text-orange-400 font-mono">
+              ভেরিফিকেশন সম্পন্ন হতে বাকি: {Math.floor(analysisRemainingSeconds / 60)} মিনিট {analysisRemainingSeconds % 60} সেকেন্ড
+            </span>
           </div>
 
         </div>
@@ -896,16 +1019,25 @@ const TypingApp = () => {
             <select
               value={selectedTaskIndex}
               onChange={(e) => {
-                setSelectedTaskIndex(Number(e.target.value));
+                const targetIdx = Number(e.target.value);
+                const isUnlocked = targetIdx === 0 || submittedTaskIds.includes(ADVANCED_10_TASKS[targetIdx - 1].id);
+                if (!isUnlocked) {
+                  setValidationError("⚠️ পূর্ববর্তী টাস্কটি সম্পূর্ণ না করে এই টাস্কে যাওয়া যাবে না। এটি লক অবস্থায় রয়েছে।");
+                  return;
+                }
+                setSelectedTaskIndex(targetIdx);
                 setValidationError(null);
               }}
               className="bg-slate-900 border border-slate-700 text-white text-xs font-semibold rounded-xl px-3 py-1.5 focus:outline-none focus:border-blue-400 cursor-pointer"
             >
-              {ADVANCED_10_TASKS.map((t, idx) => (
-                <option key={t.id} value={idx}>
-                  #{t.id}: {t.title.slice(0, 30)}... {submittedTaskIds.includes(t.id) ? '✓ (জমা হয়েছে)' : ''}
-                </option>
-              ))}
+              {ADVANCED_10_TASKS.map((t, idx) => {
+                const isUnlocked = idx === 0 || submittedTaskIds.includes(ADVANCED_10_TASKS[idx - 1].id);
+                return (
+                  <option key={t.id} value={idx} disabled={!isUnlocked}>
+                    {idx > 0 && !isUnlocked ? '🔒 ' : ''}#{t.id}: {t.title.slice(0, 30)}... {submittedTaskIds.includes(t.id) ? '✓ (জমা হয়েছে)' : ''}
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>
@@ -923,14 +1055,19 @@ const TypingApp = () => {
       </div>
 
       {/* MANDATORY CONDITIONAL MODIFICATION RULE */}
-      <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 text-amber-950 space-y-1.5 shadow-xs">
-        <div className="flex items-center gap-2 font-bold text-xs text-amber-900">
+      <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 text-amber-950 space-y-3 shadow-xs">
+        <div className="flex items-center gap-2 font-bold text-xs text-amber-900 border-b border-amber-200 pb-2">
           <Zap size={15} className="text-amber-600 shrink-0" />
-          <span>বাধ্যতামূলক শর্ত (Mandatory Condition):</span>
+          <span>টাস্ক পরিবর্তনের জন্য ১০টি বাধ্যতামূলক ধাপ:</span>
         </div>
-        <p className="text-xs font-semibold text-amber-900 bg-white/80 p-2.5 rounded-xl border border-amber-200">
-          {currentTask.mandatoryCondition}
-        </p>
+        <ul className="space-y-1.5 list-none">
+          {currentTask.instructionSteps.map((step, index) => (
+            <li key={index} className="text-xs text-amber-950 flex gap-2 font-medium">
+              <span className="text-amber-700 font-bold">{index + 1}.</span>
+              {step}
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* MAIN TYPING WORKSPACE */}

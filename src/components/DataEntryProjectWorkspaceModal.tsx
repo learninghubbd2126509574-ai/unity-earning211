@@ -60,6 +60,72 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
   // 10-Project Audit & Rejection States
   const [isAnalyzing10Batch, setIsAnalyzing10Batch] = useState(false);
   const [analysis10Progress, setAnalysis10Progress] = useState(0);
+  const [analysisRemainingSeconds, setAnalysisRemainingSeconds] = useState(120);
+  const [analysisStepText, setAnalysisStepText] = useState('১০টি ডাটা এন্ট্রি প্রজেক্টের সামগ্রিক ডাটা অডিট শুরু হয়েছে...');
+
+  // 120-second verification timer simulation for Data Entry Batch 10
+  useEffect(() => {
+    let timer: any = null;
+    if (isAnalyzing10Batch) {
+      setAnalysis10Progress(0);
+      setAnalysisRemainingSeconds(120);
+      setAnalysisStepText('১০টি ডাটা এন্ট্রি প্রজেক্টের সামগ্রিক ডাটা অডিট শুরু হয়েছে...');
+
+      timer = setInterval(() => {
+        setAnalysisRemainingSeconds(prev => {
+          const nextSec = prev - 1;
+          const pct = Math.min(100, Math.round(((120 - nextSec) / 120) * 100));
+          setAnalysis10Progress(pct);
+
+          if (pct < 15) {
+            setAnalysisStepText('১০টি প্রজেক্ট ফাইলের সেল রেঞ্জ, ফর্মুলা সামঞ্জস্য ও নকল ডাটা এন্ট্রি ভ্যালিডেশন শুরু হয়েছে...');
+          } else if (pct < 35) {
+            setAnalysisStepText('কেন্দ্রীয় ডাটা ভ্যালিডেশন চেকারের সাহায্যে স্প্রেডশিট ফাইলে ক্যালকুলেশন অমিল বিশ্লেষণ চলছে...');
+          } else if (pct < 55) {
+            setAnalysisStepText('৫০ টাকা কর্তন নীতিমালার শর্ত এবং বোনাস গণনার সঠিকতা স্ক্যান করা হচ্ছে...');
+          } else if (pct < 75) {
+            setAnalysisStepText('সাবমিটকৃত স্ক্রিন রেকর্ডিং এবং ভিডিও প্রমাণের সত্যতা ভেরিফিকেশন চলছে...');
+          } else if (pct < 90) {
+            setAnalysisStepText('কৃত্রিম বুদ্ধিমত্তা (AI) বা অটোমেটেড স্প্রেডশিট স্ক্রিপ্টিং চেকিং চলছে...');
+          } else {
+            setAnalysisStepText('অডিট সম্পন্ন! সেন্ট্রাল কোয়ালিটি ফলাফল প্রস্তুত হচ্ছে...');
+          }
+
+          if (nextSec <= 0) {
+            clearInterval(timer);
+            setIsAnalyzing10Batch(false);
+            const now = new Date();
+            const finalExcelRef = spreadsheetUrl.trim() || (excelFile ? excelFile.name : 'Shared Spreadsheet Link');
+            const rejectedDoc: ProjectSubmissionDoc = {
+              id: 'auto-rej-10-' + Date.now(),
+              projectId: project.id,
+              projectNumber: project.number,
+              projectTitle: project.title,
+              userId: user?.uid || 'anonymous',
+              participantName: profile?.fullName || 'Participant',
+              participantPhone: profile?.whatsappNumber || '',
+              status: 'Rejected',
+              submissionTime: now.toISOString(),
+              rejectionTime: now.toISOString(),
+              autoRejected: true,
+              videoSubmitted: Boolean(videoFile || videoUrl.trim()),
+              videoUrl: videoUrl.trim(),
+              videoFileName: videoFile?.name || '',
+              excelFileName: finalExcelRef,
+              notes: submissionNotes.trim()
+            };
+            setCurrentSubmission(rejectedDoc);
+            if (onSubmissionUpdated) onSubmissionUpdated();
+            return 0;
+          }
+          return nextSec;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isAnalyzing10Batch, spreadsheetUrl, videoUrl, videoFile, excelFile, submissionNotes, project, user, profile, onSubmissionUpdated]);
 
   useEffect(() => {
     setCurrentSubmission(existingSubmission || null);
@@ -133,32 +199,6 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
       // Auto-rejection after 10th project submission with realistic audit loading
       if (project.number === 10) {
         setIsAnalyzing10Batch(true);
-        setAnalysis10Progress(25);
-        setTimeout(() => setAnalysis10Progress(68), 850);
-        setTimeout(() => setAnalysis10Progress(96), 1800);
-        setTimeout(() => {
-          setIsAnalyzing10Batch(false);
-          const rejectedDoc: ProjectSubmissionDoc = {
-            id: subId,
-            projectId: project.id,
-            projectNumber: project.number,
-            projectTitle: project.title,
-            userId: user.uid,
-            participantName: profile?.fullName || 'Participant',
-            participantPhone: profile?.whatsappNumber || '',
-            status: 'Rejected',
-            submissionTime: now.toISOString(),
-            rejectionTime: new Date().toISOString(),
-            autoRejected: true,
-            videoSubmitted: Boolean(videoFile || videoUrl.trim()),
-            videoUrl: videoUrl.trim(),
-            videoFileName: videoFile?.name || '',
-            excelFileName: finalExcelRef,
-            notes: submissionNotes.trim()
-          };
-          setCurrentSubmission(rejectedDoc);
-          if (onSubmissionUpdated) onSubmissionUpdated();
-        }, 2600);
         return;
       }
 
@@ -298,7 +338,7 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
                   ১০টি ডাটা এন্ট্রি প্রজেক্টের সেন্ট্রাল অডিট ও স্প্রেডশিট ভেরিফিকেশন চলছে...
                 </h3>
                 <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
-                  ফর্মুলা সামঞ্জস্য, নকল এন্ট্রি ও ৫০ টাকা কর্তন নীতিমালার শর্ত পরীক্ষা করা হচ্ছে ({analysis10Progress}%)।
+                  {analysisStepText} ({analysis10Progress}%)
                 </p>
               </div>
               <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden max-w-xs mx-auto">
@@ -306,6 +346,13 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
                   className="bg-gradient-to-r from-blue-500 to-emerald-400 h-full rounded-full transition-all duration-300"
                   style={{ width: `${analysis10Progress}%` }}
                 ></div>
+              </div>
+
+              <div className="text-[10px] text-slate-500 flex items-center justify-center gap-1 bg-slate-950/40 py-2 px-4 rounded-xl border border-slate-850 max-w-xs mx-auto">
+                <Clock size={12} className="text-orange-400 animate-pulse" />
+                <span className="font-semibold text-orange-400 font-mono">
+                  ভেরিফিকেশন সম্পন্ন হতে বাকি: {Math.floor(analysisRemainingSeconds / 60)} মিনিট {analysisRemainingSeconds % 60} সেকেন্ড
+                </span>
               </div>
             </div>
           )}
