@@ -307,7 +307,7 @@ export const Home = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-3.5">
-          {WORK_MODULES.map((mod) => {
+          {WORK_MODULES.filter(m => ['typing', 'form', 'data'].includes(m.id)).map((mod) => {
             const isAssigned = !isPending && authorizedModuleIds.includes(mod.id);
             const visuals = getModuleVisuals(mod.id);
 
@@ -439,21 +439,21 @@ export const Home = () => {
                 </p>
               </div>
 
-              {/* 3. Digital Marketing & Lead Generation */}
-              <div className="bg-gradient-to-r from-teal-50/80 to-emerald-50/80 p-3.5 rounded-2xl border border-teal-100 space-y-1">
+              {/* 3. Form Fillup Work */}
+              <div className="bg-gradient-to-r from-emerald-50/80 to-teal-50/80 p-3.5 rounded-2xl border border-emerald-100 space-y-1">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-xs">
-                      <Target size={14} />
+                    <div className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
+                      <FileText size={14} />
                     </div>
-                    <span className="font-extrabold text-xs text-teal-950">Social Media & Lead Generation</span>
+                    <span className="font-extrabold text-xs text-emerald-950">Form Fillup Work</span>
                   </div>
-                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-teal-600 text-white shadow-2xs">
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs">
                     +20% Extra
                   </span>
                 </div>
-                <p className="text-[11px] text-teal-900/90 leading-relaxed pl-9">
-                  Earn +20% extra payout on verified corporate B2B executive prospects, direct phone contacts, and targeted decision-maker email databases.
+                <p className="text-[11px] text-emerald-900/90 leading-relaxed pl-9">
+                  Earn +20% extra payout on verified multi-field standardized forms, data validation tasks, and verified customer inquiry submissions.
                 </p>
               </div>
             </div>
@@ -472,7 +472,7 @@ export const Home = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
               <button
                 onClick={() => {
                   setShowOfferModal(false);
@@ -480,8 +480,7 @@ export const Home = () => {
                 }}
                 className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>Start Data Entry</span>
-                <ArrowRight size={14} />
+                <span>Data Entry</span>
               </button>
 
               <button
@@ -491,8 +490,17 @@ export const Home = () => {
                 }}
                 className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>Start Typing Work</span>
-                <ArrowRight size={14} />
+                <span>Typing</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowOfferModal(false);
+                  navigate('/module/form');
+                }}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>Form Fill</span>
               </button>
             </div>
 

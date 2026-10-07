@@ -52,7 +52,7 @@ export const UnifiedAuth: React.FC = () => {
   });
   const [hasExperience, setHasExperience] = useState<boolean>(false);
   const [hasSelectedWorkKnowledge, setHasSelectedWorkKnowledge] = useState<boolean | null>(null);
-  const [selectedModules, setSelectedModules] = useState<string[]>(['typing']);
+  const [selectedModule, setSelectedModule] = useState<string>('typing');
   const [hasCertificate, setHasCertificate] = useState<boolean>(false);
   const [certificateDataUrl, setCertificateDataUrl] = useState<string>('');
   const [certFileName, setCertFileName] = useState<string>('');
@@ -71,19 +71,6 @@ export const UnifiedAuth: React.FC = () => {
     });
     return () => unsub();
   }, []);
-
-  // Toggle Module Selection (1 to max 3)
-  const toggleModule = (modId: string) => {
-    if (selectedModules.includes(modId)) {
-      if (selectedModules.length > 1) {
-        setSelectedModules(selectedModules.filter(m => m !== modId));
-      }
-    } else {
-      if (selectedModules.length < 3) {
-        setSelectedModules([...selectedModules, modId]);
-      }
-    }
-  };
 
   const handleCertificateUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -341,8 +328,8 @@ export const UnifiedAuth: React.FC = () => {
       return;
     }
 
-    if (selectedModules.length === 0 || selectedModules.length > 3) {
-      setRegisterError('Please select between 1 and 3 preferred work tasks.');
+    if (!selectedModule) {
+      setRegisterError('Please select a preferred work task.');
       setRegisterLoading(false);
       return;
     }
@@ -371,9 +358,8 @@ export const UnifiedAuth: React.FC = () => {
         teamTrainerName: teamTrainerName.trim(),
         email: authEmail,
         role: 'student',
-        status: 'pending', // Pending Admin approval
-        assignedJob: '', // Assigned by Admin
-        preferredModules: selectedModules,
+        status: 'active', // Immediate activation
+        assignedJob: selectedModule, // Assigned immediately
         courseCompleted: Boolean(courseCompleted),
         companyJoinDate: companyJoinDate || new Date().toISOString().split('T')[0],
         hasExperience: Boolean(hasExperience),
@@ -408,20 +394,16 @@ export const UnifiedAuth: React.FC = () => {
           <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle2 size={36} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800">Application Submitted!</h2>
+          <h2 className="text-2xl font-bold text-slate-800">Registration Successful!</h2>
           <p className="text-sm text-slate-600 leading-relaxed">
-            Your registration profile has been successfully sent to the system administration. 
-            Once an administrator reviews your details, approves your account, and assigns your specific work module, 
-            you will be able to log in and start working.
+            Your account has been created successfully and is now active. You can log in immediately with your phone number and password to start working on your assigned task.
           </p>
 
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-left text-xs space-y-2 text-slate-600">
             <div><span className="font-semibold text-slate-800">Applicant:</span> {fullName}</div>
-            <div><span className="font-semibold text-slate-800">7-Digit ID:</span> {studentId}</div>
             <div><span className="font-semibold text-slate-800">Phone:</span> {phone}</div>
-            <div><span className="font-semibold text-slate-800">Team Leader:</span> {teamLeaderName}</div>
-            <div><span className="font-semibold text-slate-800">Team Trainer:</span> {teamTrainerName}</div>
-            <div><span className="font-semibold text-slate-800">Status:</span> <span className="font-bold text-orange-600">Pending Admin Review</span></div>
+            <div><span className="font-semibold text-slate-800">Assigned Task:</span> <span className="font-bold text-orange-600">{WORK_MODULES.find(m => m.id === selectedModule)?.title}</span></div>
+            <div><span className="font-semibold text-slate-800">Status:</span> <span className="font-bold text-emerald-600">Active</span></div>
           </div>
 
           <button
@@ -764,33 +746,35 @@ export const UnifiedAuth: React.FC = () => {
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="block text-xs font-semibold text-slate-700">
-                  Select Desired Tasks (1 to 3 modules) <span className="text-rose-500">*</span>
+                  Select Your Work Task <span className="text-rose-500">*</span>
                 </label>
-                <span className="text-[11px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
-                  {selectedModules.length}/3 Selected
-                </span>
               </div>
               <p className="text-[11px] text-slate-400 mb-2">
-                Choose the work categories you wish to undertake. The administrator will grant access based on your selection.
+                Choose the work category you wish to undertake. Access will be granted immediately.
               </p>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 {WORK_MODULES.map((mod) => {
-                  const isSelected = selectedModules.includes(mod.id);
+                  const isEnabled = ['typing', 'form', 'data'].includes(mod.id);
+                  const isSelected = selectedModule === mod.id;
+                  
                   return (
                     <button
                       key={mod.id}
                       type="button"
-                      onClick={() => toggleModule(mod.id)}
-                      className={`p-2.5 rounded-xl border text-left text-xs font-medium transition-all ${
-                        isSelected
+                      disabled={!isEnabled}
+                      onClick={() => isEnabled && setSelectedModule(mod.id)}
+                      className={`p-3 rounded-xl border text-left text-xs font-medium transition-all ${
+                        !isEnabled 
+                          ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed'
+                          : isSelected
                            ? 'border-orange-500 bg-orange-50/50 text-orange-950 font-bold shadow-sm'
                           : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span>{mod.title}</span>
-                        {isSelected && <span className="text-orange-600 text-xs">✓</span>}
+                        <span>{mod.title} {!isEnabled && '(Locked)'}</span>
+                        {isSelected && <span className="text-orange-600 text-xs font-bold">✓</span>}
                       </div>
                     </button>
                   );
