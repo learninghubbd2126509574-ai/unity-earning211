@@ -583,17 +583,23 @@ export const UnifiedAuth: React.FC = () => {
 
             {/* 3. 7-Digit Student ID Code */}
             <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="block text-xs font-semibold text-slate-700">
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-xs font-bold text-slate-800">
                   Student ID Code (7 Digits) <span className="text-rose-500">*</span>
                 </label>
-                <span className="text-[10px] text-slate-400 font-mono">
+                <span className="text-[11px] text-slate-400 font-mono font-semibold">
                   {studentId.length}/7 digits
                 </span>
               </div>
-              <p className="text-[10px] text-rose-600 font-bold mb-1 bg-rose-50 p-2 rounded-lg border border-rose-100">
-                অবশ্যই স্টুডেন্ট আইডির সাথে এই আইডি কোডের মিল থাকতে হবে। সতর্কতা: একই আইডি কোড দিয়ে দুইবার রেজিস্ট্রেশন করলে আইডি ব্লক হয়ে যাবে এবং পেমেন্ট ট্রান্সফার করার সময় পেমেন্ট রিজেক্টেড হয়ে যাবে।
-              </p>
+              <div className="text-[11px] text-rose-700 font-medium mb-2 bg-rose-50/90 p-3 rounded-xl border border-rose-200/80 flex items-start gap-2.5 shadow-2xs">
+                <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <strong className="font-bold">গুরুত্বপূর্ণ নির্দেশিকা:</strong> অবশ্যই আপনার প্রাতিষ্ঠানিক স্টুডেন্ট আইডির সাথে এই আইডি কোডের হুবহু মিল থাকতে হবে।
+                  <span className="block mt-1 text-[10.5px] text-rose-800/90">
+                    ⚠️ একই আইডি কোড দিয়ে দুইবার রেজিস্ট্রেশন করলে অ্যাকাউন্ট ব্লক এবং পেমেন্ট ট্রান্সফার বাতিল করা হবে।
+                  </span>
+                </div>
+              </div>
               <input
                 type="text"
                 required
@@ -601,14 +607,14 @@ export const UnifiedAuth: React.FC = () => {
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value.replace(/\D/g, ''))}
                 placeholder="7-digit numeric code (e.g. 1234567)"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono tracking-wider text-slate-900 focus:bg-white focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition"
               />
             </div>
 
             {/* 4. Team Leader Name */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Users size={15} className="text-orange-500" />
+              <label className="block text-xs font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
+                <Users size={15} className="text-slate-600" />
                 <span>Team Leader Name</span> <span className="text-rose-500">*</span>
               </label>
               <input
@@ -617,14 +623,14 @@ export const UnifiedAuth: React.FC = () => {
                 value={teamLeaderName}
                 onChange={(e) => setTeamLeaderName(e.target.value)}
                 placeholder="Enter Team Leader Name"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition"
               />
             </div>
 
             {/* 5. Team Trainer Name */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Award size={15} className="text-orange-500" />
+              <label className="block text-xs font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
+                <Award size={15} className="text-slate-600" />
                 <span>Team Trainer Name</span> <span className="text-rose-500">*</span>
               </label>
               <input
@@ -633,13 +639,13 @@ export const UnifiedAuth: React.FC = () => {
                 value={teamTrainerName}
                 onChange={(e) => setTeamTrainerName(e.target.value)}
                 placeholder="Enter Team Trainer Name"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition"
               />
             </div>
 
             {/* 6. Email */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-800 mb-1.5">
                 Email Address <span className="text-rose-500">*</span>
               </label>
               <input
@@ -648,13 +654,13 @@ export const UnifiedAuth: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition"
               />
             </div>
 
             {/* 7. Password */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-800 mb-1.5">
                 Account Password <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
@@ -665,7 +671,7 @@ export const UnifiedAuth: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Minimum 6 characters"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-11 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  className="w-full bg-slate-50/80 border border-slate-200 rounded-xl pl-4 pr-11 py-3 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition"
                 />
                 <button
                   type="button"
@@ -679,28 +685,28 @@ export const UnifiedAuth: React.FC = () => {
             </div>
 
             {/* 8. Course Completed */}
-            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200/80">
-              <label className="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
-                <GraduationCap size={16} className="text-orange-500" /> Have you completed the training course?
+            <div className="bg-slate-50/90 p-3.5 rounded-2xl border border-slate-200/80">
+              <label className="block text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5">
+                <GraduationCap size={16} className="text-slate-700" /> Have you completed the training course?
               </label>
               <div className="flex gap-4">
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                   <input
                     type="radio"
                     name="courseCompleted"
                     checked={courseCompleted === true}
                     onChange={() => setCourseCompleted(true)}
-                    className="accent-orange-500"
+                    className="accent-slate-900 w-4 h-4"
                   />
                   <span>Yes, Completed</span>
                 </label>
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                   <input
                     type="radio"
                     name="courseCompleted"
                     checked={courseCompleted === false}
                     onChange={() => setCourseCompleted(false)}
-                    className="accent-orange-500"
+                    className="accent-slate-900 w-4 h-4"
                   />
                   <span>No / In Progress</span>
                 </label>
@@ -709,22 +715,22 @@ export const UnifiedAuth: React.FC = () => {
 
             {/* 9. Joining Date */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Calendar size={14} className="text-orange-500" /> Company Joining Date <span className="text-rose-500">*</span>
+              <label className="block text-xs font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
+                <Calendar size={15} className="text-slate-600" /> Company Joining Date <span className="text-rose-500">*</span>
               </label>
               <input
                 type="date"
                 required
                 value={companyJoinDate}
                 onChange={(e) => setCompanyJoinDate(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition"
               />
             </div>
 
             {/* 10. Prior Experience / Knowledge */}
-            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200/80">
-              <label className="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                <Briefcase size={16} className="text-orange-500" /> কাজ সম্পর্কে কোন প্রকার ধারণা আছে কিনা? <span className="text-rose-500">*</span>
+            <div className="bg-slate-50/90 p-3.5 rounded-2xl border border-slate-200/80">
+              <label className="block text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5">
+                <Briefcase size={16} className="text-slate-700" /> কাজ সম্পর্কে কোন প্রকার ধারণা আছে কিনা? <span className="text-rose-500">*</span>
               </label>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
@@ -733,7 +739,7 @@ export const UnifiedAuth: React.FC = () => {
                     name="hasExperience"
                     checked={hasExperience === true}
                     onChange={() => setHasExperience(true)}
-                    className="accent-orange-500"
+                    className="accent-slate-900 w-4 h-4"
                   />
                   <span>হ্যাঁ, আমার ধারণা আছে (Yes)</span>
                 </label>
@@ -743,34 +749,40 @@ export const UnifiedAuth: React.FC = () => {
                     name="hasExperience"
                     checked={hasExperience === false}
                     onChange={() => setHasExperience(false)}
-                    className="accent-orange-500"
+                    className="accent-slate-900 w-4 h-4"
                   />
                   <span>না, আমার কোনো ধারণা নেই (No)</span>
                 </label>
               </div>
             </div>
 
-            {/* 11. Desired Work Selection (1 to max 3) */}
+            {/* 11. Desired Work Selection */}
             <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-xs font-semibold text-slate-700">
-                  Select Your Work Task <span className="text-rose-500">*</span>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-xs font-bold text-slate-800">
+                  Select Your Primary Work Task <span className="text-rose-500">*</span>
                 </label>
               </div>
-              <p className="text-[11px] text-slate-400 mb-2">
-                Choose the work category you wish to undertake. Access will be granted immediately.
+              <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
+                আপনার পছন্দের ক্যাটাগরিটি নির্বাচন করুন। অ্যাকাউন্ট তৈরির সাথে সাথে তাৎক্ষণিক অ্যাক্সেস আনলক হবে।
               </p>
 
-              <div className="mb-4 bg-slate-100 p-3 rounded-xl border border-slate-200">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Unlock All Tasks (Optional Code):</label>
+              {/* Enterprise Unlock Box */}
+              <div className="mb-4 bg-slate-900 text-white p-3.5 rounded-2xl border border-slate-800 shadow-sm">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-xs font-bold flex items-center gap-1.5 text-slate-200">
+                    <Lock size={14} className="text-amber-400" /> Task Category Authorization Code
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">Optional</span>
+                </div>
                 <div className="flex gap-2">
                   <input
                     type="password"
                     maxLength={4}
                     value={unlockCode}
                     onChange={(e) => setUnlockCode(e.target.value.replace(/\D/g, ''))}
-                    placeholder="Enter 4-digit code"
-                    className="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
+                    placeholder="Enter 4-digit key"
+                    className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs font-mono text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400"
                   />
                   <button
                     type="button"
@@ -779,18 +791,20 @@ export const UnifiedAuth: React.FC = () => {
                         setIsAllUnlocked(true);
                         setCodeError('');
                       } else {
-                        setCodeError('রং কোড!');
+                        setCodeError('রং কোড! সঠিক সিকিউরিটি কোড দিন।');
                         setIsAllUnlocked(false);
                       }
                     }}
-                    className="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold cursor-pointer"
+                    className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0"
                   >
                     Verify
                   </button>
                 </div>
-                {codeError && <p className="text-[10px] text-rose-600 font-bold mt-1">{codeError}</p>}
+                {codeError && <p className="text-[10px] text-rose-400 font-semibold mt-1.5">{codeError}</p>}
+                {isAllUnlocked && <p className="text-[10px] text-emerald-400 font-semibold mt-1.5">✓ All 14 Enterprise Tasks Unlocked!</p>}
               </div>
 
+              {/* Modules Grid */}
               <div className="grid grid-cols-1 gap-2">
                 {WORK_MODULES.map((mod) => {
                   const isEnabled = isAllUnlocked || ['typing', 'form', 'data'].includes(mod.id);
@@ -802,36 +816,46 @@ export const UnifiedAuth: React.FC = () => {
                       type="button"
                       disabled={!isEnabled}
                       onClick={() => isEnabled && setSelectedModule(mod.id)}
-                      className={`p-3 rounded-xl border text-left text-xs font-medium transition-all ${
+                      className={`p-3.5 rounded-2xl border text-left text-xs font-semibold transition-all flex items-center justify-between ${
                         !isEnabled 
-                          ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed'
+                          ? 'border-slate-200/60 bg-slate-50/70 text-slate-400 cursor-not-allowed opacity-60'
                           : isSelected
-                           ? 'border-orange-500 bg-orange-50/50 text-orange-950 font-bold shadow-sm'
-                          : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
+                           ? 'border-slate-900 bg-slate-900 text-white shadow-md'
+                          : 'border-slate-200/80 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span>{mod.title} {!isEnabled && '(Locked)'}</span>
-                        {isSelected && <span className="text-orange-600 text-xs font-bold">✓</span>}
+                      <div className="flex items-center gap-2.5">
+                        <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-amber-400' : isEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                        <span>{mod.title}</span>
                       </div>
+
+                      {isSelected ? (
+                        <span className="text-amber-400 text-xs font-bold bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-700">Selected</span>
+                      ) : !isEnabled ? (
+                        <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                          <Lock size={12} /> Locked
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-medium">Available</span>
+                      )}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Question: Do you have any experience/idea about the selected tasks? */}
-              <div className="mt-3 p-3 bg-orange-50/40 rounded-2xl border border-orange-200/50 space-y-2">
+              {/* Question: Do you have experience? */}
+              <div className="mt-3.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
                 <label className="block text-xs font-bold text-slate-800 leading-relaxed">
-                  নির্বাচিত কাজ সম্পর্কে আপনার কি কোনো ধারণা আছে? <span className="text-rose-500">*</span>
+                  নির্বাচিত কাজ সম্পর্কে আপনার কি কোনো পূর্ব ধারণা বা অভিজ্ঞতা আছে? <span className="text-rose-500">*</span>
                 </label>
-                <div className="flex gap-4">
+                <div className="flex gap-5">
                   <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
                     <input
                       type="radio"
                       name="hasSelectedWorkKnowledge"
                       checked={hasSelectedWorkKnowledge === true}
                       onChange={() => setHasSelectedWorkKnowledge(true)}
-                      className="accent-orange-500"
+                      className="accent-slate-900 w-4 h-4"
                     />
                     <span>হ্যাঁ (Yes)</span>
                   </label>
@@ -841,7 +865,7 @@ export const UnifiedAuth: React.FC = () => {
                       name="hasSelectedWorkKnowledge"
                       checked={hasSelectedWorkKnowledge === false}
                       onChange={() => setHasSelectedWorkKnowledge(false)}
-                      className="accent-orange-500"
+                      className="accent-slate-900 w-4 h-4"
                     />
                     <span>না (No)</span>
                   </label>
@@ -850,22 +874,22 @@ export const UnifiedAuth: React.FC = () => {
             </div>
 
             {/* 12. Company Certificate */}
-            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 space-y-3">
-              <label className="block text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                <FileBadge size={16} className="text-orange-500" /> Have you received a certificate from the company?
+            <div className="bg-slate-50/90 p-3.5 rounded-2xl border border-slate-200/80 space-y-3">
+              <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <FileBadge size={16} className="text-slate-700" /> Have you received a training certificate?
               </label>
               <div className="flex gap-4">
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                   <input
                     type="radio"
                     name="hasCertificate"
                     checked={hasCertificate === true}
                     onChange={() => setHasCertificate(true)}
-                    className="accent-orange-500"
+                    className="accent-slate-900 w-4 h-4"
                   />
                   <span>Yes, I have a certificate</span>
                 </label>
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                   <input
                     type="radio"
                     name="hasCertificate"
@@ -875,7 +899,7 @@ export const UnifiedAuth: React.FC = () => {
                       setCertificateDataUrl('');
                       setCertFileName('');
                     }}
-                    className="accent-orange-500"
+                    className="accent-slate-900 w-4 h-4"
                   />
                   <span>No certificate</span>
                 </label>
@@ -883,15 +907,15 @@ export const UnifiedAuth: React.FC = () => {
 
               {hasCertificate && (
                 <div className="pt-2 border-t border-slate-200">
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1.5">
                     Upload Certificate Image / Document <span className="text-rose-500">*</span>
                   </label>
-                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-orange-300 rounded-xl p-3 bg-white cursor-pointer hover:bg-orange-50/20 transition">
-                    <Upload size={20} className="text-orange-500 mb-1" />
-                    <span className="text-xs text-slate-600 font-medium">
-                      {certFileName ? certFileName : 'Click to select certificate file'}
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-2xl p-4 bg-white cursor-pointer hover:bg-slate-50 transition">
+                    <Upload size={20} className="text-slate-600 mb-1" />
+                    <span className="text-xs text-slate-700 font-semibold">
+                      {certFileName ? certFileName : 'Click to select certificate document'}
                     </span>
-                    <span className="text-[10px] text-slate-400">PNG, JPG, or PDF up to 5MB</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, or PDF up to 5MB</span>
                     <input
                       type="file"
                       accept="image/*,application/pdf"
@@ -901,11 +925,11 @@ export const UnifiedAuth: React.FC = () => {
                   </label>
 
                   {certificateDataUrl && (
-                    <div className="mt-2 text-center">
+                    <div className="mt-2.5 text-center">
                       <img
                         src={certificateDataUrl}
                         alt="Certificate Preview"
-                        className="max-h-28 mx-auto rounded-lg border border-slate-200 object-contain shadow-xs"
+                        className="max-h-28 mx-auto rounded-xl border border-slate-200 object-contain shadow-xs"
                       />
                     </div>
                   )}
@@ -916,13 +940,13 @@ export const UnifiedAuth: React.FC = () => {
             <button
               type="submit"
               disabled={registerLoading}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3.5 rounded-xl transition shadow-md disabled:opacity-50 mt-4"
+              className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl transition shadow-md disabled:opacity-50 mt-4 cursor-pointer"
             >
-              {registerLoading ? 'Submitting Application...' : 'Submit Registration Application'}
+              {registerLoading ? 'Submitting Application...' : 'Complete & Register Account'}
             </button>
 
-            <p className="text-[11px] text-slate-400 text-center">
-              Your details will be securely sent to the administrator. Once approved, you will receive your designated work module.
+            <p className="text-[11px] text-slate-400 text-center font-medium">
+              Your details will be securely verified. System access is instantly granted upon submission.
             </p>
           </form>
         )}
