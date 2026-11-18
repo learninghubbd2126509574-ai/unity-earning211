@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { doc, onSnapshot, getDoc, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { ShieldCheck, Delete, RotateCcw, Lock, ArrowRight, KeyRound } from 'lucide-react';
+import { ShieldCheck, Delete, RotateCcw, Lock, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface PinLockScreenProps {
@@ -16,24 +16,8 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({ onSuccess }) => {
   const [isShaking, setIsShaking] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  // Listen to the Admin-configured PIN in real-time
+  // Listen to the Admin-configured PIN in real-time (read-only)
   useEffect(() => {
-    // Initial check & default bootstrap
-    const checkAndInitPin = async () => {
-      try {
-        const snap = await getDoc(doc(db, 'settings', 'appConfig'));
-        if (!snap.exists() || !snap.data()?.accessPin) {
-          await setDoc(doc(db, 'settings', 'appConfig'), {
-            accessPin: '1234',
-            updatedAt: new Date().toISOString()
-          }, { merge: true });
-        }
-      } catch (e) {
-        // Fallback to local default
-      }
-    };
-    checkAndInitPin();
-
     const unsub = onSnapshot(doc(db, 'settings', 'appConfig'), (snap) => {
       if (snap.exists()) {
         const data = snap.data();
@@ -54,7 +38,6 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({ onSuccess }) => {
     const newPin = pin + digit;
     setPin(newPin);
 
-    // Auto verify when 4 digits are completed
     if (newPin.length === 4) {
       setIsVerifying(true);
       setTimeout(() => {
@@ -62,14 +45,14 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({ onSuccess }) => {
           onSuccess();
         } else {
           setIsShaking(true);
-          setErrorMsg('Incorrect PIN code. Please try again.');
+          setErrorMsg('Incorrect PIN. Please enter the 4-digit security access code.');
           setTimeout(() => {
             setPin('');
             setIsVerifying(false);
             setIsShaking(false);
-          }, 600);
+          }, 550);
         }
-      }, 250);
+      }, 200);
     }
   };
 
@@ -86,108 +69,102 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      {/* White Clean Minimalist Card */}
-      <div className="w-full max-w-[390px] bg-white rounded-3xl shadow-xl border border-slate-100 p-8 flex flex-col items-center select-none">
+    <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center p-4">
+      <div className="w-full max-w-[380px] bg-white rounded-xl shadow-[0_1px_3px_rgba(15,23,42,0.06)] border border-slate-200/90 p-7 flex flex-col items-center select-none">
         
-        {/* Top Icon Badge */}
-        <div className="w-16 h-16 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-500 mb-4 shadow-inner">
-          <ShieldCheck size={36} />
+        <div className="w-12 h-12 rounded-xl bg-[#EEF5FC] border border-[#D4E4F7] flex items-center justify-center text-[#0A4D8C] mb-4">
+          <ShieldCheck size={24} strokeWidth={1.75} />
         </div>
 
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight text-center">
+        <h1 className="text-lg font-semibold text-[#1E2329] tracking-tight text-center">
           Security Access PIN
         </h1>
-        <p className="text-xs text-slate-400 mt-1 text-center max-w-[270px]">
-          Enter the 4-digit security PIN to unlock portal access.
+        <p className="text-xs text-slate-500 mt-1 text-center max-w-[260px] leading-relaxed">
+          Enter your 4-digit portal security PIN to continue.
         </p>
 
         {/* 4 PIN Indicator Dots */}
-        <div className={`flex justify-center items-center gap-4 my-6 py-2 ${isShaking ? 'animate-bounce' : ''}`}>
+        <div className={`flex justify-center items-center gap-4 my-6 py-1 ${isShaking ? 'translate-x-1 transition-transform' : ''}`}>
           {[0, 1, 2, 3].map((index) => {
             const isFilled = pin.length > index;
             return (
               <div
                 key={index}
-                className={`w-5 h-5 rounded-full transition-all duration-200 border-2 ${
+                className={`w-4 h-4 rounded-full transition-colors duration-150 border ${
                   isFilled
-                    ? 'bg-slate-900 border-slate-900 scale-110 shadow-sm'
-                    : 'bg-slate-100 border-slate-200'
+                    ? 'bg-[#0A4D8C] border-[#0A4D8C]'
+                    : 'bg-slate-100 border-slate-300'
                 }`}
               />
             );
           })}
         </div>
 
-        {/* Error Feedback */}
-        <div className="h-6 flex items-center justify-center mb-2">
+        {/* Error / Status Feedback */}
+        <div className="min-h-[24px] flex items-center justify-center mb-2 px-2">
           {errorMsg ? (
-            <span className="text-xs font-semibold text-rose-500 animate-pulse text-center">
+            <span className="text-xs font-medium text-rose-600 text-center">
               {errorMsg}
             </span>
           ) : isVerifying ? (
-            <span className="text-xs font-medium text-slate-400">Verifying PIN code...</span>
+            <span className="text-xs font-medium text-slate-500">Verifying PIN...</span>
           ) : null}
         </div>
 
-        {/* Calculator-Style Keypad (1-9, C, 0, Backspace) */}
-        <div className="grid grid-cols-3 gap-3 w-full max-w-[280px] mt-2">
+        {/* Formal Numeric Keypad */}
+        <div className="grid grid-cols-3 gap-2.5 w-full max-w-[264px] mt-1">
           {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
             <button
               key={num}
               type="button"
               onClick={() => handleDigit(num)}
-              className="h-16 rounded-2xl bg-slate-50 hover:bg-slate-100 active:bg-orange-50 active:text-orange-600 active:scale-95 text-slate-800 text-2xl font-semibold border border-slate-200/80 transition-all flex items-center justify-center shadow-sm"
+              className="h-14 rounded-lg bg-slate-50 hover:bg-[#EEF5FC] active:bg-[#D4E4F7] text-[#1E2329] hover:text-[#0A4D8C] text-xl font-semibold border border-slate-200 transition-colors flex items-center justify-center cursor-pointer tabular-nums"
             >
               {num}
             </button>
           ))}
 
-          {/* Clear Key */}
           <button
             type="button"
             onClick={handleClear}
-            className="h-16 rounded-2xl bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-400 hover:text-slate-600 text-sm font-bold border border-slate-200/80 transition-all flex flex-col items-center justify-center gap-0.5"
+            className="h-14 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-800 text-xs font-medium border border-slate-200 transition-colors flex flex-col items-center justify-center gap-0.5 cursor-pointer"
             title="Clear"
           >
-            <RotateCcw size={18} />
-            <span className="text-[10px] uppercase tracking-wider">Clear</span>
+            <RotateCcw size={15} strokeWidth={1.75} />
+            <span className="text-[11px]">Clear</span>
           </button>
 
-          {/* Zero Key */}
           <button
             type="button"
             onClick={() => handleDigit('0')}
-            className="h-16 rounded-2xl bg-slate-50 hover:bg-slate-100 active:bg-orange-50 active:text-orange-600 active:scale-95 text-slate-800 text-2xl font-semibold border border-slate-200/80 transition-all flex items-center justify-center shadow-sm"
+            className="h-14 rounded-lg bg-slate-50 hover:bg-[#EEF5FC] active:bg-[#D4E4F7] text-[#1E2329] hover:text-[#0A4D8C] text-xl font-semibold border border-slate-200 transition-colors flex items-center justify-center cursor-pointer tabular-nums"
           >
             0
           </button>
 
-          {/* Backspace Key */}
           <button
             type="button"
             onClick={handleBackspace}
-            className="h-16 rounded-2xl bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-400 hover:text-slate-600 text-sm font-bold border border-slate-200/80 transition-all flex flex-col items-center justify-center gap-0.5"
-            title="Backspace"
+            className="h-14 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-800 text-xs font-medium border border-slate-200 transition-colors flex flex-col items-center justify-center gap-0.5 cursor-pointer"
+            title="Delete"
           >
-            <Delete size={20} />
-            <span className="text-[10px] uppercase tracking-wider">Delete</span>
+            <Delete size={16} strokeWidth={1.75} />
+            <span className="text-[11px]">Delete</span>
           </button>
         </div>
 
-        {/* Footer Admin Shortcut */}
-        <div className="mt-8 pt-4 border-t border-slate-100 w-full flex justify-between items-center text-xs text-slate-400 px-2">
-          <span className="flex items-center gap-1 font-medium">
-            <Lock size={12} /> System Secured
+        {/* Footer */}
+        <div className="mt-7 pt-4 border-t border-slate-100 w-full flex justify-between items-center text-xs text-slate-500">
+          <span className="flex items-center gap-1.5 font-medium">
+            <Lock size={13} strokeWidth={1.75} /> Protected Access
           </span>
           <button
             onClick={() => navigate('/admin-login')}
-            className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1 hover:underline"
+            className="text-[#0A4D8C] hover:underline font-medium flex items-center gap-1 cursor-pointer"
           >
-            Admin Portal <ArrowRight size={12} />
+            Admin Portal <ArrowRight size={13} />
           </button>
         </div>
-
       </div>
     </div>
   );

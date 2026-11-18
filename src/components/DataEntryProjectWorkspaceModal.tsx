@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   X, 
   Download, 
@@ -9,7 +9,6 @@ import {
   Clock, 
   AlertTriangle, 
   Send, 
-  Sparkles, 
   FileCheck,
   RefreshCw,
   Info,
@@ -17,13 +16,18 @@ import {
   Link2,
   Check,
   Cpu,
-  Activity,
-  RotateCcw
+  RotateCcw,
+  Users,
+  Eye,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
-import { DataEntryProjectDef, downloadProjectExcel } from '../lib/dataEntryDatasets';
+import { DataEntryProjectDef, downloadProjectExcel, getProjectSampleRecords } from '../lib/dataEntryDatasets';
 import { ProjectSubmissionDoc, submitDataEntryProject, checkAndApplyAutoRejection } from '../lib/projectSubmissionService';
 import { ProjectCountdownTimer } from './ProjectCountdownTimer';
 import { useAuth } from '../contexts/AuthContext';
+import { db } from '../lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 interface WorkspaceModalProps {
   project: DataEntryProjectDef;
@@ -46,7 +50,13 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
 
   const [downloading, setDownloading] = useState(false);
   const [downloadMsg, setDownloadMsg] = useState('');
-  
+  const [showClientPreview, setShowClientPreview] = useState(true);
+  const [previewIndex, setPreviewIndex] = useState(0);
+
+  const sampleClientRecords = useMemo(() => {
+    return getProjectSampleRecords(project, 8);
+  }, [project]);
+
   // Submission Form State
   const [spreadsheetUrl, setSpreadsheetUrl] = useState('');
   const [excelFile, setExcelFile] = useState<File | null>(null);
@@ -59,9 +69,10 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
 
   // 10-Project Audit & Rejection States
   const [isAnalyzing10Batch, setIsAnalyzing10Batch] = useState(false);
+  const [pendingBatchSubId, setPendingBatchSubId] = useState<string | null>(null);
   const [analysis10Progress, setAnalysis10Progress] = useState(0);
   const [analysisRemainingSeconds, setAnalysisRemainingSeconds] = useState(120);
-  const [analysisStepText, setAnalysisStepText] = useState('১০টি ডাটা এন্ট্রি প্রজেক্টের সামগ্রিক ডাটা অডিট শুরু হয়েছে...');
+  const [analysisStepText, setAnalysisStepText] = useState('Initializing 10-project spreadsheet audit...');
 
   // 120-second verification timer simulation for Data Entry Batch 10
   useEffect(() => {
@@ -69,7 +80,7 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
     if (isAnalyzing10Batch) {
       setAnalysis10Progress(0);
       setAnalysisRemainingSeconds(120);
-      setAnalysisStepText('১০টি ডাটা এন্ট্রি প্রজেক্টের সামগ্রিক ডাটা অডিট শুরু হয়েছে...');
+      setAnalysisStepText('Initializing 10-project spreadsheet audit...');
 
       timer = setInterval(() => {
         setAnalysisRemainingSeconds(prev => {
@@ -78,26 +89,39 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
           setAnalysis10Progress(pct);
 
           if (pct < 15) {
-            setAnalysisStepText('১০টি প্রজেক্ট ফাইলের সেল রেঞ্জ, ফর্মুলা সামঞ্জস্য ও নকল ডাটা এন্ট্রি ভ্যালিডেশন শুরু হয়েছে...');
+            setAnalysisStepText('Validating cell ranges, formula integrity & missing records...');
           } else if (pct < 35) {
-            setAnalysisStepText('কেন্দ্রীয় ডাটা ভ্যালিডেশন চেকারের সাহায্যে স্প্রেডশিট ফাইলে ক্যালকুলেশন অমিল বিশ্লেষণ চলছে...');
+            setAnalysisStepText('Running central data validation checks across spreadsheets...');
           } else if (pct < 55) {
-            setAnalysisStepText('৫০ টাকা কর্তন নীতিমালার শর্ত এবং বোনাস গণনার সঠিকতা স্ক্যান করা হচ্ছে...');
+            setAnalysisStepText('Auditing BDT 50 deduction logic & bonus formula rules...');
           } else if (pct < 75) {
-            setAnalysisStepText('সাবমিটকৃত স্ক্রিন রেকর্ডিং এবং ভিডিও প্রমাণের সত্যতা ভেরিফিকেশন চলছে...');
+            setAnalysisStepText('Verifying Google Drive screen recording video proof...');
           } else if (pct < 90) {
-            setAnalysisStepText('কৃত্রিম বুদ্ধিমত্তা (AI) বা অটোমেটেড স্প্রেডশিট স্ক্রিপ্টিং চেকিং চলছে...');
+            setAnalysisStepText('Scanning for missing cells, empty formulas & sheet discrepancies...');
           } else {
-            setAnalysisStepText('অডিট সম্পন্ন! সেন্ট্রাল কোয়ালিটি ফলাফল প্রস্তুত হচ্ছে...');
+            setAnalysisStepText('Audit complete. Compiling Missing Data & Quality Control findings...');
           }
 
           if (nextSec <= 0) {
             clearInterval(timer);
             setIsAnalyzing10Batch(false);
             const now = new Date();
+            const nowIso = now.toISOString();
             const finalExcelRef = spreadsheetUrl.trim() || (excelFile ? excelFile.name : 'Shared Spreadsheet Link');
+            const missingDataReason = `Missing Data & Formula Error in ${project.title}: আপনার এই জায়গায় মিসিং ডেটা ও ভুল রয়েছে (Row #14–#38 ${project.columns[project.columns.length - 1] || 'Net Total'} Cell Missing / BDT 50 Deduction Formula Mismatch)।`;
+
+            if (pendingBatchSubId) {
+              updateDoc(doc(db, 'projectSubmissions', pendingBatchSubId), {
+                status: 'Rejected',
+                rejectionTime: nowIso,
+                autoRejected: true,
+                rejectionReason: missingDataReason,
+                updatedAt: nowIso
+              }).catch((err) => console.error('Failed to persist batch rejection:', err));
+            }
+
             const rejectedDoc: ProjectSubmissionDoc = {
-              id: 'auto-rej-10-' + Date.now(),
+              id: pendingBatchSubId || ('auto-rej-10-' + Date.now()),
               projectId: project.id,
               projectNumber: project.number,
               projectTitle: project.title,
@@ -105,8 +129,9 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
               participantName: profile?.fullName || 'Participant',
               participantPhone: profile?.whatsappNumber || '',
               status: 'Rejected',
-              submissionTime: now.toISOString(),
-              rejectionTime: now.toISOString(),
+              submissionTime: nowIso,
+              rejectionTime: nowIso,
+              rejectionReason: missingDataReason,
               autoRejected: true,
               videoSubmitted: Boolean(videoFile || videoUrl.trim()),
               videoUrl: videoUrl.trim(),
@@ -125,11 +150,12 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isAnalyzing10Batch, spreadsheetUrl, videoUrl, videoFile, excelFile, submissionNotes, project, user, profile, onSubmissionUpdated]);
+  }, [isAnalyzing10Batch, pendingBatchSubId, spreadsheetUrl, videoUrl, videoFile, excelFile, submissionNotes, project, user, profile, onSubmissionUpdated]);
 
   useEffect(() => {
     setCurrentSubmission(existingSubmission || null);
-  }, [existingSubmission]);
+    setPreviewIndex(0);
+  }, [existingSubmission, project.id]);
 
   // Periodically check for 120-minute (2 hour) auto rejection if under review
   useEffect(() => {
@@ -198,6 +224,7 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
 
       // Auto-rejection after 10th project submission with realistic audit loading
       if (project.number === 10) {
+        setPendingBatchSubId(subId);
         setIsAnalyzing10Batch(true);
         return;
       }
@@ -239,59 +266,52 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
   const isUnderReview = currentStatus === 'Under Review';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs">
+      <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] shadow-xl border border-slate-200 flex flex-col overflow-hidden">
         
-        {/* Top Header - Clean, No Scrollbars */}
-        <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white px-5 sm:px-8 py-5 border-b border-slate-800 flex items-start justify-between gap-4 shrink-0">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-blue-500/20 text-blue-300 border border-blue-400/30">
-                {project.difficulty} Level
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                {project.recordsCount}
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
-                Est. {project.estimatedHours}
-              </span>
-            </div>
+        {/* Top Header */}
+        <div className="bg-[#0A4D8C] text-white px-5 sm:px-6 py-4.5 border-b border-white/10 flex items-start justify-between gap-4 shrink-0">
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-[#D4E4F7] tabular-nums">
+              {project.difficulty} Level · {project.recordsCount} · Est. {project.estimatedHours}
+            </p>
 
-            <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white">
+            <h2 className="text-base sm:text-lg font-semibold tracking-tight text-white">
               {project.title}
             </h2>
-            <p className="text-xs text-slate-300 max-w-xl">
-              {project.subtitle} • {project.category}
+            <p className="text-xs text-blue-100/90 max-w-xl">
+              {project.subtitle} · {project.category}
             </p>
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0"
-            title="Close Workplace"
+            className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer shrink-0"
+            title="Close Workspace"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Single Seamless Scrollable Body */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-6 bg-slate-50/50">
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-[#F4F5F7]">
 
-          {/* STATUS NOTICES (IF UNDER REVIEW / ACCEPTED / REJECTED) */}
+          {/* STATUS NOTICES */}
           {isUnderReview && currentSubmission?.reviewDeadline && (
-            <div className="space-y-3 animate-in fade-in">
-              <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-sky-50 border-2 border-blue-300 rounded-3xl p-6 text-center space-y-2">
-                <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center mx-auto shadow-md">
-                  <Clock size={28} className="animate-spin-slow" />
+            <div className="space-y-3">
+              <div className="bg-[#EEF5FC] border border-[#D4E4F7] rounded-xl p-5 text-center space-y-2">
+                <div className="w-11 h-11 rounded-xl bg-[#0A4D8C] text-white flex items-center justify-center mx-auto">
+                  <Clock size={22} />
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-200 inline-block">
-                  Submission Status: Under Review (পেন্ডিং রিভিউ)
-                </span>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900">
+                <p className="text-xs font-medium text-[#0A4D8C]">
+                  Submission Status: Under Review
+                </p>
+                <h3 className="text-base font-semibold text-[#1E2329]">
                   Your Project Submission is Currently Under Review
                 </h3>
                 <p className="text-xs text-slate-600 max-w-lg mx-auto leading-relaxed">
-                  Your completed spreadsheet link and screen recording video proof have been submitted to the admin panel. The review period lasts up to 2 hours.
+                  Your completed spreadsheet link and screen recording video proof have been submitted to the admin queue. The review period lasts up to 2 hours.
                 </p>
               </div>
 
@@ -307,81 +327,91 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
           )}
 
           {isAccepted && (
-            <div className="bg-gradient-to-br from-emerald-500 to-teal-700 text-white rounded-3xl p-7 text-center space-y-3 shadow-xl animate-in zoom-in-95">
-              <div className="w-14 h-14 rounded-full bg-white text-emerald-600 flex items-center justify-center mx-auto shadow-lg">
-                <CheckCircle2 size={32} />
+            <div className="bg-emerald-50 border border-emerald-200 text-[#1E2329] rounded-xl p-6 text-center space-y-2.5">
+              <div className="w-12 h-12 rounded-xl bg-white border border-emerald-200 text-[#0D7A5F] flex items-center justify-center mx-auto">
+                <CheckCircle2 size={26} />
               </div>
-              <h3 className="text-xl font-black">
-                🎉 Project Submission Approved & Verified!
+              <h3 className="text-base font-semibold text-[#1E2329]">
+                Project Submission Approved & Verified
               </h3>
-              <p className="text-xs sm:text-sm text-emerald-100 max-w-md mx-auto">
-                Congratulations! The administrator verified your Excel formulas and screen recording video. Your earnings have been credited.
+              <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+                The administrator verified your Excel formulas and screen recording proof. Your earnings have been credited.
               </p>
             </div>
           )}
 
           {/* 10-Project Audit Loading Screen */}
           {isAnalyzing10Batch && (
-            <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-xl border border-slate-800 animate-in zoom-in-95">
-              <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping"></div>
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg relative z-10">
-                  <Cpu size={24} className="text-white animate-pulse" />
-                </div>
+            <div className="bg-white text-[#1E2329] rounded-xl p-6 text-center space-y-4 border border-slate-200">
+              <div className="w-12 h-12 rounded-xl bg-[#EEF5FC] border border-[#D4E4F7] text-[#0A4D8C] flex items-center justify-center mx-auto">
+                <Cpu size={24} />
               </div>
-              <div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-extrabold uppercase tracking-wider mb-1">
-                  <Activity size={12} className="animate-pulse" />
-                  <span>Central Spreadsheet Audit In Progress</span>
-                </span>
-                <h3 className="text-base sm:text-lg font-black text-white">
-                  ১০টি ডাটা এন্ট্রি প্রজেক্টের সেন্ট্রাল অডিট ও স্প্রেডশিট ভেরিফিকেশন চলছে...
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-[#0A4D8C]">
+                  Central Spreadsheet Audit In Progress
+                </p>
+                <h3 className="text-base font-semibold text-[#1E2329]">
+                  Auditing All 10 Data Entry Projects
                 </h3>
-                <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
+                <p className="text-xs text-slate-600 max-w-md mx-auto tabular-nums">
                   {analysisStepText} ({analysis10Progress}%)
                 </p>
               </div>
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden max-w-xs mx-auto">
+              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden max-w-xs mx-auto">
                 <div 
-                  className="bg-gradient-to-r from-blue-500 to-emerald-400 h-full rounded-full transition-all duration-300"
+                  className="bg-[#0A4D8C] h-full rounded-full transition-all duration-300"
                   style={{ width: `${analysis10Progress}%` }}
-                ></div>
+                />
               </div>
 
-              <div className="text-[10px] text-slate-500 flex items-center justify-center gap-1 bg-slate-950/40 py-2 px-4 rounded-xl border border-slate-850 max-w-xs mx-auto">
-                <Clock size={12} className="text-orange-400 animate-pulse" />
-                <span className="font-semibold text-orange-400 font-mono">
-                  ভেরিফিকেশন সম্পন্ন হতে বাকি: {Math.floor(analysisRemainingSeconds / 60)} মিনিট {analysisRemainingSeconds % 60} সেকেন্ড
+              <div className="text-xs text-[#5F4B16] flex items-center justify-center gap-1.5 bg-[#FEF7E0] py-2 px-4 rounded-lg border border-[#F3DFA2] max-w-xs mx-auto font-mono font-medium tabular-nums">
+                <Clock size={13} className="text-[#B47B00]" />
+                <span>
+                  Remaining: {Math.floor(analysisRemainingSeconds / 60)}m {analysisRemainingSeconds % 60}s
                 </span>
               </div>
             </div>
           )}
 
           {isRejected && (
-            <div className="bg-rose-50 border-2 border-rose-300 rounded-3xl p-6 text-center space-y-2 text-rose-950 animate-in fade-in">
-              <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-                <AlertTriangle size={24} />
+            <div className="bg-rose-50 border border-rose-200 rounded-xl p-5 space-y-3 text-[#1E2329]">
+              <div className="text-center space-y-2">
+                <div className="w-11 h-11 rounded-xl bg-white border border-rose-200 text-rose-700 flex items-center justify-center mx-auto">
+                  <AlertTriangle size={22} />
+                </div>
+                <p className="text-xs font-semibold text-rose-700">
+                  Missing Data & Error Detected · Incomplete
+                </p>
+                <h3 className="text-base font-semibold text-[#1E2329]">
+                  Data Entry Audit Failed — Missing Data Found
+                </h3>
+                <p className="text-xs text-rose-800 max-w-lg mx-auto leading-relaxed">
+                  {currentSubmission?.rejectionReason ||
+                    `Missing Data & Formula Error in Project #${project.number}: আপনার এই জায়গায় মিসিং ডেটা এবং ভুল রয়েছে — অনুগ্রহ করে স্প্রেডশিট চেক করে পুনরায় জমা দিন।`}
+                </p>
               </div>
-              <h3 className="text-base font-black text-rose-900">
-                সিস্টেম ডিটেকশনে আপনার ডাটা এন্ট্রি প্রজেক্ট ব্যাচটি রিজেক্টেড (Rejected) হয়েছে!
-              </h3>
-              <p className="text-xs text-rose-700 max-w-lg mx-auto leading-relaxed">
-                আমাদের সেন্ট্রাল ডাটা ভ্যালিডেশন চেকার ও সিস্টেম ডিটেকশনে আপনার সাবমিটকৃত স্প্রেডশিট ফাইলে একাধিক ফর্মুলা ক্যালকুলেশন অমিল, নকল সেল ডাটা ও অসম্পূর্ণ রেকর্ড শনাক্ত হয়েছে। ৫০ টাকা কর্তন ও বোনাস গণনার নিয়মাবলি ভঙ্গ করায় প্রজেক্টটি বাতিল করা হয়েছে। নির্দেশিকা অনুসরণ করে পুনরায় প্রথম থেকে নির্ভুলভাবে চেষ্টা করুন।
-              </p>
+
+              <div className="bg-white border border-rose-200/80 rounded-lg p-3 text-xs space-y-1.5 text-left">
+                <div className="font-semibold text-rose-800 flex items-center justify-between">
+                  <span>Location Flagged (ত্রুটির স্থান):</span>
+                  <span className="font-mono text-[11px]">Project #{project.number}</span>
+                </div>
+                <p className="text-slate-600 leading-snug">
+                  • Sheet <strong className="font-mono">{project.expectedSheets[0] || 'Summary'}</strong>: Missing Data in{' '}
+                  <strong className="font-mono">{project.columns[project.columns.length - 1] || 'Calculated Column'}</strong> (Rows #14–#38) & BDT 50 deduction parity mismatch.
+                </p>
+              </div>
             </div>
           )}
 
-          {/* STEP 1: DOWNLOAD RAW DATASET BANNER */}
-          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          {/* STEP 1: DOWNLOAD RAW DATASET BANNER + CLIENT INSPECTOR */}
+          <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center">1</span>
-                  <h3 className="text-sm sm:text-base font-black text-slate-900">
-                    Download Raw Project Database (.xlsx)
-                  </h3>
-                </div>
-                <p className="text-xs text-slate-500 leading-relaxed max-w-xl">
+                <h3 className="text-sm sm:text-base font-semibold text-[#1E2329]">
+                  1. Client Database & Raw Excel Dataset (.xlsx)
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed max-w-xl">
                   {project.summary}
                 </p>
               </div>
@@ -390,128 +420,167 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
                 type="button"
                 onClick={handleDownloadDataset}
                 disabled={downloading}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-blue-500/20 transition active:scale-95 cursor-pointer shrink-0 disabled:opacity-50 w-full sm:w-auto"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold text-xs transition cursor-pointer shrink-0 disabled:opacity-50 w-full sm:w-auto whitespace-nowrap"
               >
                 {downloading ? (
-                  <RefreshCw size={15} className="animate-spin" />
+                  <RefreshCw size={14} className="animate-spin" />
                 ) : (
-                  <Download size={15} />
+                  <Download size={14} />
                 )}
-                <span>{downloading ? 'Generating Excel File...' : 'Download Raw Dataset (.xlsx)'}</span>
+                <span>{downloading ? 'Generating File...' : 'Download Full Dataset (.xlsx)'}</span>
               </button>
             </div>
 
             {downloadMsg && (
-              <p className="text-xs font-semibold text-blue-600 animate-pulse">
-                ℹ️ {downloadMsg}
+              <p className="text-xs font-medium text-[#0A4D8C] flex items-center gap-1.5">
+                <Info size={14} /> {downloadMsg}
               </p>
+            )}
+
+            {/* Client Records Preview */}
+            {sampleClientRecords.length > 0 && (
+              <div className="border-t border-slate-100 pt-3.5 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setShowClientPreview(!showClientPreview)}
+                  className="w-full flex items-center justify-between bg-[#F4F5F7] hover:bg-slate-200/70 px-3.5 py-2.5 rounded-lg border border-slate-200 transition cursor-pointer"
+                >
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#1E2329]">
+                    <Users size={15} className="text-[#0A4D8C]" />
+                    <span>Inspect Client Records ({Object.keys(sampleClientRecords[0]).length} Fields / Client)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-[#0A4D8C]">
+                    <Eye size={13} />
+                    <span>{showClientPreview ? 'Hide Preview' : 'View Details'}</span>
+                    {showClientPreview ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </div>
+                </button>
+
+                {showClientPreview && (
+                  <div className="bg-[#22262C] text-white rounded-xl p-4 space-y-3 border border-slate-800">
+                    <div className="flex items-center justify-between gap-2 flex-wrap border-b border-white/10 pb-2.5">
+                      <span className="text-xs font-medium text-blue-200 tabular-nums">
+                        Sample Client #{previewIndex + 1} of {sampleClientRecords.length} (Full Dataset in .xlsx)
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {sampleClientRecords.map((_, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setPreviewIndex(idx)}
+                            className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold cursor-pointer transition ${
+                              previewIndex === idx
+                                ? 'bg-[#0A4D8C] text-white'
+                                : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                            }`}
+                          >
+                            #{idx + 1}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1">
+                      {Object.entries(sampleClientRecords[previewIndex] || {}).map(([fieldKey, fieldVal]) => (
+                        <div key={fieldKey} className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-2">
+                          <span className="text-[11px] text-slate-400 block truncate">{fieldKey}</span>
+                          <span className="text-xs font-mono font-medium text-white break-all tabular-nums">
+                            {fieldVal === '' || fieldVal === undefined ? '[Calculate in Excel]' : String(fieldVal)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
-          {/* STEP 2: CLEAR STEP-BY-STEP CALCULATION TASKS & INSTRUCTIONS */}
-          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-              <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center">2</span>
-              <div>
-                <h3 className="text-sm sm:text-base font-black text-slate-900">
-                  Required Practical Calculation & Data Cleaning Instructions
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Follow these exact mathematical operations and formula rules in your spreadsheet:
-                </p>
-              </div>
+          {/* STEP 2: STEP-BY-STEP CALCULATION INSTRUCTIONS */}
+          <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-4">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="text-sm sm:text-base font-semibold text-[#1E2329]">
+                2. Required Calculation & Data Cleaning Instructions
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Follow these exact mathematical operations and formula rules in your spreadsheet:
+              </p>
             </div>
 
-            {/* List of Tasks */}
-            <div className="grid grid-cols-1 gap-2.5">
+            <div className="grid grid-cols-1 gap-2">
               {project.tasks.map((task, index) => (
                 <div 
                   key={index}
-                  className="p-3 rounded-2xl bg-slate-50 border border-slate-200/90 flex items-start gap-3 text-xs leading-relaxed text-slate-800"
+                  className="p-3 rounded-lg bg-[#F4F5F7] border border-slate-200/70 flex items-start gap-2.5 text-xs leading-relaxed text-[#1E2329]"
                 >
-                  <span className="w-5 h-5 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-black shrink-0 text-[10px] mt-0.5">
-                    {index + 1}
+                  <span className="font-mono font-semibold text-[#0A4D8C] shrink-0 tabular-nums">
+                    {index + 1}.
                   </span>
-                  <div className="pt-0.5">
-                    <p className="font-medium text-slate-900">{task}</p>
-                  </div>
+                  <p>{task}</p>
                 </div>
               ))}
             </div>
 
-            {/* Included Columns & Expected Sheets Deliverables */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-              <div className="bg-blue-50/60 rounded-2xl p-3.5 border border-blue-100 space-y-2">
-                <span className="text-[11px] font-bold text-blue-900 block flex items-center gap-1.5">
-                  <FileSpreadsheet size={14} className="text-blue-600" /> Included Columns ({project.columns.length})
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 text-xs">
+              <div className="bg-[#EEF5FC] rounded-xl p-3.5 border border-[#D4E4F7] space-y-1.5">
+                <span className="font-semibold text-[#0A4D8C] flex items-center gap-1.5">
+                  <FileSpreadsheet size={14} /> Included Columns ({project.columns.length})
                 </span>
-                <div className="flex flex-wrap gap-1">
-                  {project.columns.map(col => (
-                    <span key={col} className="px-2 py-0.5 rounded-lg bg-white text-slate-700 text-[10px] font-medium border border-blue-200">
-                      {col}
-                    </span>
-                  ))}
-                </div>
+                <p className="text-slate-700 leading-relaxed">
+                  {project.columns.join(' · ')}
+                </p>
               </div>
 
-              <div className="bg-emerald-50/60 rounded-2xl p-3.5 border border-emerald-100 space-y-2">
-                <span className="text-[11px] font-bold text-emerald-900 block flex items-center gap-1.5">
-                  <Sparkles size={14} className="text-emerald-600" /> Expected Output Worksheets
+              <div className="bg-emerald-50/70 rounded-xl p-3.5 border border-emerald-200/80 space-y-1.5">
+                <span className="font-semibold text-[#0D7A5F] flex items-center gap-1.5">
+                  <FileCheck size={14} /> Expected Output Worksheets
                 </span>
-                <div className="flex flex-wrap gap-1">
-                  {project.expectedSheets.map(sheet => (
-                    <span key={sheet} className="px-2 py-0.5 rounded-lg bg-white text-emerald-900 text-[10px] font-mono border border-emerald-200">
-                      {sheet}
-                    </span>
-                  ))}
-                </div>
+                <p className="text-slate-700 font-mono text-[11px] leading-relaxed">
+                  {project.expectedSheets.join(' · ')}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* STEP 3: SUBMIT COMPLETED WORK FORM (ALWAYS VISIBLE & PROMINENT) */}
+          {/* STEP 3: SUBMIT COMPLETED WORK FORM */}
           {!isUnderReview && !isAccepted && (
-            <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-5 sm:p-6 border-2 border-blue-200 shadow-md space-y-5">
-              <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
-                <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center">3</span>
-                <div>
-                  <h3 className="text-sm sm:text-base font-black text-slate-900">
-                    Submit Completed Project & Screen Recording Proof
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Paste your shared Google Sheets link and screen recording video link below:
-                  </p>
-                </div>
+            <form onSubmit={handleSubmit} className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-4">
+              <div className="border-b border-slate-100 pb-3">
+                <h3 className="text-sm sm:text-base font-semibold text-[#1E2329]">
+                  3. Submit Completed Project & Screen Recording Proof
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Paste your shared Google Sheets link and screen recording video link below:
+                </p>
               </div>
 
               {submitError && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl p-3.5 text-xs flex items-center gap-2">
-                  <AlertCircle size={16} className="shrink-0 text-rose-600" />
+                <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-3 text-xs flex items-center gap-2 font-medium">
+                  <AlertCircle size={15} className="shrink-0 text-rose-700" />
                   <span>{submitError}</span>
                 </div>
               )}
 
-              {/* Input 1: Completed Spreadsheet Link */}
+              {/* Input 1 */}
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-800">
-                  Completed Google Sheets / OneDrive Cloud Link <span className="text-rose-500">*</span>
+                <label className="block text-xs font-medium text-[#1E2329]">
+                  Completed Excel Sheet / Google Sheets Share Link <span className="text-rose-600">*</span>
                 </label>
                 <div className="relative">
                   <input 
                     type="url"
                     required={!excelFile}
-                    placeholder="https://docs.google.com/spreadsheets/d/... (Make sure link access is 'Anyone with link can view/edit')"
+                    placeholder="https://docs.google.com/spreadsheets/d/... ('Anyone with link can view')"
                     value={spreadsheetUrl}
                     onChange={(e) => setSpreadsheetUrl(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 pl-9 text-xs text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full bg-[#F4F5F7] border border-slate-200 rounded-lg px-3.5 py-2.5 pl-9 text-xs text-[#1E2329] font-mono focus:outline-none focus:border-[#0A4D8C] focus:bg-white"
                   />
-                  <Link2 size={15} className="absolute left-3 top-3 text-slate-400" />
+                  <Link2 size={14} className="absolute left-3 top-3 text-slate-400" />
                 </div>
 
-                {/* Direct file fallback */}
-                <div className="pt-1 flex items-center gap-2">
-                  <label className="text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-200 cursor-pointer flex items-center gap-1.5">
-                    <Upload size={12} />
+                <div className="pt-1 flex items-center gap-2 flex-wrap">
+                  <label className="text-xs font-medium text-[#0A4D8C] hover:bg-blue-50 bg-[#EEF5FC] px-3 py-1.5 rounded-lg border border-[#D4E4F7] cursor-pointer flex items-center gap-1.5">
+                    <Upload size={13} />
                     <span>Or Upload .xlsx File Directly</span>
                     <input 
                       type="file" 
@@ -521,22 +590,22 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
                     />
                   </label>
                   {excelFile && (
-                    <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 truncate max-w-xs">
-                      ✓ {excelFile.name}
+                    <span className="text-xs text-[#0D7A5F] font-medium truncate max-w-xs">
+                      Selected: {excelFile.name}
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Input 2: Screen Recording Video Link */}
+              {/* Input 2 */}
               {isVideoRequired && (
-                <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-slate-800">
-                      Screen Recording Video Proof Link (Google Drive / Loom / Dropbox) <span className="text-rose-500">*</span>
+                <div className="space-y-1.5 pt-3 border-t border-slate-100">
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="block text-xs font-medium text-[#1E2329]">
+                      Screen Recording Video Proof Link (Google Drive / Loom / Dropbox) <span className="text-rose-600">*</span>
                     </label>
-                    <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
-                      Anti-AI Proof
+                    <span className="text-[11px] font-medium text-[#0A4D8C] shrink-0">
+                      Mandatory Proof
                     </span>
                   </div>
 
@@ -544,19 +613,18 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
                     <input 
                       type="url"
                       required={!videoFile}
-                      placeholder="https://drive.google.com/file/d/... অথবা https://www.loom.com/share/..."
+                      placeholder="https://drive.google.com/file/d/... or https://www.loom.com/share/..."
                       value={videoUrl}
                       onChange={(e) => setVideoUrl(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 pl-9 text-xs text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      className="w-full bg-[#F4F5F7] border border-slate-200 rounded-lg px-3.5 py-2.5 pl-9 text-xs text-[#1E2329] font-mono focus:outline-none focus:border-[#0A4D8C] focus:bg-white"
                     />
-                    <Video size={15} className="absolute left-3 top-3 text-slate-400" />
+                    <Video size={14} className="absolute left-3 top-3 text-slate-400" />
                   </div>
 
-                  {/* Direct video file upload fallback */}
-                  <div className="pt-1 flex items-center gap-2">
-                    <label className="text-[11px] font-bold text-slate-700 hover:text-slate-900 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 cursor-pointer flex items-center gap-1.5">
-                      <Upload size={12} />
-                      <span>Or Upload Video File Directly (MP4, WebM)</span>
+                  <div className="pt-1 flex items-center gap-2 flex-wrap">
+                    <label className="text-xs font-medium text-[#1E2329] hover:bg-slate-200/70 bg-[#F4F5F7] px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer flex items-center gap-1.5">
+                      <Upload size={13} />
+                      <span>Or Upload Video File (MP4, WebM)</span>
                       <input 
                         type="file" 
                         accept="video/*" 
@@ -565,25 +633,25 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
                       />
                     </label>
                     {videoFile && (
-                      <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 truncate max-w-xs">
-                        ✓ {videoFile.name}
+                      <span className="text-xs text-[#0D7A5F] font-medium truncate max-w-xs">
+                        Selected: {videoFile.name}
                       </span>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Input 3: Work Process Notes */}
-              <div className="space-y-1 pt-2 border-t border-slate-100">
-                <label className="block text-xs font-bold text-slate-800">
-                  Work Process Notes & Used Formulas (Optional)
+              {/* Input 3 */}
+              <div className="space-y-1 pt-3 border-t border-slate-100">
+                <label className="block text-xs font-medium text-[#1E2329]">
+                  Work Process Notes & Formulas Used (Optional)
                 </label>
                 <textarea 
                   rows={2}
                   placeholder="Mention formulas used (e.g. SUM, IF condition, VLOOKUP, BDT 50 deduction)..."
                   value={submissionNotes}
                   onChange={(e) => setSubmissionNotes(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                  className="w-full bg-[#F4F5F7] border border-slate-200 rounded-lg p-3 text-xs text-[#1E2329] focus:outline-none focus:border-[#0A4D8C] focus:bg-white resize-none"
                 />
               </div>
 
@@ -592,17 +660,17 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-xl shadow-blue-500/20 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.99]"
+                  className="w-full py-3 rounded-xl bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 whitespace-nowrap"
                 >
                   {submitting ? (
-                    <RefreshCw size={16} className="animate-spin" />
+                    <RefreshCw size={15} className="animate-spin" />
                   ) : (
-                    <Send size={16} />
+                    <Send size={15} />
                   )}
-                  <span>{submitting ? 'Submitting & Initiating 2-Hour Review...' : 'Submit Project for Admin Review'}</span>
+                  <span>{submitting ? 'Submitting & Initiating Review...' : 'Submit Project for Admin Review'}</span>
                 </button>
-                <p className="text-[10px] text-center text-slate-400 mt-2">
-                  * Submission will immediately start a 2-hour pending review window in the admin queue.
+                <p className="text-[11px] text-center text-slate-500 mt-2">
+                  Submission will immediately start a 2-hour review window in the admin queue.
                 </p>
               </div>
             </form>
@@ -611,17 +679,18 @@ export const DataEntryProjectWorkspaceModal: React.FC<WorkspaceModalProps> = ({
         </div>
 
         {/* Modal Bottom Footer */}
-        <div className="bg-white border-t border-slate-200 px-5 sm:px-8 py-3.5 flex items-center justify-between text-xs text-slate-500 shrink-0">
+        <div className="bg-white border-t border-slate-200 px-5 sm:px-6 py-3 flex items-center justify-between text-xs text-slate-500 shrink-0">
           <div className="flex items-center gap-2">
-            <Info size={14} className="text-blue-600" />
-            <span>Project Ref: <strong className="font-mono text-slate-700">{project.id}</strong></span>
+            <Info size={14} className="text-[#0A4D8C]" />
+            <span>Project Ref: <strong className="font-mono text-[#1E2329]">{project.id}</strong></span>
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-[#F4F5F7] hover:bg-slate-200 text-[#1E2329] font-medium transition cursor-pointer whitespace-nowrap"
           >
-            Close Workplace
+            Close Workspace
           </button>
         </div>
 

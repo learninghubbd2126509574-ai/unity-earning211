@@ -1,0 +1,241 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered member account profile synced with live Firebase Firestore for admin verification, work module authorization, credentials management, and wallet balance tracking.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "fullName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "whatsappNumber": { "type": "string", "minLength": 7, "maxLength": 25 },
+        "studentIdCode": { "type": "string", "pattern": "^[0-9]{7}$", "maxLength": 7 },
+        "email": { "type": "string", "format": "email", "maxLength": 160 },
+        "passwordText": { "type": "string", "minLength": 4, "maxLength": 128 },
+        "role": { "type": "string", "enum": ["student", "admin"] },
+        "status": { "type": "string", "enum": ["pending", "active", "blocked"] },
+        "balance": { "type": "number" },
+        "microjobPoints": { "type": "number" },
+        "assignedJob": { "type": "string", "maxLength": 64 },
+        "assignedJobs": { "type": "array" },
+        "preferredModules": { "type": "array" },
+        "courseCompleted": { "type": "boolean" },
+        "companyJoinDate": { "type": "string", "maxLength": 32 },
+        "hasExperience": { "type": "boolean" },
+        "hasSelectedWorkKnowledge": { "type": "boolean" },
+        "hasCertificate": { "type": "boolean" },
+        "certificateUrl": { "type": "string", "maxLength": 1000000 },
+        "teamLeaderName": { "type": "string", "maxLength": 120 },
+        "teamTrainerName": { "type": "string", "maxLength": 120 },
+        "photoUrl": { "type": "string", "maxLength": 1000000 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["fullName", "whatsappNumber", "studentIdCode", "role", "status"]
+    },
+    "MemberDirectoryEntry": {
+      "title": "MemberDirectoryEntry",
+      "description": "Publicly isolated non-PII lookup record mapping a 7-digit Student ID to member display name and UID for peer balance transfers.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "studentIdCode": { "type": "string", "pattern": "^[0-9]{7}$" },
+        "fullName": { "type": "string", "maxLength": 120 }
+      },
+      "required": ["uid", "studentIdCode", "fullName"]
+    },
+    "AuthLookupEntry": {
+      "title": "AuthLookupEntry",
+      "description": "Hash-keyed login alias lookup for resolving phone numbers or 7-digit IDs to auth emails without exposing member lists.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email", "maxLength": 160 },
+        "uid": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["email", "uid"]
+    },
+    "PortalSetting": {
+      "title": "PortalSetting",
+      "description": "Administrative portal configuration documents including YouTube video guide link, support channels, access PIN, and notices.",
+      "type": "object",
+      "properties": {
+        "accessPin": { "type": "string", "pattern": "^[0-9]{4}$" },
+        "videoUrl": { "type": "string", "maxLength": 500 },
+        "url": { "type": "string", "maxLength": 500 },
+        "telegramUrl": { "type": "string", "maxLength": 500 },
+        "whatsappUrl": { "type": "string", "maxLength": 500 },
+        "logoUrl": { "type": "string", "maxLength": 1000000 },
+        "message": { "type": "string", "maxLength": 5000 },
+        "title": { "type": "string", "maxLength": 200 },
+        "buttonText": { "type": "string", "maxLength": 100 },
+        "isActive": { "type": "boolean" },
+        "isVideoRequired": { "type": "boolean" },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      }
+    },
+    "WorkSubmission": {
+      "title": "WorkSubmission",
+      "description": "Submitted work task proofs (typing, video, photo, marketing) for administrator review and reward payout.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "module": { "type": "string", "maxLength": 64 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "projectSuccessId": { "type": "string", "maxLength": 16 },
+        "submittedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["userId", "status"]
+    },
+    "ProjectSubmission": {
+      "title": "ProjectSubmission",
+      "description": "Structured Data Entry and Form Fillup Excel assignment submissions with review window tracking.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "projectId": { "type": "string", "maxLength": 64 },
+        "projectTitle": { "type": "string", "maxLength": 200 },
+        "participantName": { "type": "string", "maxLength": 120 },
+        "status": { "type": "string", "enum": ["Not Started", "In Progress", "Submitted", "Under Review", "Accepted", "Rejected"] },
+        "projectSuccessId": { "type": "string", "maxLength": 16 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["userId", "projectId", "status"]
+    },
+    "StudentReview": {
+      "title": "StudentReview",
+      "description": "Verified worker review and 10-point rating entry gated by completed project verification.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 120 },
+        "rating": { "type": "number" },
+        "text": { "type": "string", "maxLength": 2000 },
+        "projectSuccessId": { "type": "string", "pattern": "^[0-9]{7}$" },
+        "status": { "type": "string", "enum": ["pending", "approved"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["userId", "name", "rating", "text", "status"]
+    },
+    "BalanceTransfer": {
+      "title": "BalanceTransfer",
+      "description": "Peer-to-peer wallet balance transfer ledger record.",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string", "maxLength": 128 },
+        "senderName": { "type": "string", "maxLength": 120 },
+        "senderStudentId": { "type": "string", "maxLength": 16 },
+        "recipientStudentId": { "type": "string", "maxLength": 16 },
+        "recipientName": { "type": "string", "maxLength": 120 },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["completed", "pending"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["senderId", "recipientStudentId", "amount", "status"]
+    },
+    "ModeratorApplication": {
+      "title": "ModeratorApplication",
+      "description": "Content Moderator career job application submitted for admin review.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "applicantName": { "type": "string", "maxLength": 120 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["userId", "applicantName", "status"]
+    },
+    "AffiliateSubmission": {
+      "title": "AffiliateSubmission",
+      "description": "Affiliate product order and commission payout claim.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "sellerName": { "type": "string", "maxLength": 120 },
+        "commissionAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "approved_paid", "rejected"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["userId", "sellerName", "status"]
+    },
+    "MicrojobPost": {
+      "title": "MicrojobPost",
+      "description": "Community microjob engagement link posted using microjob points.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "platform": { "type": "string", "maxLength": 40 },
+        "url": { "type": "string", "maxLength": 500 },
+        "notice": { "type": "string", "maxLength": 500 },
+        "isActive": { "type": "boolean" },
+        "reward": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["userId", "platform", "url", "isActive"]
+    },
+    "CampaignRegistration": {
+      "title": "CampaignRegistration",
+      "description": "Weekly bonus campaign participation entry submitted by active members.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "fullName": { "type": "string", "maxLength": 120 },
+        "phone": { "type": "string", "maxLength": 25 },
+        "studentIdCode": { "type": "string", "pattern": "^[0-9]{7}$" },
+        "tasksCompletedToday": { "type": "number" },
+        "campaignWeek": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["verified", "pending"] },
+        "submittedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["userId", "fullName", "phone", "studentIdCode", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user account profiles accessible only to the owning user and administrators."
+    },
+    "/memberDirectory/{studentIdCode}": {
+      "schema": { "$ref": "#/entities/MemberDirectoryEntry" },
+      "description": "Publicly isolated 7-digit ID lookup directory for safe recipient resolution during balance transfers."
+    },
+    "/authLookups/{lookupHash}": {
+      "schema": { "$ref": "#/entities/AuthLookupEntry" },
+      "description": "Hash-keyed auth email resolution preventing unauthenticated user enumeration."
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/PortalSetting" },
+      "description": "Portal configuration docs (support video guide URL, notice banners, access PIN)."
+    },
+    "/submissions/{submissionId}": {
+      "schema": { "$ref": "#/entities/WorkSubmission" },
+      "description": "Member work task submissions."
+    },
+    "/projectSubmissions/{submissionId}": {
+      "schema": { "$ref": "#/entities/ProjectSubmission" },
+      "description": "Data Entry and Form Fillup Excel project submissions."
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/StudentReview" },
+      "description": "Member ratings and reviews."
+    },
+    "/transfers/{transferId}": {
+      "schema": { "$ref": "#/entities/BalanceTransfer" },
+      "description": "Peer balance transfer ledger entries."
+    },
+    "/moderatorApplications/{appId}": {
+      "schema": { "$ref": "#/entities/ModeratorApplication" },
+      "description": "Content moderator job applications."
+    },
+    "/affiliateSubmissions/{saleId}": {
+      "schema": { "$ref": "#/entities/AffiliateSubmission" },
+      "description": "Affiliate sales commission requests."
+    },
+    "/microjobs/{jobId}": {
+      "schema": { "$ref": "#/entities/MicrojobPost" },
+      "description": "Community microjob engagement posts."
+    },
+    "/campaign_registrations/{regId}": {
+      "schema": { "$ref": "#/entities/CampaignRegistration" },
+      "description": "Weekly bonus campaign participation entries."
+    }
+  }
+}

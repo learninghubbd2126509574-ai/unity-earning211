@@ -5,16 +5,12 @@ import {
   Send, 
   CheckCircle2, 
   AlertCircle, 
-  Sparkles, 
   Copy, 
   Check, 
-  Play, 
-  Layers, 
   Clapperboard, 
   Film, 
-  ExternalLink,
   RefreshCw,
-  HelpCircle
+  Info
 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
@@ -258,14 +254,14 @@ const VideoSubmitApp = () => {
 
     // 1. Check Commercial Video URL
     if (!commercialVideoUrl.trim() || commercialVideoUrl.trim().length < 8) {
-      setErrorMsg('⚠️ তৈরি করা ফাইনাল কমার্শিয়াল ভিডিওর লিঙ্ক (TikTok, Shorts, Reels, Drive) দেওয়া বাধ্যতামূলক!');
+      setErrorMsg('তৈরি করা ফাইনাল কমার্শিয়াল ভিডিওর লিঙ্ক (TikTok, Shorts, Reels, Drive) দেওয়া বাধ্যতামূলক।');
       return;
     }
 
     // 2. Check Editing Screen Record Proof
     const hasScreenProof = screenRecordType === 'upload' ? Boolean(screenRecordFile) : Boolean(screenRecordUrl.trim());
     if (!hasScreenProof) {
-      setErrorMsg('⚠️ ভিডিও এডিটিংয়ের টাইমলাইন স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ সংযুক্ত করা বাধ্যতামূলক!');
+      setErrorMsg('ভিডিও এডিটিংয়ের টাইমলাইন স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ সংযুক্ত করা বাধ্যতামূলক।');
       return;
     }
 
@@ -307,40 +303,40 @@ const VideoSubmitApp = () => {
 
   if (isSubmitted) {
     return (
-      <div className="p-4 sm:p-6 min-h-[80vh] flex items-center justify-center">
-        <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-purple-200 shadow-2xl text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-purple-50 border border-purple-200 text-purple-600 flex items-center justify-center mx-auto shadow-inner">
-            <CheckCircle2 size={36} />
+      <div className="min-h-full bg-[#F4F5F7] p-4 sm:p-6 flex items-center justify-center">
+        <div className="bg-white rounded-xl p-6 max-w-lg w-full border border-slate-200/90 text-center space-y-4">
+          <div className="w-14 h-14 rounded-xl bg-[#ECFDF5] border border-[#A7F3D0] text-[#0D7A5F] flex items-center justify-center mx-auto">
+            <CheckCircle2 size={30} />
           </div>
 
           <div className="space-y-1">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-[#0D7A5F]">
               Submitted to Admin Panel
-            </span>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              প্রোডাক্ট ভিডিও ও স্ক্রিন রেকর্ড সাবমিট সফল!
+            </div>
+            <h2 className="text-lg font-semibold text-[#111827] tracking-tight">
+              প্রোডাক্ট ভিডিও ও স্ক্রিন রেকর্ড সাবমিট সফল
             </h2>
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            <p className="text-xs text-slate-600 leading-relaxed">
               আপনার তৈরিকৃত প্রোডাক্ট কমার্শিয়াল ভিডিও এবং এডিটিং টাইমলাইনের স্ক্রিন রেকর্ড ভিডিও প্রমাণ অ্যাডমিন পর্যালোচনার জন্য জমা হয়েছে।
             </p>
           </div>
 
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-left space-y-2 text-xs">
-            <div className="flex justify-between items-center text-slate-700">
-              <span className="font-semibold">ভিডিও টাস্ক:</span>
-              <span className="font-bold text-slate-900 truncate max-w-[200px]">{currentTask.title}</span>
+          <div className="bg-[#F8FAFC] p-4 rounded-xl border border-slate-200 text-left space-y-2 text-xs">
+            <div className="flex justify-between items-center gap-3 text-slate-700">
+              <span className="font-medium text-slate-500">ভিডিও টাস্ক</span>
+              <span className="font-semibold text-[#111827] truncate max-w-[220px]">{currentTask.title}</span>
             </div>
-            <div className="flex justify-between items-center text-slate-700">
-              <span className="font-semibold">এডিটিং সফটওয়্যার:</span>
-              <span className="font-bold text-slate-900">{editingSoftware}</span>
+            <div className="flex justify-between items-center gap-3 text-slate-700">
+              <span className="font-medium text-slate-500">এডিটিং সফটওয়্যার</span>
+              <span className="font-semibold text-[#111827]">{editingSoftware}</span>
             </div>
-            <div className="flex justify-between items-center text-slate-700">
-              <span className="font-semibold">ধার্যকৃত রিওয়ার্ড:</span>
-              <span className="font-bold text-emerald-600 font-mono">{currentTask.reward}</span>
+            <div className="flex justify-between items-center gap-3 text-slate-700">
+              <span className="font-medium text-slate-500">ধার্যকৃত রিওয়ার্ড</span>
+              <span className="font-semibold text-[#0D7A5F] font-mono tabular-nums">{currentTask.reward}</span>
             </div>
-            <div className="flex justify-between items-center text-slate-700">
-              <span className="font-semibold">স্ট্যাটাস:</span>
-              <span className="font-bold text-amber-600">Pending Admin Verification</span>
+            <div className="flex justify-between items-center gap-3 text-slate-700">
+              <span className="font-medium text-slate-500">স্ট্যাটাস</span>
+              <span className="font-semibold text-[#B47B00]">Pending Admin Verification</span>
             </div>
           </div>
 
@@ -353,7 +349,7 @@ const VideoSubmitApp = () => {
               setTimelineNotes('');
               setSelectedTaskIndex((prev) => (prev + 1) % VIDEO_PROMPT_10_TASKS.length);
             }}
-            className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl text-xs transition shadow-md cursor-pointer"
+            className="w-full bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold py-2.5 rounded-lg text-xs transition-colors cursor-pointer"
           >
             পরবর্তী ভিডিও মেকিং টাস্ক শুরু করুন
           </button>
@@ -363,254 +359,251 @@ const VideoSubmitApp = () => {
   }
 
   return (
-    <div className="p-3 sm:p-5 max-w-4xl mx-auto pb-28 space-y-4">
-      
-      {/* Top Banner */}
-      <div className="bg-gradient-to-br from-purple-900 via-indigo-950 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-md border border-purple-800/80 space-y-3">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30 inline-flex items-center gap-1 mb-1.5">
-              <Clapperboard size={12} />
-              <span>10 Commercial Product Video Prompts</span>
-            </span>
-            <h1 className="text-lg sm:text-2xl font-black tracking-tight">
-              Video Submit Work (ভিডিও মেকিং ও ভিডিও সাবমিট)
-            </h1>
-            <p className="text-xs text-purple-200 mt-0.5 max-w-xl leading-relaxed">
-              Commercial Product Video Ad Creation & Timeline Screen Recording Demonstration Proof.
-            </p>
-            <p className="text-[11px] text-purple-300/90 mt-0.5 leading-snug">
-              ১০টি কঠিন ও হাই-কনভার্টিং কমার্শিয়াল প্রোডাক্ট ভিডিও তৈরির প্রম্পট। ভিডিও বানিয়ে এডিটিং টাইমলাইনের স্ক্রিন রেকর্ডসহ সাবমিট করুন।
-            </p>
-          </div>
-
-          <div className="bg-purple-950/80 border border-purple-800/80 px-4 py-2.5 rounded-2xl text-center shrink-0 w-full sm:w-auto">
-            <div className="text-[10px] uppercase font-bold text-purple-300">টাস্ক রিওয়ার্ড</div>
-            <div className="text-xl font-bold font-mono text-emerald-400 mt-0.5">
-              {currentTask.reward}
-            </div>
-          </div>
-        </div>
-
-        {/* Task Selector */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-purple-800/60">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="font-semibold text-purple-300">টাস্ক নির্বাচন ({selectedTaskIndex + 1}/১০):</span>
-          </div>
-
-          <select
-            value={selectedTaskIndex}
-            onChange={(e) => {
-              setSelectedTaskIndex(Number(e.target.value));
-              setErrorMsg(null);
-            }}
-            className="bg-slate-900 border border-purple-700/80 text-white text-xs font-semibold rounded-xl px-3 py-1.5 focus:outline-none focus:border-purple-400 cursor-pointer"
-          >
-            {VIDEO_PROMPT_10_TASKS.map((t, idx) => (
-              <option key={t.id} value={idx}>
-                #{t.id}: {t.title.slice(0, 30)}... ({t.reward})
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* MANDATORY SCREEN RECORDING NOTICE */}
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl p-4 text-amber-950 space-y-2">
-        <div className="flex items-center gap-2 font-black text-xs sm:text-sm text-amber-900">
-          <Video size={17} className="text-amber-600 shrink-0" />
-          <span>বাধ্যতামূলক নিয়ম: ভিডিও এডিটিংয়ের স্ক্রিন রেকর্ডিং টাইমলাইন প্রমাণ</span>
-        </div>
-        <p className="text-xs text-amber-900 leading-relaxed font-medium">
-          প্রদত্ত প্রম্পট ও স্টোরিবোর্ড অনুযায়ী ভিডিওটি আপনি নিজে ক্যাপকাট (CapCut), প্রিমিয়ার প্রো (Premiere Pro), ডাভিঞ্চি বা অন্য কোনো সফটওয়্যারে এডিট করেছেন তা প্রমাণ করতে <strong>ভিডিও টাইমলাইনের স্ক্রিন রেকর্ড করা ভিডিও ফাইল বা গুগল ড্রাইভ/ইউটিউব লিংক সাবমিট করা বাধ্যতামূলক</strong>।
-        </p>
-      </div>
-
-      {/* SELECTED PROMPT SPECIFICATION CARD */}
-      <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
-                {currentTask.category}
-              </span>
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
-                {currentTask.durationSec}
-              </span>
-            </div>
-            <h2 className="text-base sm:text-lg font-black text-slate-900">
-              {currentTask.title}
-            </h2>
-          </div>
-
-          <button
-            onClick={handleCopyBrief}
-            className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 flex items-center gap-1.5 transition cursor-pointer"
-          >
-            {copiedBrief ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
-            <span>{copiedBrief ? 'স্টোরিবোর্ড কপি হয়েছে!' : 'স্টোরিবোর্ড কপি করুন'}</span>
-          </button>
-        </div>
-
-        {/* Storyboard Prompt */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-            ভিডিও স্ক্রিপ্ট ও স্টোরিবোর্ড প্রম্পট নির্দেশনা:
-          </label>
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
-            {currentTask.storyboardPrompt}
-          </div>
-        </div>
-
-        {/* Video Steps */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-            টাইমকোড অনুযায়ী সিকোয়েন্স ধাপসমূহ:
-          </label>
-          <div className="space-y-2 text-xs text-slate-700">
-            {currentTask.videoSteps.map((step, idx) => (
-              <div key={idx} className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-start gap-2">
-                <Film size={14} className="text-purple-600 shrink-0 mt-0.5" />
-                <span className="leading-snug">{step}</span>
+    <div className="min-h-full bg-[#F4F5F7] p-3 sm:p-5 pb-28">
+      <div className="max-w-3xl mx-auto space-y-4">
+        {/* Top Banner */}
+        <div className="bg-[#0A4D8C] rounded-xl p-5 text-white border border-[#083D70] space-y-3.5">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-white/80 mb-1">
+                <Clapperboard size={13} />
+                <span>10 Commercial Product Video Prompts</span>
               </div>
-            ))}
-          </div>
-        </div>
+              <h1 className="text-lg sm:text-xl font-semibold tracking-tight">
+                Video Submit Work (ভিডিও মেকিং ও ভিডিও সাবমিট)
+              </h1>
+              <p className="text-xs text-white/80 mt-1 max-w-xl leading-relaxed">
+                ১০টি কমার্শিয়াল প্রোডাক্ট ভিডিও তৈরির প্রম্পট। ভিডিও বানিয়ে এডিটিং টাইমলাইনের স্ক্রিন রেকর্ডসহ সাবমিট করুন।
+              </p>
+            </div>
 
-        <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 font-medium flex items-center gap-2">
-          <Sparkles size={14} className="text-indigo-600 shrink-0" />
-          <span><strong>টেকনিক্যাল স্পেকস:</strong> {currentTask.mandatorySpecs}</span>
-        </div>
-      </div>
-
-      {/* SUBMISSION FORM */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-5">
-        <h2 className="text-base font-extrabold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-          <Film size={17} className="text-purple-600" />
-          <span>তৈরিকৃত কমার্শিয়াল ভিডিও ও টাইমলাইন স্ক্রিন রেকর্ড সাবমিশন</span>
-        </h2>
-
-        {/* 1. Final Commercial Video Link */}
-        <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-slate-800">
-            ১. তৈরিকৃত ফাইনাল কমার্শিয়াল ভিডিওর লিঙ্ক (TikTok, Reels, Shorts, Drive) *
-          </label>
-          <input
-            type="url"
-            placeholder="https://tiktok.com/@... অথবা https://drive.google.com/..."
-            value={commercialVideoUrl}
-            onChange={(e) => setCommercialVideoUrl(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-purple-500 font-mono"
-          />
-        </div>
-
-        {/* 2. Screen Recording Video Proof */}
-        <div className="space-y-3 pt-3 border-t border-slate-100">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <label className="block text-xs font-bold text-slate-800">
-              ২. ভিডিও এডিটিংয়ের টাইমলাইন স্ক্রিন রেকর্ডিং প্রমাণ (Screen Record Proof) *
-            </label>
-
-            <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl text-xs">
-              <button
-                type="button"
-                onClick={() => setScreenRecordType('link')}
-                className={`px-3 py-1 rounded-lg font-bold transition cursor-pointer ${screenRecordType === 'link' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600'}`}
-              >
-                ড্রাইভ/ইউটিউব লিংক
-              </button>
-              <button
-                type="button"
-                onClick={() => setScreenRecordType('upload')}
-                className={`px-3 py-1 rounded-lg font-bold transition cursor-pointer ${screenRecordType === 'upload' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600'}`}
-              >
-                ভিডিও ফাইল আপলোড
-              </button>
+            <div className="bg-white/10 border border-white/15 px-4 py-2.5 rounded-lg text-left sm:text-right shrink-0 w-full sm:w-auto">
+              <div className="text-[11px] font-medium text-white/75">টাস্ক রিওয়ার্ড</div>
+              <div className="text-lg font-semibold font-mono tabular-nums text-white mt-0.5">
+                {currentTask.reward}
+              </div>
             </div>
           </div>
 
-          {screenRecordType === 'link' ? (
-            <input
-              type="url"
-              placeholder="https://drive.google.com/file/d/... অথবা ইউটিউব/ক্লাউড ভিডিও লিংক"
-              value={screenRecordUrl}
-              onChange={(e) => setScreenRecordUrl(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-purple-500 font-mono"
-            />
-          ) : (
-            <label className="p-4 bg-slate-50 border-2 border-dashed border-slate-300 hover:border-purple-500 rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition text-xs font-semibold text-slate-700">
-              <Video size={16} />
-              <span>{screenRecordFile ? `নির্বাচিত ফাইল: ${screenRecordFile.name}` : 'টাইমলাইন স্ক্রিন রেকর্ড ভিডিও ফাইল বেছে নিন (Max 50MB)'}</span>
-              <input
-                type="file"
-                accept="video/*"
-                onChange={handleScreenRecordUpload}
-                className="hidden"
-              />
-            </label>
-          )}
-        </div>
+          {/* Task Selector */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-white/15">
+            <span className="text-xs font-medium text-white/85">
+              টাস্ক নির্বাচন ({selectedTaskIndex + 1}/১০)
+            </span>
 
-        {/* 3. Editing Software & Notes */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-100">
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">
-              ব্যবহৃত ভিডিও এডিটিং সফটওয়্যার *
-            </label>
             <select
-              value={editingSoftware}
-              onChange={(e) => setEditingSoftware(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-purple-500"
+              value={selectedTaskIndex}
+              onChange={(e) => {
+                setSelectedTaskIndex(Number(e.target.value));
+                setErrorMsg(null);
+              }}
+              className="bg-white text-[#111827] border border-white/20 text-xs font-medium rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer max-w-full"
             >
-              <option value="CapCut Pro (PC/Mobile)">CapCut Pro (PC/Mobile)</option>
-              <option value="Adobe Premiere Pro">Adobe Premiere Pro</option>
-              <option value="Adobe After Effects">Adobe After Effects</option>
-              <option value="DaVinci Resolve">DaVinci Resolve</option>
-              <option value="VN Video Editor">VN Video Editor</option>
-              <option value="Wondershare Filmora">Wondershare Filmora</option>
+              {VIDEO_PROMPT_10_TASKS.map((t, idx) => (
+                <option key={t.id} value={idx}>
+                  #{t.id}: {t.title.slice(0, 34)}... ({t.reward})
+                </option>
+              ))}
             </select>
           </div>
+        </div>
 
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">
-              টাইমলাইন নোট / ইফেক্ট বিবরণ (ঐচ্ছিক)
+        {/* MANDATORY SCREEN RECORDING NOTICE */}
+        <div className="bg-[#FEF7E0] border border-[#F3DFA2] rounded-xl p-4 text-[#5F4B16] space-y-1.5">
+          <div className="flex items-center gap-2 font-semibold text-xs text-[#47380F]">
+            <Video size={16} className="text-[#B47B00] shrink-0" />
+            <span>Mandatory Rule: Timeline Screen Recording Proof</span>
+          </div>
+          <p className="text-xs leading-relaxed">
+            To verify manual editing in CapCut, Premiere Pro, or DaVinci Resolve, submitting a <strong>screen recording video file or Google Drive/YouTube link</strong> of your editing timeline is mandatory.
+          </p>
+        </div>
+
+        {/* SELECTED PROMPT SPECIFICATION CARD */}
+        <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3.5">
+            <div>
+              <div className="text-[11px] font-medium text-[#0A4D8C] mb-1">
+                {currentTask.category} · {currentTask.durationSec}
+              </div>
+              <h2 className="text-base font-semibold text-[#111827]">
+                {currentTask.title}
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCopyBrief}
+              className="bg-[#F8FAFC] hover:bg-slate-100 text-slate-700 text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              {copiedBrief ? <Check size={13} className="text-[#0D7A5F]" /> : <Copy size={13} />}
+              <span>{copiedBrief ? 'স্টোরিবোর্ড কপি হয়েছে' : 'স্টোরিবোর্ড কপি করুন'}</span>
+            </button>
+          </div>
+
+          {/* Storyboard Prompt */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-[#111827] block">
+              ভিডিও স্ক্রিপ্ট ও স্টোরিবোর্ড প্রম্পট নির্দেশনা
             </label>
-            <input
-              type="text"
-              placeholder="e.g. কালার এলইউটি, স্পিড র‍্যাম্প ও সাউন্ড ডিজাইন সম্পন্ন"
-              value={timelineNotes}
-              onChange={(e) => setTimelineNotes(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-purple-500"
-            />
+            <div className="bg-[#F8FAFC] p-3.5 rounded-lg border border-slate-200 text-xs sm:text-sm text-slate-700 leading-relaxed">
+              {currentTask.storyboardPrompt}
+            </div>
+          </div>
+
+          {/* Video Steps */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-[#111827] block">
+              টাইমকোড অনুযায়ী সিকোয়েন্স ধাপসমূহ
+            </label>
+            <div className="space-y-2 text-xs text-slate-700">
+              {currentTask.videoSteps.map((step, idx) => (
+                <div key={idx} className="bg-[#F8FAFC] p-2.5 rounded-lg border border-slate-200 flex items-start gap-2.5">
+                  <Film size={14} className="text-[#0A4D8C] shrink-0 mt-0.5" />
+                  <span className="leading-snug">{step}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-3 bg-[#EEF5FC] border border-[#D4E4F7] rounded-lg text-xs text-slate-700 flex items-start gap-2">
+            <Info size={14} className="text-[#0A4D8C] shrink-0 mt-0.5" />
+            <span><strong className="text-[#111827]">টেকনিক্যাল স্পেকস:</strong> {currentTask.mandatorySpecs}</span>
           </div>
         </div>
 
-        {errorMsg && (
-          <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs flex items-start gap-2 font-semibold">
-            <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
-            <span>{errorMsg}</span>
+        {/* SUBMISSION FORM */}
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-4">
+          <h2 className="text-sm font-semibold text-[#111827] border-b border-slate-100 pb-3 flex items-center gap-2">
+            <Film size={16} className="text-[#0A4D8C]" />
+            <span>Commercial Video & Screen Recording Submission</span>
+          </h2>
+
+          {/* 1. Final Commercial Video Link */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-medium text-[#111827]">
+              1. Final Commercial Video Link (TikTok, Reels, Shorts, Google Drive) *
+            </label>
+            <input
+              type="url"
+              placeholder="https://tiktok.com/@... or https://drive.google.com/..."
+              value={commercialVideoUrl}
+              onChange={(e) => setCommercialVideoUrl(e.target.value)}
+              className="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#0A4D8C] font-mono"
+            />
           </div>
-        )}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition shadow-md active:scale-95 text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
-        >
-          {isSubmitting ? (
-            <>
-              <RefreshCw size={16} className="animate-spin" />
-              <span>সাবমিট হচ্ছে...</span>
-            </>
-          ) : (
-            <>
-              <Send size={15} />
-              <span>প্রোডাক্ট ভিডিও ও স্ক্রিন রেকর্ড সাবমিট করুন (অ্যাডমিন ভেরিফিকেশন)</span>
-            </>
+          {/* 2. Screen Recording Video Proof */}
+          <div className="space-y-3 pt-3 border-t border-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="block text-xs font-medium text-[#111827]">
+                2. Editing Timeline Screen Recording Proof *
+              </label>
+
+              <div className="flex gap-1 bg-[#F4F5F7] p-1 rounded-lg text-xs border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setScreenRecordType('link')}
+                  className={`px-3 py-1 rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                    screenRecordType === 'link' ? 'bg-[#0A4D8C] text-white' : 'text-slate-600'
+                  }`}
+                >
+                  Drive / Cloud Link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScreenRecordType('upload')}
+                  className={`px-3 py-1 rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                    screenRecordType === 'upload' ? 'bg-[#0A4D8C] text-white' : 'text-slate-600'
+                  }`}
+                >
+                  Upload Video File
+                </button>
+              </div>
+            </div>
+
+            {screenRecordType === 'link' ? (
+              <input
+                type="url"
+                placeholder="https://drive.google.com/file/d/... or YouTube/Cloud video link"
+                value={screenRecordUrl}
+                onChange={(e) => setScreenRecordUrl(e.target.value)}
+                className="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#0A4D8C] font-mono"
+              />
+            ) : (
+              <label className="p-4 bg-[#F8FAFC] border border-dashed border-slate-300 hover:border-[#0A4D8C] rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors text-xs font-medium text-slate-700">
+                <Video size={16} className="text-[#0A4D8C]" />
+                <span>{screenRecordFile ? `Selected File: ${screenRecordFile.name}` : 'Choose Screen Recording File (Max 50MB)'}</span>
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleScreenRecordUpload}
+                  className="hidden"
+                />
+              </label>
+            )}
+          </div>
+
+          {/* 3. Editing Software & Notes */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                Video Editing Software *
+              </label>
+              <select
+                value={editingSoftware}
+                onChange={(e) => setEditingSoftware(e.target.value)}
+                className="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#0A4D8C]"
+              >
+                <option value="CapCut Pro (PC/Mobile)">CapCut Pro (PC/Mobile)</option>
+                <option value="Adobe Premiere Pro">Adobe Premiere Pro</option>
+                <option value="Adobe After Effects">Adobe After Effects</option>
+                <option value="DaVinci Resolve">DaVinci Resolve</option>
+                <option value="VN Video Editor">VN Video Editor</option>
+                <option value="Wondershare Filmora">Wondershare Filmora</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                Timeline Notes / Effects (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Color LUT, speed ramp & audio sync applied"
+                value={timelineNotes}
+                onChange={(e) => setTimelineNotes(e.target.value)}
+                className="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#0A4D8C]"
+              />
+            </div>
+          </div>
+
+          {errorMsg && (
+            <div className="p-3 bg-[#FEF2F2] border border-[#FECACA] text-[#B91C1C] rounded-lg text-xs flex items-start gap-2 font-medium">
+              <AlertCircle size={15} className="shrink-0 mt-0.5" />
+              <span>{errorMsg}</span>
+            </div>
           )}
-        </button>
-      </form>
 
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-[#0A4D8C] hover:bg-[#083D70] disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition-colors text-xs flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {isSubmitting ? (
+              <>
+                <RefreshCw size={15} className="animate-spin" />
+                <span>Submitting...</span>
+              </>
+            ) : (
+              <>
+                <Send size={15} />
+                <span>Submit Video & Screen Recording Proof</span>
+              </>
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

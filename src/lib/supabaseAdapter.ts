@@ -237,7 +237,12 @@ export async function getDocs(queryRef: any): Promise<any> {
           exists: () => true,
           data: () => item
         }));
-        return { docs, empty: docs.length === 0 };
+        return {
+          docs,
+          empty: docs.length === 0,
+          size: docs.length,
+          forEach: (cb: (docSnap: any) => void) => docs.forEach(cb)
+        };
       }
     } catch {}
   }
@@ -254,7 +259,12 @@ export async function getDocs(queryRef: any): Promise<any> {
     exists: () => true,
     data: () => item
   }));
-  return { docs, empty: docs.length === 0 };
+  return {
+    docs,
+    empty: docs.length === 0,
+    size: docs.length,
+    forEach: (cb: (docSnap: any) => void) => docs.forEach(cb)
+  };
 }
 
 export function onSnapshot(ref: any, callback: (snapshot: any) => void, _errorCallback?: (err: any) => void): () => void {
@@ -319,7 +329,14 @@ export function onSnapshot(ref: any, callback: (snapshot: any) => void, _errorCa
             exists: () => true,
             data: () => item
           }));
-          if (active) callback({ docs, empty: docs.length === 0 });
+          if (active) {
+            callback({
+              docs,
+              empty: docs.length === 0,
+              size: docs.length,
+              forEach: (cb: (docSnap: any) => void) => docs.forEach(cb)
+            });
+          }
           return;
         }
       } catch {}
@@ -337,7 +354,12 @@ export function onSnapshot(ref: any, callback: (snapshot: any) => void, _errorCa
       data: () => item
     }));
     if (active) {
-      callback({ docs, empty: docs.length === 0 });
+      callback({
+        docs,
+        empty: docs.length === 0,
+        size: docs.length,
+        forEach: (cb: (docSnap: any) => void) => docs.forEach(cb)
+      });
     }
   };
 
@@ -441,7 +463,7 @@ function getDefaultTableData(tableName: string): any[] {
       {
         id: 'support',
         telegramUrl: 'https://t.me/unityearning',
-        whatsappUrl: 'https://wa.me/8801919012426',
+        whatsappUrl: 'https://whatsapp.com/channel/0029VbB4RqI3mFY5nkzbCs0p',
         videoUrl: 'https://youtube.com',
         logoUrl: ''
       },

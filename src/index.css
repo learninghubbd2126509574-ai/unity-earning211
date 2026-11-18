@@ -10,8 +10,8 @@
   }
 
   body {
-    background-color: #f1f5f9;
-    color: #0f172a;
+    background-color: #F4F5F7;
+    color: #1E2329;
     overflow-x: hidden;
   }
 
@@ -23,14 +23,14 @@
   }
 }
 
-/* Custom Scrollbar Styling */
+/* Subtle Formal Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(15, 23, 42, 0.03);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -42,53 +42,21 @@
   background: rgba(100, 116, 139, 0.45);
 }
 
-/* Smooth Pulse & Slow Animations */
-@keyframes spinSlow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.hide-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
-.animate-spin-slow {
-  animation: spinSlow 8s linear infinite;
+.hide-scrollbar,
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Gift Box Lid Opening & Closing Animation */
-@keyframes giftLidBounce {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  18% {
-    transform: translateY(-7px) rotate(-9deg);
-  }
-  32% {
-    transform: translateY(-8px) rotate(-11deg);
-  }
-  48% {
-    transform: translateY(0) rotate(0deg);
-  }
-  65% {
-    transform: translateY(-5px) rotate(6deg);
-  }
-  80% {
-    transform: translateY(0) rotate(0deg);
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
-
-.animate-gift-lid {
-  transform-origin: 25% 85%;
-  animation: giftLidBounce 2.4s ease-in-out infinite;
-}
-
-@keyframes giftGlow {
-  0%, 100% {
-    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4), 0 0 10px rgba(236, 72, 153, 0.3);
-  }
-  50% {
-    box-shadow: 0 6px 28px rgba(245, 158, 11, 0.75), 0 0 20px rgba(236, 72, 153, 0.55);
-  }
-}
-
-.animate-gift-glow {
-  animation: giftGlow 2s ease-in-out infinite;
-}
-

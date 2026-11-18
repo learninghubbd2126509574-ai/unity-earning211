@@ -41,6 +41,26 @@ export const WORK_MODULES: WorkModuleInfo[] = [
     rateInfo: 'BDT 1 per 10 verified links'
   },
   {
+    id: 'shop',
+    title: 'Affiliate Marketing & Shop',
+    shortDesc: 'দারাজের মতো ইউনিটি শপ থেকে পণ্য শেয়ার ও সেল করে নিশ্চিত ১৫০৳ অথবা ২০০৳ কমিশন আয় করুন।',
+    route: '/shop',
+    badge: 'Commission',
+    iconName: 'ShoppingBag',
+    color: 'bg-rose-100 text-rose-600',
+    rateInfo: '৳150 - ৳200 commission per sale'
+  },
+  {
+    id: 'moderation',
+    title: 'Content Moderator Career',
+    shortDesc: '৫টি নির্দিষ্ট পদে আকর্ষণীয় বেতনে প্ল্যাটফর্ম মডারেটর হিসেবে সরাসরি আবেদন করুন।',
+    route: '/module/moderation',
+    badge: 'Career Role',
+    iconName: 'ShieldCheck',
+    color: 'bg-cyan-100 text-cyan-600',
+    rateInfo: 'BDT 18,000 - 25,000 monthly'
+  },
+  {
     id: 'video',
     title: 'Video Submit Work',
     shortDesc: 'Create commercial product promotional video ads and submit timeline editing proof.',
@@ -71,16 +91,6 @@ export const WORK_MODULES: WorkModuleInfo[] = [
     rateInfo: '10 points per task'
   },
   {
-    id: 'shop',
-    title: 'Product Selling & Affiliate',
-    shortDesc: 'Promote verified catalog products and earn sales commissions.',
-    route: '/shop',
-    badge: 'Commission',
-    iconName: 'ShoppingBag',
-    color: 'bg-rose-100 text-rose-600',
-    rateInfo: 'High commission on sales'
-  },
-  {
     id: 'ad_viewing',
     title: 'Sponsored Ad Viewing',
     shortDesc: 'View sponsored brand campaigns with interactive timer verification.',
@@ -89,16 +99,6 @@ export const WORK_MODULES: WorkModuleInfo[] = [
     iconName: 'Eye',
     color: 'bg-teal-100 text-teal-600',
     rateInfo: 'BDT 0.50 per verified view'
-  },
-  {
-    id: 'moderation',
-    title: 'Content Moderation Work',
-    shortDesc: 'Evaluate community submissions and flag policy-violating items.',
-    route: '/module/moderation',
-    badge: 'Active Task',
-    iconName: 'CheckSquare',
-    color: 'bg-cyan-100 text-cyan-600',
-    rateInfo: 'BDT 1 per 5 reviewed items'
   },
   {
     id: 'social_marketing',

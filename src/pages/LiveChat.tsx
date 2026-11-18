@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Radio } from 'lucide-react';
+import { Send, MessageSquare, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { generate320RealisticChatPool } from '../data/liveChatMessages';
+import { generate500RealisticChatPool } from '../data/liveChatMessages';
 
 interface ChatMessage {
   id: string;
@@ -10,47 +10,83 @@ interface ChatMessage {
   text: string;
   timeString: string;
   isUser?: boolean;
-  avatarColor: string;
 }
 
-const AVATAR_COLORS = [
-  'from-blue-600 to-indigo-700',
-  'from-emerald-600 to-teal-700',
-  'from-purple-600 to-violet-700',
-  'from-rose-600 to-pink-700',
-  'from-amber-600 to-orange-700',
-  'from-cyan-600 to-blue-700',
-  'from-fuchsia-600 to-purple-700'
+const ALL_CHAT_MESSAGES = generate500RealisticChatPool();
+
+const AVATAR_COLOR_PALETTE = [
+  'bg-[#0A4D8C] text-white border-[#0A4D8C]',         // Blue
+  'bg-white text-[#1E2329] border-slate-300',         // White
+  'bg-[#FACC15] text-[#1E2329] border-[#EAB308]',     // Yellow
+  'bg-[#1E2329] text-white border-[#1E2329]',         // Black
+  'bg-[#0D7A5F] text-white border-[#0D7A5F]',         // Deep Teal
+  'bg-[#1D4ED8] text-white border-[#1D4ED8]',         // Royal Blue
+  'bg-[#EAB308] text-white border-[#CA8A04]',         // Gold Amber
+  'bg-[#334155] text-white border-[#334155]'          // Slate Charcoal
 ];
 
-const ALL_320_MESSAGES = generate320RealisticChatPool();
+function getAvatarColorClass(userName: string): string {
+  let hash = 0;
+  for (let i = 0; i < userName.length; i++) {
+    hash = (hash * 31 + userName.charCodeAt(i)) >>> 0;
+  }
+  return AVATAR_COLOR_PALETTE[hash % AVATAR_COLOR_PALETTE.length];
+}
+
+function getContextualPeerReply(userText: string): { userName: string; district: string; text: string } | null {
+  const lower = userText.toLowerCase();
+
+  if (lower.includes('moderator') || lower.includes('মডারেটর') || lower.includes('apply') || lower.includes('এপ্লাই')) {
+    return {
+      userName: 'Sabbir Ahmed',
+      district: 'Dhaka',
+      text: 'ভাই Moderator আবেদন রিভিউ হতে সাধারণত ৩ থেকে ৭ কর্মদিবস সময় লাগে। আপনার আগের কাজের রেকর্ড ঠিক থাকলে টিম থেকে আপডেট পেয়ে যাবেন।'
+    };
+  }
+  if (lower.includes('lead') || lower.includes('লিড') || lower.includes('convert') || lower.includes('কনভার্ট')) {
+    return {
+      userName: 'Farhana Akter',
+      district: 'Chattogram',
+      text: 'লিড জেনারেশনে শুধু লিংক শেয়ার না করে বাংলায় কাজের নিয়মটা ২-৩ লাইনে বুঝিয়ে বললে কনভার্ট রেট অনেক ভালো আসে ভাই, আলহামদুলিল্লাহ আমার ডেইলি ৩-৪ টা হচ্ছে।'
+    };
+  }
+  if (lower.includes('typing') || lower.includes('টাইপিং') || lower.includes('start') || lower.includes('স্টার্ট') || lower.includes('cooldown') || lower.includes('লক')) {
+    return {
+      userName: 'Tanvir Hasan',
+      district: 'Sylhet',
+      text: 'টাইপিং কাজ করার আগে Start বাটনে ক্লিক করে ৩০ মিনিটের টাইমার অন করতে হয় ভাই, আর মাঝপথে পেজ রিফ্রেশ দিলে ২ ঘণ্টার কুলডাউন লক পড়ে যায়।'
+    };
+  }
+  if (lower.includes('submit') || lower.includes('সাবমিট') || lower.includes('approve') || lower.includes('অ্যাপ্রুভ') || lower.includes('problem') || lower.includes('সমস্যা')) {
+    return {
+      userName: 'Mehedi Hasan Shuvo',
+      district: 'Rajshahi',
+      text: 'ভাই সাবমিট বা অ্যাপ্রুভ না হলে দেখেন সব বাধ্যতামূলক ঘর সঠিকভাবে পূরণ করেছেন কি না এবং Google Sheet / Drive লিংক "Anyone with the link" করা আছে কি না।'
+    };
+  }
+  return null;
+}
 
 export const LiveChat = () => {
   const { profile } = useAuth();
 
-  // Active online student counter under 150 (fluctuates between 39 and 150)
-  const [onlineCount, setOnlineCount] = useState(() => Math.floor(Math.random() * (120 - 78 + 1)) + 78);
-
-  // Input message
+  // Active online student counter
+  const [onlineCount, setOnlineCount] = useState(() => Math.floor(Math.random() * (126 - 82 + 1)) + 82);
   const [inputText, setInputText] = useState('');
 
-  // Queue and visible messages state
-  const poolIndexRef = useRef(14);
+  const poolIndexRef = useRef(18);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    // Initial 14 messages
-    return ALL_320_MESSAGES.slice(0, 14).map((m, idx) => ({
+    return ALL_CHAT_MESSAGES.slice(0, 18).map((m, idx) => ({
       id: `init-${idx}`,
       userName: m.userName,
       district: m.district,
       text: m.text,
-      timeString: `${Math.max(1, 14 - idx)} মিনিট আগে`,
-      avatarColor: AVATAR_COLORS[idx % AVATAR_COLORS.length]
+      timeString: `${Math.max(1, 18 - idx)} মিনিট আগে`
     }));
   });
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -61,30 +97,27 @@ export const LiveChat = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Online count slight realistic oscillation under 150 (between 39 and 150)
   useEffect(() => {
     const countInterval = setInterval(() => {
       setOnlineCount((prev) => {
-        const delta = Math.floor(Math.random() * 11) - 5; // -5 to +5
-        return Math.max(39, Math.min(150, prev + delta));
+        const delta = Math.floor(Math.random() * 11) - 5;
+        return Math.max(54, Math.min(148, prev + delta));
       });
-    }, 10000);
+    }, 9000);
     return () => clearInterval(countInterval);
   }, []);
 
-  // Active real-time message stream: 5 to 20 seconds intervals continuously
   useEffect(() => {
     let timeoutId: any = null;
     let burstTimeoutId: any = null;
 
     const scheduleNextMessage = () => {
-      // Delays fluctuating between 5s and 20s (minimum 5-6s) as requested
-      const delays = [5000, 6000, 7500, 9000, 11000, 13000, 15000, 18000, 20000];
+      const delays = [4500, 6000, 7500, 9000, 11000, 13500];
       const randomDelay = delays[Math.floor(Math.random() * delays.length)];
 
       timeoutId = setTimeout(() => {
-        const nextIdx = poolIndexRef.current % ALL_320_MESSAGES.length;
-        const nextData = ALL_320_MESSAGES[nextIdx];
+        const nextIdx = poolIndexRef.current % ALL_CHAT_MESSAGES.length;
+        const nextData = ALL_CHAT_MESSAGES[nextIdx];
         poolIndexRef.current += 1;
 
         const newMsg: ChatMessage = {
@@ -92,17 +125,15 @@ export const LiveChat = () => {
           userName: nextData.userName,
           district: nextData.district,
           text: nextData.text,
-          timeString: 'এইমাত্র',
-          avatarColor: AVATAR_COLORS[nextIdx % AVATAR_COLORS.length]
+          timeString: 'এইমাত্র'
         };
 
-        setMessages((prev) => [...prev.slice(-50), newMsg]);
+        setMessages((prev) => [...prev.slice(-60), newMsg]);
 
-        // 35% chance to emit a quick second reply message after 1.5 seconds!
-        if (Math.random() < 0.35) {
+        if (Math.random() < 0.45) {
           burstTimeoutId = setTimeout(() => {
-            const burstIdx = poolIndexRef.current % ALL_320_MESSAGES.length;
-            const burstData = ALL_320_MESSAGES[burstIdx];
+            const burstIdx = poolIndexRef.current % ALL_CHAT_MESSAGES.length;
+            const burstData = ALL_CHAT_MESSAGES[burstIdx];
             poolIndexRef.current += 1;
 
             const secondMsg: ChatMessage = {
@@ -110,12 +141,11 @@ export const LiveChat = () => {
               userName: burstData.userName,
               district: burstData.district,
               text: burstData.text,
-              timeString: 'এইমাত্র',
-              avatarColor: AVATAR_COLORS[burstIdx % AVATAR_COLORS.length]
+              timeString: 'এইমাত্র'
             };
 
-            setMessages((prev) => [...prev.slice(-50), secondMsg]);
-          }, 1500);
+            setMessages((prev) => [...prev.slice(-60), secondMsg]);
+          }, 2200);
         }
 
         scheduleNextMessage();
@@ -130,7 +160,6 @@ export const LiveChat = () => {
     };
   }, []);
 
-  // Handle user send message
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanText = inputText.trim();
@@ -138,93 +167,107 @@ export const LiveChat = () => {
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
-      userName: profile?.fullName || 'You (শিক্ষার্থী)',
+      userName: profile?.fullName || 'You',
       district: 'Student Account',
       text: cleanText,
       timeString: 'এইমাত্র',
-      isUser: true,
-      avatarColor: 'from-orange-500 to-amber-600'
+      isUser: true
     };
 
-    setMessages((prev) => [...prev.slice(-24), userMsg]);
+    setMessages((prev) => [...prev.slice(-60), userMsg]);
     setInputText('');
     setTimeout(scrollToBottom, 50);
+
+    const peerReply = getContextualPeerReply(cleanText);
+    if (peerReply) {
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev.slice(-60),
+          {
+            id: `reply-${Date.now()}`,
+            userName: peerReply.userName,
+            district: peerReply.district,
+            text: peerReply.text,
+            timeString: 'এইমাত্র'
+          }
+        ]);
+      }, 2800);
+    }
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto px-2 sm:px-3 pt-2 pb-1 space-y-2">
-      
-      {/* Top Header - Clean and Minimal with Member Counter Only */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white rounded-2xl p-3 sm:p-3.5 shadow-md border border-slate-800 shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="relative shrink-0">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md">
-              <Radio size={18} className="animate-pulse" />
-            </div>
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-slate-900 animate-ping" />
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-slate-900" />
+    <div className="flex flex-col h-[calc(100dvh-166px)] p-3.5 sm:p-4 space-y-2.5 bg-[#F4F5F7]">
+      {/* Formal Messaging Header */}
+      <div className="bg-white rounded-xl p-3.5 border border-slate-200/90 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-[#EEF5FC] border border-[#D4E4F7] text-[#0A4D8C] flex items-center justify-center shrink-0">
+            <MessageSquare size={17} strokeWidth={1.75} />
           </div>
-
           <div>
-            <h1 className="text-sm sm:text-base font-black tracking-tight">
+            <h1 className="text-sm font-semibold text-slate-900">
               লাইভ স্টুডেন্ট চ্যাটরুম
             </h1>
-            <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" />
-              <span className="text-emerald-400 font-bold font-mono">{onlineCount} জন মেম্বার</span> সক্রিয় আছেন
+            <p className="text-[11px] text-[#0D7A5F] font-medium tabular-nums">
+              {onlineCount} জন মেম্বার সক্রিয় আছেন
             </p>
           </div>
         </div>
       </div>
 
       {/* Main Chat Stream Container */}
-      <div 
+      <div
         ref={chatContainerRef}
-        className="flex-1 overflow-y-auto space-y-2 p-3 bg-slate-100/90 rounded-2xl border border-slate-200/90 shadow-inner relative hide-scrollbar"
+        className="flex-1 overflow-y-auto space-y-2.5 p-3 bg-white rounded-xl border border-slate-200/90 relative hide-scrollbar"
       >
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex items-start gap-2 transition-all duration-300 animate-in fade-in-50 slide-in-from-bottom-1 ${
-              msg.isUser ? 'flex-row-reverse' : ''
-            }`}
+            className={`flex items-start gap-2.5 ${msg.isUser ? 'flex-row-reverse' : ''}`}
           >
-            {/* Circular Blank Silhouette Avatar */}
-            <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${msg.avatarColor} text-white flex items-center justify-center border-2 border-white shadow-xs shrink-0 overflow-hidden relative`}>
-              <svg viewBox="0 0 100 100" className="w-full h-full bg-slate-900/40 fill-white p-0.5" title="Blank Student Avatar">
-                <circle cx="50" cy="38" r="20" className="fill-white/80" />
-                <path d="M16 95 C16 68, 30 58, 50 58 C70 58, 84 68, 84 95 Z" className="fill-white/80" />
-              </svg>
-            </div>
+            {/* Avatar */}
+            {msg.isUser && profile?.photoUrl ? (
+              <img
+                src={profile.photoUrl}
+                alt={msg.userName}
+                referrerPolicy="no-referrer"
+                className="w-7 h-7 rounded-full object-cover border border-[#0A4D8C] shrink-0"
+              />
+            ) : (
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border shadow-[0_1px_2px_rgba(15,23,42,0.06)] ${
+                  msg.isUser
+                    ? 'bg-[#0A4D8C] text-white border-[#0A4D8C]'
+                    : getAvatarColorClass(msg.userName)
+                }`}
+              >
+                <UserIcon size={13} strokeWidth={2} />
+              </div>
+            )}
 
             {/* Message Bubble */}
             <div
-              className={`max-w-[84%] sm:max-w-[78%] rounded-2xl px-3 py-2 shadow-2xs space-y-0.5 relative ${
+              className={`max-w-[82%] sm:max-w-[76%] rounded-xl px-3.5 py-2.5 space-y-1 ${
                 msg.isUser
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-tr-xs'
-                  : 'bg-white text-slate-900 border border-slate-200/90 rounded-tl-xs'
+                  ? 'bg-[#0A4D8C] text-white'
+                  : 'bg-[#F8FAFC] text-slate-800 border border-slate-200/90'
               }`}
             >
-              {/* Header Info */}
-              <div className="flex items-center justify-between gap-2 border-b border-black/5 pb-0.5">
-                <div className="flex items-center gap-1.5">
-                  <span className={`font-bold text-[11px] leading-none ${msg.isUser ? 'text-white' : 'text-slate-900'}`}>
+              <div className={`flex items-center justify-between gap-3 border-b pb-1 ${msg.isUser ? 'border-white/15' : 'border-slate-200/70'}`}>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className={`font-semibold text-[11.5px] truncate ${msg.isUser ? 'text-white' : 'text-slate-900'}`}>
                     {msg.userName}
                   </span>
-                  {msg.isUser && (
-                    <span className="text-[9px] px-1.5 py-0.2 rounded-md font-semibold bg-black/20 text-white">
-                      You
-                    </span>
+                  {msg.district && !msg.isUser && (
+                    <span className="text-[10.5px] text-slate-400 shrink-0">· {msg.district}</span>
                   )}
                 </div>
 
-                <span className={`text-[9px] font-mono ${msg.isUser ? 'text-white/80' : 'text-slate-400'}`}>
+                <span className={`text-[10px] font-mono shrink-0 ${msg.isUser ? 'text-white/75' : 'text-slate-400'}`}>
                   {msg.timeString}
                 </span>
               </div>
 
-              {/* Message Content */}
-              <p className={`text-xs leading-relaxed font-sans ${msg.isUser ? 'text-white' : 'text-slate-700'}`}>
+              <p className={`text-xs leading-relaxed ${msg.isUser ? 'text-white' : 'text-slate-700'}`}>
                 {msg.text}
               </p>
             </div>
@@ -232,26 +275,27 @@ export const LiveChat = () => {
         ))}
       </div>
 
-      {/* Input Box - Sits Cleanly Right Above Bottom Navigation Bar */}
-      <form onSubmit={handleSendMessage} className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200/90 shadow-xs shrink-0">
-        <input
-          type="text"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          placeholder="আপনার মেসেজ বা কাজের অভিজ্ঞতা লিখুন..."
-          className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 font-sans"
-        />
+      {/* Fixed Bottom Input Bar placed cleanly right above Bottom Nav */}
+      <div className="fixed bottom-[52px] left-0 right-0 max-w-[520px] md:max-w-3xl lg:max-w-4xl mx-auto px-3 sm:px-4 py-2 bg-[#F4F5F7] border-t border-slate-200/80 z-30">
+        <form onSubmit={handleSendMessage} className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-slate-200/90 shadow-xs">
+          <input
+            type="text"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder="আপনার প্রশ্ন, কাজের সমস্যা বা অভিজ্ঞতা লিখুন..."
+            className="flex-1 bg-[#F8FAFC] border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#0A4D8C] focus:bg-white transition"
+          />
 
-        <button
-          type="submit"
-          disabled={!inputText.trim()}
-          className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white p-2 rounded-xl transition shadow-xs active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
-          title="Send message"
-        >
-          <Send size={15} />
-        </button>
-      </form>
-
+          <button
+            type="submit"
+            disabled={!inputText.trim()}
+            className="bg-[#0A4D8C] hover:bg-[#083D70] disabled:opacity-40 text-white px-3.5 py-2 rounded-lg transition cursor-pointer flex items-center justify-center shrink-0"
+            title="Send message"
+          >
+            <Send size={15} />
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

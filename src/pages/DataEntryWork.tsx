@@ -13,15 +13,14 @@ import {
   Users, 
   Package, 
   Receipt, 
-  Sparkles, 
   ShieldCheck, 
-  Flame, 
   Award,
   Layers,
   ArrowRight,
   RefreshCw,
   HelpCircle,
-  FileCheck
+  FileCheck,
+  Lock
 } from 'lucide-react';
 import { DATA_ENTRY_PROJECTS, DataEntryProjectDef, downloadProjectExcel } from '../lib/dataEntryDatasets';
 import { ProjectSubmissionDoc, checkAndApplyAutoRejection } from '../lib/projectSubmissionService';
@@ -120,7 +119,7 @@ const DataEntrySystem: React.FC = () => {
 
   const handleOpenWorkspace = (proj: DataEntryProjectDef) => {
     if (!isProjectUnlocked(proj)) {
-      setLockWarning(`⚠️ অনুগ্রহ করে পূর্ববর্তী প্রজেক্টটি (Project #${proj.number - 1}) সম্পূর্ণ করে সাবমিট করুন। আগের কাজ জমা দেওয়া হলে এই প্রজেক্টটি স্বয়ংক্রিয়ভাবে আনলক হয়ে যাবে।`);
+      setLockWarning(`Please complete and submit Project #${proj.number - 1} first to unlock this project.`);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -132,7 +131,7 @@ const DataEntrySystem: React.FC = () => {
   const handleFastDownload = (e: React.MouseEvent, proj: DataEntryProjectDef) => {
     e.stopPropagation();
     if (!isProjectUnlocked(proj)) {
-      setLockWarning(`⚠️ অনুগ্রহ করে পূর্ববর্তী প্রজেক্টটি (Project #${proj.number - 1}) সম্পূর্ণ করে সাবমিট করুন। আগের কাজ জমা দেওয়া হলে এই প্রজেক্টটি স্বয়ংক্রিয়ভাবে আনলক হয়ে যাবে।`);
+      setLockWarning(`Please complete and submit Project #${proj.number - 1} first to unlock this project.`);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -148,95 +147,99 @@ const DataEntrySystem: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 pb-16 font-sans">
+    <div className="p-3 sm:p-5 max-w-4xl mx-auto space-y-4 pb-24 font-sans">
       
       {/* Lock Warning Banner */}
       {lockWarning && (
-        <div className="p-4 bg-rose-50 border-2 border-rose-200 text-rose-800 text-xs sm:text-sm font-bold rounded-2xl flex items-start justify-between gap-3 shadow-sm animate-bounce">
+        <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium rounded-xl flex items-start justify-between gap-3">
           <div className="flex items-start gap-2">
-            <span>⚠️</span>
+            <AlertTriangle size={15} className="text-rose-700 shrink-0 mt-0.5" />
             <span>{lockWarning}</span>
           </div>
-          <button onClick={() => setLockWarning(null)} className="text-rose-500 hover:text-rose-800 font-extrabold px-1 cursor-pointer">X</button>
+          <button
+            type="button"
+            onClick={() => setLockWarning(null)}
+            className="text-rose-600 hover:text-rose-800 font-semibold px-1 cursor-pointer"
+          >
+            Dismiss
+          </button>
         </div>
       )}
       
-      {/* 1. HERO HEADER: Professional White with Blue & Green Accents */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md relative overflow-hidden space-y-5">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-blue-500/10 via-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold uppercase tracking-wider">
-              <Layers size={14} className="text-blue-600" />
+      {/* 1. HERO HEADER */}
+      <div className="bg-white rounded-xl p-5 sm:p-6 border border-slate-200/90 space-y-5">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+          <div className="space-y-1.5 max-w-2xl">
+            <p className="text-xs font-medium text-[#0A4D8C] flex items-center gap-1.5">
+              <Layers size={14} strokeWidth={1.75} />
               <span>Enterprise Excel Assessment</span>
-            </div>
+            </p>
 
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 leading-tight">
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-[#1E2329] leading-snug">
               Data Entry Project Management System
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              ১০টি বাস্তবসম্মত কর্পোরেট ডাটা এন্ট্রি প্রজেক্ট। র ডাটাবেজ ডাউনলোড করে গাণিতিক যোগ-বিয়োগ, ৫০ টাকা কর্তন, শর্তসাপেক্ষ বোনাস ও ডাটা ক্লিনিং করে স্প্রেডশিট লিংক এবং স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ সাবমিট করুন।
+              Download raw Excel datasets, apply arithmetic formulas, BDT 50 deductions, and conditional bonuses, then submit your spreadsheet and Google Drive screen recording link.
             </p>
           </div>
 
-          {/* Quick Metrics Badge Group */}
+          {/* Quick Metrics */}
           <div className="grid grid-cols-2 gap-3 w-full md:w-auto shrink-0">
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 text-center">
-              <span className="text-lg font-black text-blue-600 block">10 Projects</span>
-              <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">১০টি সম্পূর্ণ প্রজেক্ট</span>
+            <div className="bg-[#F4F5F7] border border-slate-200/80 rounded-xl px-4 py-3 text-center">
+              <span className="text-base font-semibold text-[#0A4D8C] block tabular-nums">10 Projects</span>
+              <span className="text-[11px] text-slate-500 font-medium">Assigned Modules</span>
             </div>
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 text-center">
-              <span className="text-lg font-black text-emerald-600 block">50,000+</span>
-              <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">মোট ডাটা রেকর্ডস</span>
+            <div className="bg-[#F4F5F7] border border-slate-200/80 rounded-xl px-4 py-3 text-center">
+              <span className="text-base font-semibold text-[#0D7A5F] block tabular-nums">50,000+</span>
+              <span className="text-[11px] text-slate-500 font-medium">Total Records</span>
             </div>
           </div>
         </div>
 
-        {/* Highlighted Policy Banner: Strict AI Ban & 2-Hour Review Countdown */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-slate-100 text-xs">
-          <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-rose-50/70 border border-rose-200/80 text-rose-900">
-            <Ban size={18} className="text-rose-600 shrink-0" />
+        {/* Highlighted Policy Strip */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-4 border-t border-slate-100 text-xs">
+          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-rose-50/70 border border-rose-200/80 text-rose-900">
+            <Ban size={16} className="text-rose-700 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-rose-950">NO AI Allowed</p>
-              <p className="text-[10px] text-rose-800">ChatGPT, Gemini নিষিদ্ধ। ম্যানুয়ালি এক্সেল ফর্মুলা ব্যবহার করুন।</p>
+              <p className="font-semibold text-[#1E2329]">No AI Allowed</p>
+              <p className="text-[11px] text-slate-600 mt-0.5">AI tools are prohibited. Use manual Excel formulas only.</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-blue-50/70 border border-blue-200/80 text-blue-900">
-            <Video size={18} className="text-blue-600 shrink-0" />
+          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#EEF5FC] border border-[#D4E4F7] text-[#1E2329]">
+            <Video size={16} className="text-[#0A4D8C] shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-blue-950">স্ক্রিন ভিডিও প্রমাণ বাধ্যতামূলক</p>
-              <p className="text-[10px] text-blue-800">কাজের সময় স্ক্রিন রেকর্ড করে গুগল ড্রাইভ লিংক দিন।</p>
+              <p className="font-semibold text-[#1E2329]">Screen Video Proof Required</p>
+              <p className="text-[11px] text-slate-600 mt-0.5">Record your screen while working and submit a Google Drive link.</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-amber-900">
-            <Clock size={18} className="text-amber-600 shrink-0" />
+          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#FEF7E0] border border-[#F3DFA2] text-[#5F4B16]">
+            <Clock size={16} className="text-[#B47B00] shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-amber-950">২ ঘণ্টা রিভিউ উইন্ডো</p>
-              <p className="text-[10px] text-amber-800">সাবমিটের পর ২ ঘণ্টা পেন্ডিং থাকবে এবং স্বয়ংক্রিয় ভেরিফিকেশন চলবে।</p>
+              <p className="font-semibold text-[#1E2329]">2-Hour Review Window</p>
+              <p className="text-[11px] text-[#5F4B16] mt-0.5">Submissions undergo a 2-hour automated audit window.</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. PROJECTS LISTING GRID (All 10 Distinct Real-World Projects) */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      {/* 2. PROJECTS LISTING GRID */}
+      <div className="space-y-3.5">
+        <div className="flex items-center justify-between px-0.5">
           <div>
-            <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <FileSpreadsheet className="text-blue-600" size={20} />
-              নির্ধারিত ১০টি এক্সেল ডাটা এন্ট্রি প্রজেক্ট
+            <h2 className="text-base font-semibold text-[#1E2329] tracking-tight flex items-center gap-2">
+              <FileSpreadsheet className="text-[#0A4D8C]" size={18} strokeWidth={1.75} />
+              <span>Assigned 10 Excel Data Entry Projects</span>
             </h2>
-            <p className="text-xs text-slate-500">
-              র ডাটাবেজ ডাউনলোড করুন, নির্দেশিত গাণিতিক রূপান্তর শেষ করে স্প্রেডশিট লিংক ও স্ক্রিন ভিডিও সাবমিট করুন।
+            <p className="text-xs text-slate-500 mt-0.5">
+              Download raw datasets, complete calculations, and submit your sheet & Drive recording link.
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {DATA_ENTRY_PROJECTS.map((proj) => {
             const sub = userSubmissions[proj.id];
             const status = sub?.status || 'Not Started';
@@ -250,40 +253,36 @@ const DataEntrySystem: React.FC = () => {
               <div
                 key={proj.id}
                 onClick={() => handleOpenWorkspace(proj)}
-                className={`bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 group relative overflow-hidden ${
-                  !isUnlocked ? 'opacity-65 bg-slate-50/50' : ''
+                className={`bg-white rounded-xl p-5 border border-slate-200/90 hover:border-slate-300 transition-colors cursor-pointer flex flex-col justify-between space-y-4 ${
+                  !isUnlocked ? 'opacity-70 bg-slate-50/70' : ''
                 }`}
               >
-                {/* Top Row: Category, Difficulty, & Live Status */}
-                <div className="space-y-3">
+                {/* Top Row */}
+                <div className="space-y-2.5">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
-                      Project #{proj.number} • {proj.difficulty}
+                    <span className="text-xs font-medium text-slate-500 tabular-nums">
+                      Project #{proj.number} · {proj.difficulty}
                     </span>
 
-                    {/* Status Chip */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold">
                       {!isUnlocked ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-slate-200 text-slate-500 border border-slate-300">
-                          🔒 Locked
+                        <span className="inline-flex items-center gap-1 text-slate-500">
+                          <Lock size={13} /> Locked
                         </span>
                       ) : isAccepted ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          <CheckCircle2 size={13} className="text-emerald-600" />
-                          Accepted
+                        <span className="inline-flex items-center gap-1 text-[#0D7A5F]">
+                          <CheckCircle2 size={14} /> Accepted
                         </span>
                       ) : isUnderReview ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 border border-blue-300 animate-pulse">
-                          <Clock size={13} className="text-blue-600" />
-                          Under Review
+                        <span className="inline-flex items-center gap-1 text-[#0A4D8C]">
+                          <Clock size={14} /> Under Review
                         </span>
                       ) : isRejected ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-800 border border-rose-300">
-                          <AlertTriangle size={13} className="text-rose-600" />
-                          Rejected
+                        <span className="inline-flex items-center gap-1 text-rose-700">
+                          <AlertTriangle size={14} /> Rejected
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                        <span className="text-slate-500 font-medium">
                           Not Started
                         </span>
                       )}
@@ -292,10 +291,10 @@ const DataEntrySystem: React.FC = () => {
 
                   {/* Title & Subtitle */}
                   <div>
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-blue-600 transition-colors">
+                    <h3 className="text-sm sm:text-base font-semibold text-[#1E2329] leading-snug">
                       {proj.title}
                     </h3>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       {proj.subtitle}
                     </p>
                   </div>
@@ -305,20 +304,20 @@ const DataEntrySystem: React.FC = () => {
                   </p>
 
                   {/* Highlights Grid */}
-                  <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-                    <div className="bg-slate-50 rounded-xl p-2 border border-slate-100 text-slate-700">
-                      <span className="text-slate-400 block text-[9px] uppercase font-bold">Volume</span>
-                      <strong className="font-bold text-slate-900">{proj.recordsCount}</strong>
+                  <div className="grid grid-cols-2 gap-2.5 text-xs pt-1">
+                    <div className="bg-[#F4F5F7] rounded-lg px-3 py-2 border border-slate-200/60">
+                      <span className="text-slate-500 block text-[11px]">Volume</span>
+                      <strong className="font-semibold text-[#1E2329] tabular-nums">{proj.recordsCount}</strong>
                     </div>
-                    <div className="bg-slate-50 rounded-xl p-2 border border-slate-100 text-slate-700">
-                      <span className="text-slate-400 block text-[9px] uppercase font-bold">Estimated Time</span>
-                      <strong className="font-bold text-slate-900">{proj.estimatedHours}</strong>
+                    <div className="bg-[#F4F5F7] rounded-lg px-3 py-2 border border-slate-200/60">
+                      <span className="text-slate-500 block text-[11px]">Estimated Time</span>
+                      <strong className="font-semibold text-[#1E2329] tabular-nums">{proj.estimatedHours}</strong>
                     </div>
                   </div>
 
-                  {/* If Under Review -> Show Live 60m Mini Timer */}
+                  {/* If Under Review -> Show Live Mini Timer */}
                   {isUnderReview && sub?.reviewDeadline && (
-                    <div className="pt-2">
+                    <div className="pt-1">
                       <ProjectCountdownTimer 
                         deadlineIso={sub.reviewDeadline}
                         size="sm"
@@ -329,44 +328,44 @@ const DataEntrySystem: React.FC = () => {
                   )}
                 </div>
 
-                {/* Bottom Action Buttons: Balanced & Clean Grid Layout */}
+                {/* Bottom Action Buttons */}
                 <div className="pt-3.5 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                   <button
                     type="button"
                     onClick={(e) => handleFastDownload(e, proj)}
                     disabled={isDownloading}
-                    className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs font-bold transition border border-slate-200 cursor-pointer disabled:opacity-50 text-center"
+                    className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-[#F4F5F7] hover:bg-slate-200/80 text-[#1E2329] text-xs font-medium transition border border-slate-200 cursor-pointer disabled:opacity-50 whitespace-nowrap"
                     title="Download Raw Excel Dataset"
                   >
                     {isDownloading ? (
-                      <RefreshCw size={14} className="animate-spin text-blue-600" />
+                      <RefreshCw size={14} className="animate-spin text-[#0A4D8C]" />
                     ) : (
-                      <Download size={14} className="text-blue-600" />
+                      <Download size={14} className="text-[#0A4D8C]" />
                     )}
-                    <span>{isDownloading ? 'Downloading...' : 'Download Raw Dataset'}</span>
+                    <span>{isDownloading ? 'Downloading...' : 'Download Dataset'}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => handleOpenWorkspace(proj)}
-                    className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-white text-xs font-bold transition shadow-xs cursor-pointer active:scale-95 text-center ${
+                    className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-white text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                       isAccepted
-                        ? 'bg-emerald-600 hover:bg-emerald-700'
+                        ? 'bg-[#0D7A5F] hover:bg-[#0A634C]'
                         : isUnderReview
-                        ? 'bg-amber-600 hover:bg-amber-700 animate-pulse'
+                        ? 'bg-[#22262C] hover:bg-slate-800'
                         : isRejected
-                        ? 'bg-rose-600 hover:bg-rose-700'
-                        : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'
+                        ? 'bg-rose-700 hover:bg-rose-800'
+                        : 'bg-[#0A4D8C] hover:bg-[#083D70]'
                     }`}
                   >
                     <span>
                       {isAccepted
                         ? 'View Approved File'
                         : isUnderReview
-                        ? 'Review Status (Pending)'
+                        ? 'Review Status'
                         : isRejected
-                        ? 'Re-submit Project'
-                        : 'Open Workplace'}
+                        ? 'Resubmit Project'
+                        : 'Open Workspace'}
                     </span>
                     <ArrowRight size={14} />
                   </button>

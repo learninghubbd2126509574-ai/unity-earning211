@@ -49,13 +49,15 @@ export const ProjectCountdownTimer: React.FC<ProjectCountdownTimerProps> = ({
 
   if (size === 'sm') {
     return (
-      <span className={`inline-flex items-center gap-1 font-mono font-bold text-xs ${
-        isExpired 
-          ? 'text-rose-500' 
-          : isUrgent 
-            ? 'text-amber-500 animate-pulse' 
-            : 'text-blue-600'
-      }`}>
+      <span
+        className={`inline-flex items-center gap-1.5 font-mono font-semibold text-xs tabular-nums ${
+          isExpired
+            ? 'text-rose-700'
+            : isUrgent
+              ? 'text-[#B47B00]'
+              : 'text-[#0A4D8C]'
+        }`}
+      >
         <Clock size={12} />
         {isExpired ? 'Expired (60m)' : `${formattedMinutes}:${formattedSeconds}`}
       </span>
@@ -63,31 +65,35 @@ export const ProjectCountdownTimer: React.FC<ProjectCountdownTimerProps> = ({
   }
 
   return (
-    <div className={`rounded-2xl p-4 border transition-all ${
-      isExpired
-        ? 'bg-rose-50/80 border-rose-200 text-rose-900'
-        : isUrgent
-          ? 'bg-amber-50 border-amber-300 text-amber-900 shadow-sm animate-pulse'
-          : 'bg-blue-50/80 border-blue-200 text-blue-950 shadow-sm'
-    }`}>
+    <div
+      className={`rounded-xl p-4 border transition-colors ${
+        isExpired
+          ? 'bg-rose-50 border-rose-200 text-[#1E2329]'
+          : isUrgent
+            ? 'bg-[#FEF7E0] border-[#F3DFA2] text-[#5F4B16]'
+            : 'bg-[#EEF5FC] border-[#D4E4F7] text-[#1E2329]'
+      }`}
+    >
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${
-            isExpired 
-              ? 'bg-rose-100 text-rose-600' 
-              : isUrgent 
-                ? 'bg-amber-100 text-amber-700' 
-                : 'bg-blue-100 text-blue-700'
-          }`}>
-            <Clock size={20} />
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+              isExpired
+                ? 'bg-rose-100 text-rose-700'
+                : isUrgent
+                  ? 'bg-amber-100 text-[#B47B00]'
+                  : 'bg-white border border-[#D4E4F7] text-[#0A4D8C]'
+            }`}
+          >
+            <Clock size={18} strokeWidth={1.75} />
           </div>
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            <h4 className="text-xs font-medium text-slate-600">
               60-Minute Review Window
             </h4>
-            <div className="text-xl sm:text-2xl font-black font-mono tracking-tight flex items-baseline gap-1">
+            <div className="text-lg sm:text-xl font-semibold font-mono tabular-nums tracking-tight flex items-baseline gap-1.5 text-[#1E2329]">
               <span>{isExpired ? '00:00' : `${formattedMinutes}:${formattedSeconds}`}</span>
-              <span className="text-[11px] font-sans font-medium text-slate-500">
+              <span className="text-xs font-sans font-normal text-slate-500">
                 {isExpired ? 'Review Expired' : 'remaining'}
               </span>
             </div>
@@ -96,17 +102,17 @@ export const ProjectCountdownTimer: React.FC<ProjectCountdownTimerProps> = ({
 
         {/* Progress Bar Gauge */}
         <div className="w-24 sm:w-32 space-y-1 text-right">
-          <span className="text-[10px] font-bold text-slate-500">
+          <span className="text-[11px] font-medium text-slate-600 tabular-nums">
             {isExpired ? '0%' : `${Math.round(percentRemaining)}% window`}
           </span>
-          <div className="h-2 w-full bg-slate-200/80 rounded-full overflow-hidden">
-            <div 
+          <div className="h-2 w-full bg-white/80 border border-slate-200/70 rounded-full overflow-hidden">
+            <div
               className={`h-full rounded-full transition-all duration-1000 ${
-                isExpired 
-                  ? 'bg-rose-500' 
-                  : isUrgent 
-                    ? 'bg-amber-500' 
-                    : 'bg-blue-600'
+                isExpired
+                  ? 'bg-rose-600'
+                  : isUrgent
+                    ? 'bg-[#B47B00]'
+                    : 'bg-[#0A4D8C]'
               }`}
               style={{ width: `${percentRemaining}%` }}
             />
@@ -115,16 +121,16 @@ export const ProjectCountdownTimer: React.FC<ProjectCountdownTimerProps> = ({
       </div>
 
       {showWarningText && (
-        <div className="mt-3 pt-3 border-t border-slate-200/60 flex items-start gap-2 text-xs">
-          <ShieldAlert size={15} className={`shrink-0 mt-0.5 ${isExpired ? 'text-rose-600' : 'text-amber-600'}`} />
-          <p className="text-[11px] leading-relaxed text-slate-600">
+        <div className="mt-3 pt-3 border-t border-slate-200/70 flex items-start gap-2 text-xs">
+          <ShieldAlert size={15} className={`shrink-0 mt-0.5 ${isExpired ? 'text-rose-700' : 'text-[#B47B00]'}`} />
+          <p className="text-xs leading-relaxed text-slate-600">
             {isExpired ? (
-              <span className="text-rose-700 font-semibold">
+              <span className="text-rose-700 font-medium">
                 Your project was not approved within the review period and has been automatically rejected.
               </span>
             ) : (
               <span>
-                <strong>Automatic Rejection Rule:</strong> Admin must manually verify your work and video proof within 60 minutes. If not approved before deadline, this submission will be automatically marked as <strong>Rejected</strong>.
+                <strong className="font-semibold text-[#1E2329]">Automatic Rejection Rule:</strong> Admin must verify your work and video proof within 60 minutes. If not approved before the deadline, this submission will be marked as Rejected.
               </span>
             )}
           </p>

@@ -1,1188 +1,502 @@
+export type ReviewCategory =
+  | 'typing'
+  | 'form'
+  | 'data'
+  | 'affiliate'
+  | 'marketing'
+  | 'payout'
+  | 'general';
+
+export type AvatarTone = 'blue' | 'white' | 'yellow' | 'black' | 'teal' | 'indigo';
+
 export interface StudentReview {
   id: string;
   name: string;
   gender: 'male' | 'female';
   location: string;
+  workRole: string;
   roleBadge?: string;
   avatarUrl?: string;
-  rating: number;
+  avatarTone: AvatarTone;
+  rating: number; // 7 to 10 (out of 10)
   text: string;
-  category: 'typing' | 'form' | 'data' | 'course' | 'payout' | 'general';
+  category: ReviewCategory;
   date: string;
   likes: number;
   earnings?: string;
+  projectSuccessId?: string;
   isVerified: boolean;
   status: 'approved' | 'pending';
   submittedByStudentId?: string;
 }
 
-export const INITIAL_STUDENT_REVIEWS: StudentReview[] = [
-  {
-    id: 'rev-001',
-    name: 'তানভীর আহমেদ',
-    gender: 'male',
-    location: 'ঢাকা',
-    roleBadge: 'Typing Specialist',
-    avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'আলহামদুলিল্লাহ আজকে টাইপিংয়ের কাজ সম্পূর্ণ করে একটা প্রজেক্ট সম্পূর্ণ করে ১০০০ টাকা ইনকাম করেছি। টাকা সাথে সাথে মেইন একাউন্টে যোগ হয়েছে। অনেক ধন্যবাদ ইউনিটি আর্নিংকে!',
-    category: 'typing',
-    date: '১০ মিনিট আগে',
-    likes: 42,
-    earnings: '৳১,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-002',
-    name: 'সুমাইয়া আক্তার',
-    gender: 'female',
-    location: 'চট্টগ্রাম',
-    roleBadge: 'Pro Member',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'দীর্ঘ দেড় মাস টাইপিংয়ের কোর্স করেছি। তারপর আজকে প্রথম পেমেন্ট পেলাম বিকাশ এর মাধ্যমে। যারা ধৈর্য ধরে কাজ করবেন তারা অবশ্যই সফল হবেন।',
-    category: 'course',
-    date: '২৫ মিনিট আগে',
-    likes: 58,
-    earnings: '৳১,৫০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-003',
-    name: 'মোঃ রাকিবুল হাসান',
-    gender: 'male',
-    location: 'রাজশাহী',
-    roleBadge: 'Top Earner',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Alhamdulillah ajke Form Fill up project complete korar por 20% extra commission soho taka pelam. Main account e transfer korar somoy ID code ta thikmoto dite hobe, tahole kono jhamela nai.',
-    category: 'form',
-    date: '৪২ মিনিট আগে',
-    likes: 31,
-    earnings: '৳১,২০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-004',
-    name: 'ফারজানা হক',
-    gender: 'female',
-    location: 'সিলেট',
-    roleBadge: 'Form Fill Up Pro',
-    avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: '৩ মাস ফর্ম ফিলাপের কোর্স করেছি। কাজটা একদম প্রফেশনাল লেভেলের। আজকে নগদ এ ২০০০ টাকা উইথড্র নিলাম। শুকরিয়া মহান আল্লাহর!',
-    category: 'course',
-    date: '১ ঘণ্টা আগে',
-    likes: 64,
-    earnings: '৳২,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-005',
-    name: 'আরিফুল ইসলাম',
-    gender: 'male',
-    location: 'খুলনা',
-    roleBadge: 'Data Entry Expert',
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Data entry kaj ta submit korar por prothome pending e chilo. Pore helpline e message deyar por ora check kore 30 min er moddhe approve kore dilo. Support team really helpful!',
-    category: 'data',
-    date: '১ ঘণ্টা আগে',
-    likes: 19,
-    earnings: '৳৮৫০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-006',
-    name: 'সাদিয়া জান্নাত',
-    gender: 'female',
-    location: 'রংপুর',
-    roleBadge: 'Verified Freelancer',
-    rating: 5,
-    text: 'ডিজিটাল মার্কেটিং দুই মাস কোর্স করে আজকে ২০০০ টাকা ইনকাম করলাম আলহামদুলিল্লাহ। বিকাশ উইথড্র নিলাম ১৫ মিনিটের মধ্যে টাকা একাউন্টে চলে আসছে।',
-    category: 'course',
-    date: '২ ঘণ্টা আগে',
-    likes: 47,
-    earnings: '৳২,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-007',
-    name: 'নাজমুল হোসেন',
-    gender: 'male',
-    location: 'বগুড়া',
-    roleBadge: 'Batch 14 Student',
-    avatarUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'অনেকে হয়তো ভাবেন অনলাইনে আয় সম্ভব না। আমি নিজে দেড় মাস ক্লাস করে আজকে ১২০০ টাকা ইনকাম করে উইথড্র নিয়ে প্রমাণ পেলাম। সঠিক নিয়ম মেনে কাজ করলে অবশ্যই ইনকাম হবে।',
-    category: 'payout',
-    date: '২ ঘণ্টা আগে',
-    likes: 38,
-    earnings: '৳১,২০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-008',
-    name: 'নুসরাত জাহান',
-    gender: 'female',
-    location: 'কুমিল্লা',
-    roleBadge: 'Typing Specialist',
-    rating: 5,
-    text: 'আমার ফর্ম ফিলাপ সাবমিট করলে একটু পেন্ডিং ছিল, গ্রুপের মধ্যে বলার পর ট্রেইনার ভাইয়া দেখে সমাধান করে দিয়েছিলেন। কাজগুলো খুবই ভালো ও সহজ।',
-    category: 'form',
-    date: '৩ ঘণ্টা আগে',
-    likes: 22,
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-009',
-    name: 'সাব্বির আহমেদ',
-    gender: 'male',
-    location: 'ময়মনসিংহ',
-    roleBadge: 'Level 2 Earner',
-    avatarUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Alhamdulillah received my 3rd payout today! Completed the Data Entry Module without any errors. Highly recommended for students who want genuine part-time income.',
-    category: 'payout',
-    date: '৩ ঘণ্টা আগে',
-    likes: 51,
-    earnings: '৳৩,৫০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-010',
-    name: 'জান্নাতুল ফেরদৌস',
-    gender: 'female',
-    location: 'গাজীপুর',
-    roleBadge: 'Verified Student',
-    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'টাইপিং প্রজেক্ট শেষ করে আজ নগদ এর মাধ্যমে ৯৫০ টাকা পেলাম। ঘরে বসে পড়ার পাশাপাশি এমন কাজের সুযোগ পেয়ে আমি সত্যি খুব আনন্দিত।',
-    category: 'typing',
-    date: '৪ ঘণ্টা আগে',
-    likes: 35,
-    earnings: '৳৯৫০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-011',
-    name: 'শাকিল খান',
-    gender: 'male',
-    location: 'নারায়ণগঞ্জ',
-    roleBadge: 'Data Entry Pro',
-    rating: 5,
-    text: 'Form Fill up er kaj gulo khub e standard. Video tutorial gulo valovabe follow korle kono error hoy na. Ajke 1000 taka income holo.',
-    category: 'form',
-    date: '৪ ঘণ্টা আগে',
-    likes: 18,
-    earnings: '৳১,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-012',
-    name: 'খাদিজা আক্তার',
-    gender: 'female',
-    location: 'বরিশাল',
-    roleBadge: 'Top Contributor',
-    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'আমি প্রথমে একটু কনফিউজড ছিলাম যে কিভাবে ফর্ম সাবমিট করতে হয়। পরে সাপোর্ট গ্রুপে জানালে সাথে সাথে হেল্প পেয়েছি। আজ প্রথম প্রজেক্টের টাকা পেলাম!',
-    category: 'general',
-    date: '৫ ঘণ্টা আগে',
-    likes: 41,
-    earnings: '৳৭০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-013',
-    name: 'রিফাত ইসলাম',
-    gender: 'male',
-    location: 'টাঙ্গাইল',
-    roleBadge: 'Typing Specialist',
-    rating: 5,
-    text: 'দেড় মাস টাইপিং প্র্যাকটিস করে এখন স্পিড অনেক ভালো। আজকে ২টা কাজ জমা দিয়ে ১৫০০ টাকা আয় করলাম। বিকাশে ক্যাশআউট কমপ্লিট।',
-    category: 'typing',
-    date: '৫ ঘণ্টা আগে',
-    likes: 29,
-    earnings: '৳১,৫০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-014',
-    name: 'প্রিয়াঙ্কা দাস',
-    gender: 'female',
-    location: 'দিনাজপুর',
-    roleBadge: 'Verified Member',
-    avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Data entry and Form fill up project was super easy. Got 20% bonus commission as promised in the special offer banner! Thanks Unity Earning.',
-    category: 'data',
-    date: '৬ ঘণ্টা আগে',
-    likes: 33,
-    earnings: '৳১,৩০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-015',
-    name: 'মেহেদী হাসান',
-    gender: 'male',
-    location: 'যশোর',
-    roleBadge: 'Level 1 Earner',
-    avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'পেনন্ডিং নিয়ে যারা চিন্তিত তারা একটু অপেক্ষা করবেন। এডমিন ভাইয়া ম্যানুয়ালি চেক করে খুব দ্রুত এপ্রুভ করে দেন। আমারটাও ১ ঘণ্টার মধ্যে এপ্রুভ হয়েছে।',
-    category: 'general',
-    date: '৬ ঘণ্টা আগে',
-    likes: 27,
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-016',
-    name: 'মাহফুজা সুলতানা',
-    gender: 'female',
-    location: 'কক্সবাজার',
-    roleBadge: 'Digital Marketer',
-    rating: 5,
-    text: '২ মাস ডিজিটাল মার্কেটিং কোর্স সম্পন্ন করে আজকে ২,০০০ টাকা বিকাশ এ পেমেন্ট রিসিভ করলাম। অসাধারণ একটি প্ল্যাটফর্ম!',
-    category: 'course',
-    date: '৭ ঘণ্টা আগে',
-    likes: 53,
-    earnings: '৳২,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-017',
-    name: 'তৌহিদুজ্জামান',
-    gender: 'male',
-    location: 'পাবনা',
-    roleBadge: 'Form Master',
-    rating: 5,
-    text: 'Form Fillup project kaj submit korechilam, ajke review complete hoye balance jog hoyeche. 20% commission bonus o peyechi!',
-    category: 'form',
-    date: '৭ ঘণ্টা আগে',
-    likes: 16,
-    earnings: '৳১,১০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-018',
-    name: 'রুবিনা আক্তার',
-    gender: 'female',
-    location: 'ফরিদপুর',
-    roleBadge: 'Batch 11 Student',
-    avatarUrl: 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'আলহামদুলিল্লাহ টাইপিং এবং ডাটা এন্ট্রি দুটা কাজই রেগুলার করছি। মাস শেষে ভালো একটা পকেট খরচ বের হয়ে যায়।',
-    category: 'typing',
-    date: '৮ ঘণ্টা আগে',
-    likes: 39,
-    earnings: '৳১,৪৫০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-019',
-    name: 'সাইদুর রহমান',
-    gender: 'male',
-    location: 'কিশোরগঞ্জ',
-    roleBadge: 'Pro Freelancer',
-    avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Balance transfer feature ta khub fast. Ami amar friend er ID te 500 tk transfer korlam sathe sathe chole gelo. Just 7-digit ID code ta thikmoto dite hoy.',
-    category: 'payout',
-    date: '৮ ঘণ্টা আগে',
-    likes: 24,
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-020',
-    name: 'আনিকা তাবাসসুম',
-    gender: 'female',
-    location: 'কুষ্টিয়া',
-    roleBadge: 'Verified Member',
-    rating: 5,
-    text: '১.৫ মাস টাইপিং প্রশিক্ষণ শেষ করে আজকে আলহামদুলিল্লাহ ১০০০ টাকা উইথড্র সফল হয়েছে। যারা নিয়মিত প্র্যাকটিস করবেন তাদের স্পিড এমনিতেই বেড়ে যাবে।',
-    category: 'course',
-    date: '৯ ঘণ্টা আগে',
-    likes: 36,
-    earnings: '৳১,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-021',
-    name: 'মাহির ফয়সাল',
-    gender: 'male',
-    location: 'হবিগঞ্জ',
-    roleBadge: 'Data Entry Pro',
-    avatarUrl: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Data entry kajer format ta khub e simple. Trainer ra khub sohoje bujhiye diyeche. Ajke 1st payout complete.',
-    category: 'data',
-    date: '৯ ঘণ্টা আগে',
-    likes: 21,
-    earnings: '৳৯০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-022',
-    name: 'তাসনিম জাহান',
-    gender: 'female',
-    location: 'নোয়াখালী',
-    roleBadge: 'Typing Specialist',
-    rating: 5,
-    text: 'আলহামদুলিল্লাহ আজকে টাইপিংয়ের পুরো প্রজেক্ট শেষ করলাম। কোন ভুল ছাড়াই সাবমিট করতে পেরেছি। টিচারদের দিকনির্দেশনা চমৎকার ছিল।',
-    category: 'typing',
-    date: '১০ ঘণ্টা আগে',
-    likes: 45,
-    earnings: '৳১,১৫০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-023',
-    name: 'ইমরান নাজির',
-    gender: 'male',
-    location: 'ব্রাহ্মণবাড়িয়া',
-    roleBadge: 'Top Earner',
-    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: '3 months Form Fill Up course shesh kore ajke 2000 BDT cashout korlam. Thanks to Unity Earning support team & trainer sir.',
-    category: 'course',
-    date: '১০ ঘণ্টা আগে',
-    likes: 52,
-    earnings: '৳২,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-024',
-    name: 'জান্নাত আরা',
-    gender: 'female',
-    location: 'পটুয়াখালী',
-    roleBadge: 'Form Fill Up Pro',
-    rating: 5,
-    text: 'ফর্ম ফিলাপ সাবমিট করার পর প্রথম দিকে পেন্ডিং ছিল। গ্রুপে মেসেজ দিলে এডমিন ভাইয়া সাথে সাথে চেক করে এপ্রুভ করে দিলেন। পেমেন্ট পেয়ে খুব ভালো লাগছে।',
-    category: 'form',
-    date: '১১ ঘণ্টা আগে',
-    likes: 30,
-    earnings: '৳১,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-025',
-    name: 'ফাহিম মোর্শেদ',
-    gender: 'male',
-    location: 'ভোলা',
-    roleBadge: 'Data Entry Specialist',
-    avatarUrl: 'https://images.unsplash.com/photo-1528892952291-009c663ce843?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Excellent e-learning and micro-earning platform. The video guide in top header made everything crystal clear. Got my 20% bonus today!',
-    category: 'payout',
-    date: '১২ ঘণ্টা আগে',
-    likes: 37,
-    earnings: '৳১,৪০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-026',
-    name: 'শারমিন আক্তার মিম',
-    gender: 'female',
-    location: 'জামালপুর',
-    roleBadge: 'Verified Student',
-    rating: 5,
-    text: 'আলহামদুলিল্লাহ আজকে টাইপিং এর কাজ শেষ করে ১০০০ টাকা ইনকাম করলাম। ঘরে বসে পড়াশোনার পাশাপাশি এমন সুযোগ সত্যিই অনেক বড় পাওয়া।',
-    category: 'typing',
-    date: '১২ ঘণ্টা আগে',
-    likes: 28,
-    earnings: '৳১,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-027',
-    name: 'নাঈমুল ইসলাম',
-    gender: 'male',
-    location: 'নাটোর',
-    roleBadge: 'Batch 15 Student',
-    avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Typing kaj ta submit kore bKash e withdraw dilam, matro 1 ghontay payment peyechi. Sobai nirdhidhay kaj korte paren.',
-    category: 'payout',
-    date: 'গতকাল',
-    likes: 40,
-    earnings: '৳১,০৫০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-028',
-    name: 'শম্পা রানী',
-    gender: 'female',
-    location: 'সাতক্ষীরা',
-    roleBadge: 'Level 1 Earner',
-    rating: 5,
-    text: 'ফর্ম ফিলাপের কোর্স করে আজকে প্রথম উইথড্র সফল হয়েছে। কোর্স চলাকালীন ট্রেইনারদের আন্তরিক সহযোগিতা কখনোই ভুলবো না।',
-    category: 'course',
-    date: 'গতকাল',
-    likes: 34,
-    earnings: '৳১,৬০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-029',
-    name: 'আশিকুর রহমান',
-    gender: 'male',
-    location: 'সিরাজগঞ্জ',
-    roleBadge: 'Data Entry Pro',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Data entry submission pore pending e thakle kono chinta korar dorkar nai, admin vaiya ra regular verify kore approve kore dey.',
-    category: 'data',
-    date: 'গতকাল',
-    likes: 19,
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-030',
-    name: 'পলি খাতুন',
-    gender: 'female',
-    location: 'ঝিনাইদহ',
-    roleBadge: 'Pro Member',
-    rating: 5,
-    text: 'ডিজিটাল মার্কেটিং ২ মাস কোর্স সম্পন্ন করে আজকে ২,০০০ টাকা উইথড্র নিলাম নগদে। আলহামদুলিল্লাহ আমি খুবই খুশি!',
-    category: 'course',
-    date: 'গতকাল',
-    likes: 49,
-    earnings: '৳২,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-031',
-    name: 'শরিফুল ইসলাম',
-    gender: 'male',
-    location: 'নেত্রকোণা',
-    roleBadge: 'Typing Expert',
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'আজকে ১০০০ টাকা ইনকাম সম্পূর্ণ করে ক্যাশআউট করলাম। টাইপিংয়ের কাজগুলো খুব স্পষ্ট আর নির্দেশনামূলক।',
-    category: 'typing',
-    date: 'গতকাল',
-    likes: 25,
-    earnings: '৳১,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-032',
-    name: 'বৃষ্টি আক্তার',
-    gender: 'female',
-    location: 'চাঁদপুর',
-    roleBadge: 'Verified Freelancer',
-    rating: 5,
-    text: 'Form submission pending thakle telegram ba whatsapp support e janalei quick solve hoye jay. Unity earning support system is super active!',
-    category: 'general',
-    date: '২ দিন আগে',
-    likes: 31,
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-033',
-    name: 'সজীব হোসেন',
-    gender: 'male',
-    location: 'মানিকগঞ্জ',
-    roleBadge: 'Top Earner',
-    avatarUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'দীর্ঘ দেড় মাস কোর্স শেষ করার পর আজকে ১৮০০ টাকা উইথড্র পেয়েছি বিকাশে। যারা সততার সাথে কাজ করতে চান তাদের জন্য সেরা প্ল্যাটফর্ম।',
-    category: 'course',
-    date: '২ দিন আগে',
-    likes: 44,
-    earnings: '৳১,৮০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-034',
-    name: 'মুন্নি বেগম',
-    gender: 'female',
-    location: 'লক্ষ্মীপুর',
-    roleBadge: 'Form Specialist',
-    rating: 5,
-    text: 'আলহামদুলিল্লাহ ফর্ম ফিলাপ প্রজেক্টের কাজ শেষ করে ২০% এক্সট্রা কমিশন সহ টাকা পেলাম। নিয়ম মেনে কাজ করলে কোন ভুল হয় না।',
-    category: 'form',
-    date: '২ দিন আগে',
-    likes: 26,
-    earnings: '৳১,২০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-035',
-    name: 'হাসান মাহমুদ',
-    gender: 'male',
-    location: 'মৌলভীবাজার',
-    roleBadge: 'Data Entry Pro',
-    avatarUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Data entry assignment successfully submitted and approved! Received 950 BDT in my wallet. Very happy with the platform.',
-    category: 'data',
-    date: '২ দিন আগে',
-    likes: 20,
-    earnings: '৳৯৫০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-036',
-    name: 'লাবণী আক্তার',
-    gender: 'female',
-    location: 'মুন্সীগঞ্জ',
-    roleBadge: 'Typing Specialist',
-    rating: 5,
-    text: '১.৫ মাস টাইপিং প্রশিক্ষণ শেষ করে আজকে প্রথম ইনকাম করলাম। পরিবারের কাউকে না জানিয়ে নিজে নিজে কিছু করতে পারা অনেক আনন্দের।',
-    category: 'course',
-    date: '২ দিন আগে',
-    likes: 56,
-    earnings: '৳১,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-037',
-    name: 'সোহেল রানা',
-    gender: 'male',
-    location: 'কুড়িগ্রাম',
-    roleBadge: 'Level 2 Earner',
-    avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Amar form fill up submission submit korar por 1 day pending chilo. Pore trainer sir k bolte e sathe sathe approve kore dilo. Thanks sir!',
-    category: 'form',
-    date: '৩ দিন আগে',
-    likes: 22,
-    earnings: '৳১,১০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-038',
-    name: 'নাদিয়া ইসলাম',
-    gender: 'female',
-    location: 'নরসিংদী',
-    roleBadge: 'Digital Marketer',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'ডিজিটাল মার্কেটিং ২ মাসের কোর্স শেষ করে আজকে ৩,০০০ টাকা ইনকাম করলাম আলহামদুলিল্লাহ। নগদ উইথড্র নিলাম। ধন্যবাদ ইউনিটি আর্নিং!',
-    category: 'course',
-    date: '৩ দিন আগে',
-    likes: 61,
-    earnings: '৳৩,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-039',
-    name: 'শাহিন আলম',
-    gender: 'male',
-    location: 'শেরপুর',
-    roleBadge: 'Typing Expert',
-    rating: 5,
-    text: 'টাইপিং এর কাজ সম্পূর্ণ করে ১০০০ টাকা ইনকাম করেছি। টাকা সাথে সাথে ওয়ালেটে চলে এসেছে। খুবই ট্রাস্টেড প্ল্যাটফর্ম।',
-    category: 'typing',
-    date: '৩ দিন আগে',
-    likes: 18,
-    earnings: '৳১,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-040',
-    name: 'রুমা পারভীন',
-    gender: 'female',
-    location: 'নীলফামারী',
-    roleBadge: 'Form Specialist',
-    rating: 5,
-    text: '৩ মাস ফর্ম ফিলাপ কোর্স শেষ করে আজকে প্রথম প্রজেক্ট সাবমিট করলাম। সব নিয়ম মেনে করলে খুব সহজে কাজ শেষ করা যায়।',
-    category: 'form',
-    date: '৩ দিন আগে',
-    likes: 29,
-    earnings: '৳১,২০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-041',
-    name: 'আল-আমিন হোসেন',
-    gender: 'male',
-    location: 'চাঁপাইনবাবগঞ্জ',
-    roleBadge: 'Data Entry Pro',
-    avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Alhamdulillah received 1500 taka today through bKash. Work submission was approved very quickly.',
-    category: 'payout',
-    date: '৪ দিন আগে',
-    likes: 38,
-    earnings: '৳১,৫০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-042',
-    name: 'স্বপ্না আক্তার',
-    gender: 'female',
-    location: 'পিরোজপুর',
-    roleBadge: 'Verified Member',
-    rating: 5,
-    text: 'দেড় মাস টাইপিং কোর্স করে আজকে প্রথম পেমেন্ট পেলাম। কাজের সাথে সাথে অনেক কিছু শেখাও হয়েছে।',
-    category: 'course',
-    date: '৪ দিন আগে',
-    likes: 33,
-    earnings: '৳১,১০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-043',
-    name: 'মাহমুদুল হাসান',
-    gender: 'male',
-    location: 'পঞ্চগড়',
-    roleBadge: 'Top Earner',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Form fill up submission ta complete kore 20% bonus commission o peyechi. Support team er response khub fast.',
-    category: 'form',
-    date: '৪ দিন আগে',
-    likes: 24,
-    earnings: '৳১,২৫০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-044',
-    name: 'রেহানা সুলতানা',
-    gender: 'female',
-    location: 'ঝালকাঠি',
-    roleBadge: 'Form Pro',
-    rating: 5,
-    text: 'আমার ফর্ম ফিলাপ সাবমিটের পর একটু পেন্ডিং ছিল, পরে গ্রুপের টিম লিডারকে জানালে ঠিক করে দিয়েছেন। ধন্যবাদ স্যারকে!',
-    category: 'general',
-    date: '৪ দিন আগে',
-    likes: 17,
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-045',
-    name: 'কামরুল হাসান',
-    gender: 'male',
-    location: 'গোপালগঞ্জ',
-    roleBadge: 'Typing Specialist',
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Typing assignment complete kore 1000 taka income holo. Withdraw process ekdom smooth & fast.',
-    category: 'typing',
-    date: '৫ দিন আগে',
-    likes: 35,
-    earnings: '৳১,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-046',
-    name: 'হাবিবা খাতুন',
-    gender: 'female',
-    location: 'চুয়াডাঙ্গা',
-    roleBadge: 'Digital Marketer',
-    avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: '২ মাস ডিজিটাল মার্কেটিং কোর্স সম্পন্ন করে আজকে ২,৫০০ টাকা পেমেন্ট পেলাম বিকাশ এর মাধ্যমে। আলহামদুলিল্লাহ!',
-    category: 'course',
-    date: '৫ দিন আগে',
-    likes: 47,
-    earnings: '৳২,৫০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-047',
-    name: 'জাহিদ হাসান',
-    gender: 'male',
-    location: 'নড়াইল',
-    roleBadge: 'Data Entry Pro',
-    rating: 5,
-    text: 'Data entry task submit korlam ajke. Guidance videos gulo dekhe kaj kora onek shohoj chilo.',
-    category: 'data',
-    date: '৫ দিন আগে',
-    likes: 21,
-    earnings: '৳৮০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-048',
-    name: 'আয়েশা সিদ্দিকা',
-    gender: 'female',
-    location: 'মেহেরপুর',
-    roleBadge: 'Verified Student',
-    rating: 5,
-    text: '৩ মাস ফর্ম ফিলাপের কোর্স করে আজকে ২০০০ টাকা ক্যাশআউট করলাম আলহামদুলিল্লাহ। সঠিক গাইডলাইন দেওয়ার জন্য স্যারদের কৃতজ্ঞতা।',
-    category: 'course',
-    date: '৬ দিন আগে',
-    likes: 42,
-    earnings: '৳২,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-049',
-    name: 'রাশেদুল ইসলাম',
-    gender: 'male',
-    location: 'জয়পুরহাট',
-    roleBadge: 'Top Contributor',
-    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Alhamdulillah today I completed my 2nd typing project. 1000 BDT received in my wallet.',
-    category: 'typing',
-    date: '৬ দিন আগে',
-    likes: 28,
-    earnings: '৳১,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-050',
-    name: 'তানিয়া আক্তার',
-    gender: 'female',
-    location: 'মাগুরা',
-    roleBadge: 'Form Specialist',
-    rating: 5,
-    text: 'ফর্ম ফিলাপের কাজ খুব সহজ ছিল। প্রজেক্ট সাবমিটের পর সাথে সাথে ভেরিফিকেশনে যায় এবং অল্প সময়ে এপ্রুভ হয়ে যায়।',
-    category: 'form',
-    date: '৬ দিন আগে',
-    likes: 19,
-    earnings: '৳৯৫০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-051',
-    name: 'মিজানুর রহমান',
-    gender: 'male',
-    location: 'লালমনিরহাট',
-    roleBadge: 'Data Entry Pro',
-    avatarUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Data entry kaj kore 1200 taka bKash e withdraw nilam. Students der jonno khub valo ekti earning platform.',
-    category: 'data',
-    date: '১ সপ্তাহ আগে',
-    likes: 33,
-    earnings: '৳১,২০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-052',
-    name: 'মমতাজ বেগম',
-    gender: 'female',
-    location: 'বাগেরহাট',
-    roleBadge: 'Batch 10 Student',
-    rating: 5,
-    text: 'দেড় মাস টাইপিং কোর্স করে আজকে প্রথম পেমেন্ট পেয়েছি। অনেক অনেক ধন্যবাদ পুরো ইউনিটি আর্নিং টিমকে।',
-    category: 'course',
-    date: '১ সপ্তাহ আগে',
-    likes: 39,
-    earnings: '৳১,৩০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-053',
-    name: 'শফিক আহমেদ',
-    gender: 'male',
-    location: 'শরীয়তপুর',
-    roleBadge: 'Level 1 Earner',
-    rating: 5,
-    text: 'Form submit korar por pending dekhe voy peyechilam, pore bujhlam admin vaiya verify korar por approve kore. Payout complete.',
-    category: 'general',
-    date: '১ সপ্তাহ আগে',
-    likes: 25,
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-054',
-    name: 'শাহিদা পারভীন',
-    gender: 'female',
-    location: 'রাজবাড়ী',
-    roleBadge: 'Digital Marketer',
-    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'ডিজিটাল মার্কেটিং কোর্স শেষ করে আজ ২০০০ টাকা বিকাশ এ পেয়েছি। নিয়মিত সময় দিলে ভালো ইনকাম সম্ভব।',
-    category: 'course',
-    date: '১ সপ্তাহ আগে',
-    likes: 46,
-    earnings: '৳২,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-055',
-    name: 'নাজমুল করিম',
-    gender: 'male',
-    location: 'সুনামগঞ্জ',
-    roleBadge: 'Typing Specialist',
-    rating: 5,
-    text: 'Typing project complete kore 1000 taka income holo Alhamdulillah. Video instructions follow korlei sohoj.',
-    category: 'typing',
-    date: '১ সপ্তাহ আগে',
-    likes: 16,
-    earnings: '৳১,০০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-056',
-    name: 'সাবিনা ইয়াসমিন',
-    gender: 'female',
-    location: 'বান্দরবান',
-    roleBadge: 'Form Master',
-    rating: 5,
-    text: '৩ মাস ফর্ম ফিলাপ কোর্স সম্পন্ন করে আজ প্রথম পেমেন্ট পেলাম। কাজের প্রতিটি ধাপ খুব সুন্দরভাবে সাজানো।',
-    category: 'course',
-    date: '১ সপ্তাহ আগে',
-    likes: 31,
-    earnings: '৳১,৭০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-057',
-    name: 'আব্দুল্লাহ আল নোমান',
-    gender: 'male',
-    location: 'খাগড়াছড়ি',
-    roleBadge: 'Pro Member',
-    avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Balance transfer feature is very easy to use. Sent money to team partner instantly.',
-    category: 'payout',
-    date: '১ সপ্তাহ আগে',
-    likes: 22,
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-058',
-    name: 'ফাতেমা তুজ জোহরা',
-    gender: 'female',
-    location: 'রাঙ্গামাটি',
-    roleBadge: 'Data Entry Specialist',
-    rating: 5,
-    text: 'ডাটা এন্ট্রির কাজগুলো খুব উপভোগ করেছি। ট্রেইনার আপু খুব যত্ন করে প্রতিটি ক্লাসে সব বুঝিয়ে দিয়েছেন।',
-    category: 'data',
-    date: '১ সপ্তাহ আগে',
-    likes: 37,
-    earnings: '৳১,০৫০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-059',
-    name: 'তানজিম হাসান',
-    gender: 'male',
-    location: 'ঢাকা',
-    roleBadge: 'Batch 16 Student',
-    avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
-    rating: 5,
-    text: 'Alhamdulillah! Typing er kaj shesh kore 1000 taka withdraw nilam. Special offer er 20% extra commission o peyechi.',
-    category: 'typing',
-    date: '১ সপ্তাহ আগে',
-    likes: 41,
-    earnings: '৳১,২০০',
-    isVerified: true,
-    status: 'approved'
-  },
-  {
-    id: 'rev-060',
-    name: 'নাসরিন সুলতানা',
-    gender: 'female',
-    location: 'চট্টগ্রাম',
-    roleBadge: 'Form Pro',
-    rating: 5,
-    text: 'ফর্ম ফিলাপ সাবমিট করার পর পেন্ডিং থাকলে ধৈর্য ধরে অপেক্ষা করুন। এডমিনরা সঠিকভাবে সব ভেরিফাই করে টাকা দিয়ে দেন।',
-    category: 'general',
-    date: '১ সপ্তাহ আগে',
-    likes: 27,
-    isVerified: true,
-    status: 'approved'
-  }
+const AVATAR_TONES: AvatarTone[] = ['blue', 'white', 'yellow', 'black', 'teal', 'indigo'];
+
+const DISTRICTS = [
+  'Dhaka', 'Chattogram', 'Rajshahi', 'Sylhet', 'Khulna', 'Barishal', 'Rangpur', 'Mymensingh',
+  'Cumilla', 'Gazipur', 'Narayanganj', 'Bogura', 'Tangail', 'Faridpur', 'Jashore', 'Dinajpur',
+  'Pabna', 'Kushtia', 'Habiganj', 'Jamalpur', 'Noakhali', 'Brahmanbaria', 'Patuakhali',
+  'Bhola', 'Natore', 'Satkhira', 'Sirajganj', 'Jhenaidah', 'Netrokona', 'Chandpur',
+  'Manikganj', 'Lakshmipur', 'Moulvibazar', 'Munshiganj', 'Kurigram', 'Narsingdi', 'Sherpur',
+  'Nilphamari', 'Chapainawabganj', 'Pirojpur', 'Panchagarh', 'Jhalokathi', 'Gopalganj', 'Chuadanga'
 ];
 
-// Helper to generate remaining realistic reviews up to 165+ items
-const generateAdditionalReviews = (): StudentReview[] => {
-  const banglaNames = [
-    { name: 'আসিফ ইকবাল', gender: 'male' as const, loc: 'ঢাকা' },
-    { name: 'শারমিন জাহান', gender: 'female' as const, loc: 'চট্টগ্রাম' },
-    { name: 'জুয়েল রানা', gender: 'male' as const, loc: 'রাজশাহী' },
-    { name: 'মৌসুমি আক্তার', gender: 'female' as const, loc: 'সিলেট' },
-    { name: 'বাপ্পি হাসান', gender: 'male' as const, loc: 'খুলনা' },
-    { name: 'রোকসানা পারভীন', gender: 'female' as const, loc: 'বরিশাল' },
-    { name: 'ফয়সাল আহমেদ', gender: 'male' as const, loc: 'রংপুর' },
-    { name: 'শারমিন আক্তার', gender: 'female' as const, loc: 'ময়মনসিংহ' },
-    { name: 'সানোয়ার হোসেন', gender: 'male' as const, loc: 'কুমিল্লা' },
-    { name: 'ইসরাত জাহান', gender: 'female' as const, loc: 'গাজীপুর' },
-    { name: 'মাহবুব আলম', gender: 'male' as const, loc: 'নারায়ণগঞ্জ' },
-    { name: 'আফরোজা বানু', gender: 'female' as const, loc: 'বগুড়া' },
-    { name: 'তৌফিক এলাহী', gender: 'male' as const, loc: 'টাঙ্গাইল' },
-    { name: 'নাজমুন নাহার', gender: 'female' as const, loc: 'ফরিদপুর' },
-    { name: 'মনিরুজ্জামান', gender: 'male' as const, loc: 'যশোর' },
-    { name: 'শিরিন আক্তার', gender: 'female' as const, loc: 'দিনাজপুর' },
-    { name: 'আমিনুর রহমান', gender: 'male' as const, loc: 'পাবনা' },
-    { name: 'বিলকিস আক্তার', gender: 'female' as const, loc: 'কুষ্টিয়া' },
-    { name: 'কামরুল ইসলাম', gender: 'male' as const, loc: 'হবিগঞ্জ' },
-    { name: 'সেলিনা বেগম', gender: 'female' as const, loc: 'জামালপুর' },
-    { name: 'আশরাফুল হক', gender: 'male' as const, loc: 'নোয়াখালী' },
-    { name: 'শাহনাজ পারভীন', gender: 'female' as const, loc: 'ব্রাহ্মণবাড়িয়া' },
-    { name: 'তরিকুল ইসলাম', gender: 'male' as const, loc: 'পটুয়াখালী' },
-    { name: 'সুমনা রায়', gender: 'female' as const, loc: 'ভোলা' },
-    { name: 'রিয়াদ হোসেন', gender: 'male' as const, loc: 'নাটোর' },
-    { name: 'মুনতাহা চৌধুরী', gender: 'female' as const, loc: 'সাতক্ষীরা' },
-    { name: 'কবির হোসেন', gender: 'male' as const, loc: 'সিরাজগঞ্জ' },
-    { name: 'ফারহানা ইয়াসমিন', gender: 'female' as const, loc: 'ঝিনাইদহ' },
-    { name: 'এনামুল হক', gender: 'male' as const, loc: 'নেত্রকোণা' },
-    { name: 'ঝুমুর আক্তার', gender: 'female' as const, loc: 'চাঁদপুর' },
-    { name: 'সাদ্দাম হোসেন', gender: 'male' as const, loc: 'মানিকগঞ্জ' },
-    { name: 'রাবেয়া বসরী', gender: 'female' as const, loc: 'লক্ষ্মীপুর' },
-    { name: 'মোস্তফা কামাল', gender: 'male' as const, loc: 'মৌলভীবাজার' },
-    { name: 'তাহমিনা আক্তার', gender: 'female' as const, loc: 'মুন্সীগঞ্জ' },
-    { name: 'ওয়াহিদুজ্জামান', gender: 'male' as const, loc: 'কুড়িগ্রাম' },
-    { name: 'আসমাতুন নেসা', gender: 'female' as const, loc: 'নরসিংদী' },
-    { name: 'রেজাউল করিম', gender: 'male' as const, loc: 'শেরপুর' },
-    { name: 'রাজিয়া সুলতানা', gender: 'female' as const, loc: 'নীলফামারী' },
-    { name: 'শওকত আলী', gender: 'male' as const, loc: 'চাঁপাইনবাবগঞ্জ' },
-    { name: 'শবনম মোস্তারী', gender: 'female' as const, loc: 'পিরোজপুর' },
-    { name: 'শহিদুল ইসলাম', gender: 'male' as const, loc: 'পঞ্চগড়' },
-    { name: 'নাদিরা বেগম', gender: 'female' as const, loc: 'ঝালকাঠি' },
-    { name: 'মাসুদ রানা', gender: 'male' as const, loc: 'গোপালগঞ্জ' },
-    { name: 'সাবেরা সুলতানা', gender: 'female' as const, loc: 'চুয়াডাঙ্গা' },
-    { name: 'মুরাদ হোসেন', gender: 'male' as const, loc: 'নড়াইল' },
-    { name: 'মমতাজ জাহান', gender: 'female' as const, loc: 'মেহেরপুর' },
-    { name: 'হারুন অর রশিদ', gender: 'male' as const, loc: 'জয়পুরহাট' },
-    { name: 'খুরশিদা বেগম', gender: 'female' as const, loc: 'মাগুরা' },
-    { name: 'ওমর ফারুক', gender: 'male' as const, loc: 'লালমনিরহাট' },
-    { name: 'শাহিনুর আক্তার', gender: 'female' as const, loc: 'বাগেরহাট' },
-    { name: 'খোরশেদ আলম', gender: 'male' as const, loc: 'শরীয়তপুর' },
-    { name: 'রশিদা পারভীন', gender: 'female' as const, loc: 'রাজবাড়ী' },
-    { name: 'মোশাররফ হোসেন', gender: 'male' as const, loc: 'সুনামগঞ্জ' },
-    { name: 'লায়লা আক্তার', gender: 'female' as const, loc: 'বান্দরবান' },
-    { name: 'আব্দুল কাদের', gender: 'male' as const, loc: 'খাগড়াছড়ি' },
-    { name: 'সালমা চৌধুরী', gender: 'female' as const, loc: 'রাঙ্গামাটি' },
-    { name: 'জাহাঙ্গীর আলম', gender: 'male' as const, loc: 'ঢাকা' },
-    { name: 'রোকেয়া সুলতানা', gender: 'female' as const, loc: 'চট্টগ্রাম' },
-    { name: 'দেলোয়ার হোসেন', gender: 'male' as const, loc: 'খুলনা' },
-    { name: 'আফসানা মিমি', gender: 'female' as const, loc: 'রাজশাহী' },
-    { name: 'মতিউর রহমান', gender: 'male' as const, loc: 'সিলেট' },
-    { name: 'ফরিদা আক্তার', gender: 'female' as const, loc: 'বরিশাল' },
-    { name: 'গোলাম কিবরিয়া', gender: 'male' as const, loc: 'ময়মনসিংহ' },
-    { name: 'সোহানা রহমান', gender: 'female' as const, loc: 'রংপুর' },
-    { name: 'আজহারুল ইসলাম', gender: 'male' as const, loc: 'কুমিল্লা' },
-    { name: 'নুসরাত পারভীন', gender: 'female' as const, loc: 'বগুড়া' },
-    { name: 'বোরহান উদ্দিন', gender: 'male' as const, loc: 'গাজীপুর' },
-    { name: 'রুমানা রশিদ', gender: 'female' as const, loc: 'নারায়ণগঞ্জ' },
-    { name: 'হাবিবুর রহমান', gender: 'male' as const, loc: 'টাঙ্গাইল' },
-    { name: 'পারভীন আক্তার', gender: 'female' as const, loc: 'দিনাজপুর' },
-    { name: 'ইশতিয়াক আহমেদ', gender: 'male' as const, loc: 'যশোর' },
-    { name: 'মেহেরুন্নেসা', gender: 'female' as const, loc: 'পাবনা' },
-    { name: 'লিটন দাস', gender: 'male' as const, loc: 'কুষ্টিয়া' },
-    { name: 'রীতা আক্তার', gender: 'female' as const, loc: 'হবিগঞ্জ' },
-    { name: 'আনিসুর রহমান', gender: 'male' as const, loc: 'নোয়াখালী' },
-    { name: 'শিউলী বেগম', gender: 'female' as const, loc: 'জামালপুর' },
-    { name: 'মাজেদুল হক', gender: 'male' as const, loc: 'ফরিদপুর' },
-    { name: 'শারমিন সুলতানা', gender: 'female' as const, loc: 'সিরাজগঞ্জ' },
-    { name: 'এনামুল হক', gender: 'male' as const, loc: 'চাঁদপুর' },
-    { name: 'কানিজ ফাতেমা', gender: 'female' as const, loc: 'মানিকগঞ্জ' },
-    { name: 'সাইফুল ইসলাম', gender: 'male' as const, loc: 'গোপালগঞ্জ' },
-    { name: 'শিরিন সুলতানা', gender: 'female' as const, loc: 'কুড়িগ্রাম' },
-    { name: 'আতাউর রহমান', gender: 'male' as const, loc: 'নরসিংদী' },
-    { name: 'জেসমিন আক্তার', gender: 'female' as const, loc: 'পিরোজপুর' },
-    { name: 'নাজমুল আলম', gender: 'male' as const, loc: 'পঞ্চগড়' },
-    { name: 'সুফিয়া খাতুন', gender: 'female' as const, loc: 'ঝালকাঠি' },
-    { name: 'মিজানুর রহমান', gender: 'male' as const, loc: 'চুয়াডাঙ্গা' },
-    { name: 'মাহিমা আক্তার', gender: 'female' as const, loc: 'মেহেরপুর' },
-    { name: 'শাহ আলম', gender: 'male' as const, loc: 'জয়পুরহাট' },
-    { name: 'রেবেকা সুলতানা', gender: 'female' as const, loc: 'মাগুরা' },
-    { name: 'আকরাম হোসেন', gender: 'male' as const, loc: 'লালমনিরহাট' },
-    { name: 'নাজমা আক্তার', gender: 'female' as const, loc: 'বাগেরহাট' },
-    { name: 'মনিরুল ইসলাম', gender: 'male' as const, loc: 'রাজবাড়ী' },
-    { name: 'জাহানারা বেগম', gender: 'female' as const, loc: 'সুনামগঞ্জ' },
-    { name: 'মোজাম্মেল হক', gender: 'male' as const, loc: 'বান্দরবান' },
-    { name: 'আলেয়া বেগম', gender: 'female' as const, loc: 'রাঙ্গামাটি' },
-    { name: 'আজিম উদ্দিন', gender: 'male' as const, loc: 'ঢাকা' },
-    { name: 'সুমি আক্তার', gender: 'female' as const, loc: 'চট্টগ্রাম' },
-    { name: 'শাহরিয়ার কবির', gender: 'male' as const, loc: 'খুলনা' },
-    { name: 'নাদিয়া সুলতানা', gender: 'female' as const, loc: 'রাজশাহী' }
-  ];
+const MALE_FIRST_EN = [
+  'Tanvir', 'Rakibul', 'Ariful', 'Nazmul', 'Sabbir', 'Shakil', 'Rifat', 'Mehedi',
+  'Touhid', 'Saidur', 'Mahir', 'Imran', 'Fahim', 'Naimul', 'Ashikur', 'Shariful',
+  'Sajib', 'Hasan', 'Sohel', 'Shahin', 'Al-Amin', 'Mahmudul', 'Kamrul', 'Jahid',
+  'Rashedul', 'Mizanur', 'Shafiq', 'Noman', 'Tanzim', 'Asif', 'Jewel', 'Bappi',
+  'Faysal', 'Sanowar', 'Mahbub', 'Toufiq', 'Monirul', 'Aminur', 'Ashraful', 'Tariqul',
+  'Riyad', 'Kabir', 'Enamul', 'Saddam', 'Mostafa', 'Wahid', 'Rezaul', 'Shawkat'
+];
 
-  const templates: {
-    text: string;
-    cat: 'typing' | 'form' | 'data' | 'course' | 'payout' | 'general';
-    earnings?: string;
-    badge: string;
-    daysAgo: string;
-  }[] = [
+const MALE_LAST_EN = [
+  'Ahmed', 'Hasan', 'Islam', 'Hossain', 'Rahman', 'Khan', 'Chowdhury', 'Uddin',
+  'Mahmud', 'Karim', 'Haque', 'Sarkar', 'Miah', 'Ali', 'Sheikh', 'Patwary'
+];
+
+const FEMALE_FIRST_EN = [
+  'Sumaiya', 'Farzana', 'Sadia', 'Nusrat', 'Jannatul', 'Khadija', 'Priyanka', 'Mahfuza',
+  'Rubina', 'Anika', 'Tasnim', 'Jannat', 'Sharmin', 'Shampa', 'Poly', 'Bristi',
+  'Munni', 'Laboni', 'Nadia', 'Ruma', 'Swapna', 'Rehana', 'Habiba', 'Ayesha',
+  'Tania', 'Momtaz', 'Shahida', 'Sabina', 'Fatema', 'Nasrin', 'Mousumi', 'Roksana',
+  'Israt', 'Afroza', 'Nazmun', 'Shirin', 'Bilkis', 'Selina', 'Shahnaz', 'Sumona',
+  'Muntaha', 'Farhana', 'Jhumur', 'Rabeya', 'Tahmina', 'Razia', 'Shabnam', 'Nadira'
+];
+
+const FEMALE_LAST_EN = [
+  'Akter', 'Jahan', 'Sultana', 'Khatun', 'Begum', 'Haque', 'Rahman', 'Islam',
+  'Chowdhury', 'Parvin', 'Yasmin', 'Das', 'Roy', 'Tabassum', 'Ferdous', 'Siddika'
+];
+
+// Everyday casual photos (flowers, cats, scenery, coffee) — NO portrait faces
+const CASUAL_AVATAR_URLS = [
+  'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1468327768560-75b778cbb551?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=150&auto=format&fit=crop&q=80'
+];
+
+interface ReviewTemplate {
+  rating: 7 | 8 | 9 | 10;
+  category: ReviewCategory;
+  workRole: string;
+  roleBadge: string;
+  earnings?: string;
+  text: string;
+}
+
+// Genuine, lived-in reviews written in realistic Banglish (dominant), Bengali, and natural English (max BDT 12,000)
+const TEMPLATES_BY_RATING: Record<7 | 8 | 9 | 10, ReviewTemplate[]> = {
+  10: [
     {
-      text: 'আলহামদুলিল্লাহ আজকে টাইপিংয়ের কাজ সম্পূর্ণ করে ১০০০ টাকা ইনকাম করেছি। টাকা দ্রুত ওয়ালেটে যোগ হয়ে গেছে।',
-      cat: 'typing',
-      earnings: '৳১,০০০',
-      badge: 'Typing Specialist',
-      daysAgo: '১ সপ্তাহ আগে'
+      rating: 10,
+      category: 'form',
+      workRole: 'Form Fillup · Active Worker',
+      roleBadge: 'Form Fillup Worker',
+      earnings: 'BDT 12,000',
+      text: 'Ami university r 2nd year er student, bashay boshe free time e form fillup er kaj shuru korchilam. Prothome 60 jon client er list theke ekta ekta kore data milate ghum chole jeto, kintu ekhon obhyash hoye gese. Last 1.5 mashe total 12,000 tk er moto cashout korsi bKash e, mess er vara ar pocket khoroch ekhon nijei chalai.'
     },
     {
-      text: 'Form Fill Up kaj ta complete kore 20% extra commission pelam. Unity earning platform e kaj kora ekdom easy.',
-      cat: 'form',
-      earnings: '৳১,২০০',
-      badge: 'Form Fill Up Pro',
-      daysAgo: '১ সপ্তাহ আগে'
+      rating: 10,
+      category: 'payout',
+      workRole: 'Data Entry · Active Worker',
+      roleBadge: 'Data Entry Specialist',
+      earnings: 'BDT 8,000',
+      text: 'Kaj korar por shobcheye bhalo lagse balance transfer option ta. Gotokal amar friend er emergency tk lagto, ami or 7 digit ID code ta niye 3,000 tk transfer kore disi—kono charge charai 2 second er moddhe or account e jog hoye gese. Ekhon porjonto Data Entry kore mot 8,000 taka peyechi.'
     },
     {
-      text: 'দীর্ঘ দেড় মাস টাইপিংয়ের কোর্স করেছি। তারপর আজকে প্রথম পেমেন্ট পেলাম বিকাশ এ। আলহামদুলিল্লাহ!',
-      cat: 'course',
-      earnings: '৳১,৫০০',
-      badge: 'Batch 9 Student',
-      daysAgo: '২ সপ্তাহ আগে'
+      rating: 10,
+      category: 'form',
+      workRole: 'Form Fillup · Active Worker',
+      roleBadge: 'Verified Member',
+      earnings: 'BDT 10,500',
+      text: 'প্রথমবার যখন ফর্ম ফিলাপের কাজ সাবমিট করি তখন প্রায় ২ ঘণ্টা পেন্ডিং দেখাচ্ছিল দেখে একটু ভয় পেয়েছিলাম। পরে আমার টিম লিডারকে নক দিলে উনি জানালেন অডিট চলছে। বিকেলে পুরো পেমেন্ট মেইন ব্যালেন্সে চলে আসে। এই পর্যন্ত কয়েক ধাপে ১০,৫০০ টাকা তুলেছি নগদে।'
     },
     {
-      text: 'Data entry submission pore pending e thakle kono chinta nai, admin vaiya ra check kore approve kore.',
-      cat: 'data',
-      earnings: '৳৮৫০',
-      badge: 'Data Entry Pro',
-      daysAgo: '২ সপ্তাহ আগে'
+      rating: 10,
+      category: 'affiliate',
+      workRole: 'Affiliate Shop · Active Seller',
+      roleBadge: 'Affiliate Seller',
+      earnings: 'BDT 5,000',
+      text: 'Affiliate marketing e prothome link share kore kono order pacchilam na, bhabchilam hoyto kaj hobe na. Tarpor mentor bhaiyer kothamoto Facebook Marketplace ar 2-3 ta buy-sell group e product er bishoygulo banglay bujhiye post deway gotokal porjonto 5,000 tk er upore commission ashche.'
     },
     {
-      text: '৩ মাস ফর্ম ফিলাপের কোর্স করে আজকে ২০০০ টাকা ক্যাশআউট করলাম আলহামদুলিল্লাহ। নগদ উইথড্র নিলাম।',
-      cat: 'course',
-      earnings: '৳২,০০০',
-      badge: 'Pro Member',
-      daysAgo: '২ সপ্তাহ আগে'
+      rating: 10,
+      category: 'data',
+      workRole: 'Data Entry · Active Worker',
+      roleBadge: 'Excel Analyst',
+      earnings: 'BDT 9,200',
+      text: 'I joined mostly to learn practical Excel work alongside my college studies. The microfinance and billing sheets actually forced me to practice VLOOKUP and reconciliation properly instead of clicking random buttons. Once my first two batches were approved, the rewards added up to BDT 9,200 total.'
     },
     {
-      text: 'ডিজিটাল মার্কেটিং দুই মাস কোর্স করে আজকে ২০০০ টাকা ইনকাম করলাম আলহামদুলিল্লাহ। বিকাশ উইথড্র সফল হয়েছে।',
-      cat: 'course',
-      earnings: '৳২,০০০',
-      badge: 'Digital Marketer',
-      daysAgo: '২ সপ্তাহ আগে'
+      rating: 10,
+      category: 'typing',
+      workRole: 'Typing Work · Active Worker',
+      roleBadge: 'Typing Worker',
+      earnings: 'BDT 5,500',
+      text: 'সত্যি বলতে টাইপিংয়ের কাজটা সবাই পারে না, শুরুতে আমার নিজেরও ৩০ মিনিটে ২৫০০+ অক্ষর শেষ করতে হাত ব্যথা হয়ে যেত। কপি-পেস্ট কাজ করে না দেখে প্রথম ২ সপ্তাহ শুধু স্পিড বাড়িয়েছি। এখন আলহামদুলিল্লাহ সময় শেষ হওয়ার আগেই সাবমিট করতে পারি, আর ৫,৫০০ টাকা আয় হয়েছে।'
     },
     {
-      text: 'Amio prothome form fillup submit kore pending dekhe voy peyechilam, pore telegram support e kotha bole solve holo.',
-      cat: 'general',
-      badge: 'Verified Member',
-      daysAgo: '২ সপ্তাহ আগে'
+      rating: 10,
+      category: 'marketing',
+      workRole: 'Digital Marketing · Active Worker',
+      roleBadge: 'CPA & Social Worker',
+      earnings: 'BDT 8,500',
+      text: 'Bhai onno sob fake earning app theke eta ekdom alada. Ekhane kaaj na kore taka ashe na, abar sothikvabe sheet ba campaign complete korle payment atkay na. Digital marketing ar CPA tasks kore ekhon porjonto 8,500 taka bKash e nilam.'
     },
     {
-      text: 'আলহামদুলিল্লাহ আজকে ডাটা এন্ট্রির কাজ করে ১০০০ টাকা ইনকাম সম্পূর্ণ করলাম। বিকাশ এর মাধ্যমে টাকা তুললাম।',
-      cat: 'data',
-      earnings: '৳১,০০০',
-      badge: 'Data Specialist',
-      daysAgo: '৩ সপ্তাহ আগে'
+      rating: 10,
+      category: 'general',
+      workRole: 'Content Moderation · Active Worker',
+      roleBadge: 'Content Moderator',
+      earnings: 'BDT 7,000',
+      text: 'Moderator career option theke apply korar 4 din por account active hoyechilo. Kaj gulo khub formal ar dashboard er design o chokhe lagar moto, kono faltu ad ba jhamela nai. Ei mashe 7,000 tk payout pelam.'
     },
     {
-      text: 'Very satisfied with the training modules. Everything from typing to data entry is explained step by step.',
-      cat: 'general',
-      badge: 'Top Contributor',
-      daysAgo: '৩ সপ্তাহ আগে'
+      rating: 10,
+      category: 'form',
+      workRole: 'Form Fillup · Active Worker',
+      roleBadge: 'Batch Worker',
+      earnings: 'BDT 6,400',
+      text: 'ঘরে বসে টিউশনের পাশাপাশি সন্ধ্যায় ২ ঘণ্টা সময় দিয়ে ফর্ম ফিলাপের কাজগুলো করি। একজন ক্লায়েন্টের ৪০টার মতো তথ্য দেখে দেখে বসাতে হয় বলে তাড়াহুড়ো করলে ভুল হয়, তাই সময় নিয়ে ধীরে ধীরে করি। এ পর্যন্ত ৬,৪০০ টাকা তুলেছি।'
     },
     {
-      text: 'Main Account e taka transfer korar somoy 7 digit ID ta check kore deya dorkar. Transfer sathe sathe hoye jay.',
-      cat: 'payout',
-      badge: 'Level 1 Earner',
-      daysAgo: '৩ সপ্তাহ আগে'
+      rating: 10,
+      category: 'payout',
+      workRole: 'Affiliate Shop · Active Seller',
+      roleBadge: 'Shop Partner',
+      earnings: 'BDT 5,000',
+      text: 'Used the peer balance transfer twice this week to settle an amount with my cousin who also works on Unity Earning. No fees, instant credit once the 7-digit ID matches, and my affiliate earnings crossed BDT 5,000 this month.'
     },
     {
-      text: 'দেড় মাস টাইপিং কোর্স করে আজকে আলহামদুলিল্লাহ প্রথম পেমেন্ট সফলভাবে রিসিভ করলাম।',
-      cat: 'course',
-      earnings: '৳১,৪০০',
-      badge: 'Batch 8 Student',
-      daysAgo: '৩ সপ্তাহ আগে'
+      rating: 10,
+      category: 'data',
+      workRole: 'Data Entry · Active Worker',
+      roleBadge: 'Data Worker',
+      earnings: 'BDT 11,400',
+      text: 'Amader batch er 3-4 jon eksathe boshe Data Entry er project gulo solve kori. Bhul formula dile admin reject kore dey tai submit korar age duibar check kori. Eibhabe kaj kore gotokoyek shoptah e 11,400 tk income korechi.'
     },
     {
-      text: 'Form submission ta reject hoy nai ekbaro, karon rules gulo kheyal kore fillup korechi. Great system!',
-      cat: 'form',
-      earnings: '৳৯৫০',
-      badge: 'Form Pro',
-      daysAgo: '১ মাস আগে'
-    },
-    {
-      text: '৩ মাস কোর্স করার পর আজ নগদ এ ২৫০০ টাকা উইথড্র নিলাম। শুকরিয়া মহান আল্লাহর কাছে।',
-      cat: 'course',
-      earnings: '৳২,৫০০',
-      badge: 'Top Earner',
-      daysAgo: '১ মাস আগে'
-    },
-    {
-      text: 'Typing kaj ta submit korar 2 ghontar moddhe balance e taka jog hoyeche. Excellent admin support.',
-      cat: 'typing',
-      earnings: '৳১,০০০',
-      badge: 'Typing Expert',
-      daysAgo: '১ মাস আগে'
-    },
-    {
-      text: 'ডিজিটাল মার্কেটিং ২ মাস প্রশিক্ষণ শেষ করে আজকে ২,০০০ টাকা ইনকাম হলো। ঘরে বসে আয়ের নির্ভরযোগ্য জায়গা।',
-      cat: 'course',
-      earnings: '৳২,০০০',
-      badge: 'Digital Marketer',
-      daysAgo: '১ মাস আগে'
+      rating: 10,
+      category: 'form',
+      workRole: 'Form Fillup · Active Worker',
+      roleBadge: 'Form Worker',
+      earnings: 'BDT 4,800',
+      text: 'আগে অনলাইনে ২ জায়গায় প্রতারণার শিকার হয়েছিলাম, তাই এখানে জয়েন করেও প্রথমে বিশ্বাস হচ্ছিল না। প্রথম পেমেন্ট ৩,০০০ টাকা বিকাশে পাওয়ার পর ভরসা পেয়েছি। এখন ৪,৮০০ টাকা আয় হয়ে গেছে আলহামদুলিল্লাহ।'
     }
-  ];
+  ],
+  9: [
+    {
+      rating: 9,
+      category: 'form',
+      workRole: 'Form Fillup · Active Worker',
+      roleBadge: 'Form Fillup Worker',
+      earnings: 'BDT 5,000',
+      text: 'Form fillup er kaj kore 5,000 taka income korte perechi kintu kajta besh somoy sapekkho. 60 jon client er list theke ekjoner sob detail milaye 40 ta ghor fill korte onek monojog lage, ekta digit vul holei punoray check korte hoy. Tobe tk thikmoto dey etai ashol kotha.'
+    },
+    {
+      rating: 9,
+      category: 'data',
+      workRole: 'Data Entry · Active Worker',
+      roleBadge: 'Data Entry Worker',
+      earnings: 'BDT 3,800',
+      text: 'Shurute Data Entry sheet gulo dekhe matha ghuray gechilo, formula bujhtam na. Pore Telegram helpline e mentor sir ke screenshot pathanor por uni voice message e bujhiye diyechen. Tarpor theke 3,800 tk earn korechi, just submission verify hote majhe majhe 2-3 ghonta wait korte hoy.'
+    },
+    {
+      rating: 9,
+      category: 'typing',
+      workRole: 'Typing Work · Active Worker',
+      roleBadge: 'Typing Member',
+      earnings: 'BDT 3,000',
+      text: 'টাইপিং প্রজেক্টে ৩০ মিনিটের টাইমার অন হওয়ার পর একটু নার্ভাস হয়ে যাই, কারণ মাঝপথে ভুল করেও পেজ রিফ্রেশ দিলে ২ ঘণ্টা অপেক্ষা করতে হয়। তবে মন দিয়ে ২টা প্রজেক্ট ঠিকঠাক জমা দিতে পেরেছি আর ৩,০০০ টাকা পেয়েছি।'
+    },
+    {
+      rating: 9,
+      category: 'affiliate',
+      workRole: 'Affiliate Shop · Active Seller',
+      roleBadge: 'Affiliate Partner',
+      earnings: 'BDT 4,200',
+      text: 'Shop er notun UI ta besh neat lagse, product code ar direct link alada kore dewa ache bole buyer ke pathate subidha hoy. Ekhon porjonto 4,200 tk commission peyechi, delivery confirm howar por balance e add hoy.'
+    },
+    {
+      rating: 9,
+      category: 'payout',
+      workRole: 'Microjob · Active Worker',
+      roleBadge: 'Verified Contributor',
+      earnings: 'BDT 3,200',
+      text: 'Earned BDT 3,200 combining small microjobs and form reviews over the past month. Cashout to Nagad went through cleanly the next morning, and support actually replies when you message them with your ID.'
+    },
+    {
+      rating: 9,
+      category: 'marketing',
+      workRole: 'Social Marketing · Active Worker',
+      roleBadge: 'Marketing Member',
+      earnings: 'BDT 5,400',
+      text: 'ডিজিটাল মার্কেটিং ও সোশ্যাল প্রোমোশন টাস্কগুলোতে লিড আনতে একটু পরিশ্রম হয়, শুধু লিংক শেয়ার করলে কেউ ক্লিক করে না। নিয়ম মেনে পোস্ট করায় ৫,৪০০ টাকার মতো আয় হয়েছে।'
+    },
+    {
+      rating: 9,
+      category: 'form',
+      workRole: 'Form Fillup · Active Worker',
+      roleBadge: 'Active Worker',
+      earnings: 'BDT 4,500',
+      text: 'Amar kache site ta khub e reliable lagse. Kaj ektu tough holeo fake kichu nai—4,500 tk bKash e nilam gotokal. Just review time ta aro ektu fast korle 10/10 ditam.'
+    },
+    {
+      rating: 9,
+      category: 'data',
+      workRole: 'Data Entry · Active Worker',
+      roleBadge: 'Excel Trainee',
+      earnings: 'BDT 3,500',
+      text: 'Phone diye Data Entry korte ektu choto lagto, tai brother er laptop niye kaj kori ekhon. Sheet validation error na thakle 3,500 tk er moto easy pawa gese ei mashe.'
+    }
+  ],
+  8: [
+    {
+      rating: 8,
+      category: 'typing',
+      workRole: 'Typing Work · Active Worker',
+      roleBadge: 'Typing Worker',
+      earnings: 'BDT 2,400',
+      text: 'Sotti bolte typing er kaj ta onno module er cheye onek kothin. 30 minute e 2500+ character error chara type kora ar screen record korar pressure ta notun der jonno ektu beshi hoye jay. Ami 3rd try te pass kore 2,400 tk peyechi, etake aro ektu sohoj korle valo hoto.'
+    },
+    {
+      rating: 8,
+      category: 'data',
+      workRole: 'Data Entry · Active Worker',
+      roleBadge: 'Data Trainee',
+      earnings: 'BDT 3,000',
+      text: 'আপনাদের প্রজেক্টের কাজগুলো আসলেই অনেক কঠিন এবং খুঁটিনাটি ভুল ধরার সিস্টেম খুব কড়া। প্রথম শিটটায় একটা ফর্মুলা ভুল থাকায় রিজেক্ট হয়েছিল, আমাকে আরও প্র্যাকটিস করতে হবে। তবে দ্বিতীয় প্রজেক্ট ঠিকমতো জমা দিয়ে ৩,০০০ টাকা পেয়েছি।'
+    },
+    {
+      rating: 8,
+      category: 'form',
+      workRole: 'Form Fillup · Active Worker',
+      roleBadge: 'Form Fillup Worker',
+      earnings: 'BDT 3,600',
+      text: 'Form fillup kore BDT 3,600 peyechi tobe data entry r quantity onek barano hoyeche. 60 ta client theke khoja ar 40 ta column fillup korte ek bosay 1.5 ghonta lege jay. Payout 100% real kintu workload ektu heavy.'
+    },
+    {
+      rating: 8,
+      category: 'typing',
+      workRole: 'Typing Work · Active Worker',
+      roleBadge: 'Active Worker',
+      earnings: 'BDT 1,800',
+      text: 'The payment system and balance transfer both work properly—withdrew BDT 1,800 without trouble. My only gripe is that the typing passage length feels overwhelming on a phone keyboard; laptop users definitely have an advantage here.'
+    },
+    {
+      rating: 8,
+      category: 'affiliate',
+      workRole: 'Affiliate Shop · Active Seller',
+      roleBadge: 'Affiliate Seller',
+      earnings: 'BDT 2,800',
+      text: 'অ্যাফিলিয়েট শপের প্রোডাক্টগুলো ভালো এবং কমিশনও ঠিকমতো দেয়। তবে এখন অনেকেই একসাথে শেয়ার করায় সেল আনতে ভালোই সময় ও মার্কেটিং স্কিল লাগে। এ পর্যন্ত ২,৮০০ টাকা পেয়েছি।'
+    },
+    {
+      rating: 8,
+      category: 'general',
+      workRole: 'Microjob · Active Worker',
+      roleBadge: 'Microjob Worker',
+      earnings: 'BDT 2,200',
+      text: 'Kaj submit korar por verification e kokhono 3-4 ghonta pore approval ashe, tobe group e admin ke bolle dekhe dey. Ekhon porjonto 2,200 taka withdraw korechi, bishashjoggo site.'
+    }
+  ],
+  7: [
+    {
+      rating: 7,
+      category: 'typing',
+      workRole: 'Typing Work · Active Worker',
+      roleBadge: 'Typing Learner',
+      text: 'Bhai typing er kaj ta khub e kothin lagse amar kache. 30 minute timer shuru howar por 2500+ okkhor type korte giye 2 bar time out hoye gelo, ar tarpor 2 ghonta lock thake. Eta ektu sohoj korle amader moto new worker der jonno subidha hoto.'
+    },
+    {
+      rating: 7,
+      category: 'data',
+      workRole: 'Data Entry · Active Worker',
+      roleBadge: 'Data Entry Member',
+      text: 'আপনাদের প্রজেক্টের কাজগুলো অনেক কঠিন, কোনো শর্টকাট বা অনুমান করে জমা দিলে সরাসরি বাতিল করে দেয়। আমার এক্সেলের বেসিক দুর্বল থাকায় দুবার রিজেক্ট খেয়েছি, আমাকে আরও প্র্যাকটিস করে তারপর সাবমিট করতে হবে।'
+    },
+    {
+      rating: 7,
+      category: 'typing',
+      workRole: 'Typing Work · Active Worker',
+      roleBadge: 'Active Worker',
+      earnings: 'BDT 1,200',
+      text: 'একটা প্রজেক্ট শেষ করে ১,২০০ টাকা পেয়েছি ঠিকই, কিন্তু সত্যি বলতে টাইপিং আর ফর্ম ফিলাপ দুটোতেই অনেক ধৈর্য লাগে। তাড়াহুড়ো করে টাইপ করলে বানান ভুল ধরে দেয়, স্পিড বাড়ানো ছাড়া উপায় নেই।'
+    },
+    {
+      rating: 7,
+      category: 'form',
+      workRole: 'Form Fillup · Active Worker',
+      roleBadge: 'Batch Worker',
+      earnings: 'BDT 1,500',
+      text: 'Platform genuine, bKash e 1,500 taka cashout o peyechi ar balance transfer o kaj kore. Kintu kajer quantity eto beshi je choto screen wala phone diye form fillup korte chokh byatha hoye jay. Laptop chara kora ektu kothin.'
+    },
+    {
+      rating: 7,
+      category: 'general',
+      workRole: 'Data Entry · Active Worker',
+      roleBadge: 'Trainee',
+      text: 'Honestly the tasks here are much tougher than typical microjob sites. Between the strict audit rules and the long validation sheets, I need more practice before I can finish assignments smoothly and earn faster.'
+    },
+    {
+      rating: 7,
+      category: 'typing',
+      workRole: 'Typing Work · Active Worker',
+      roleBadge: 'Typing Trainee',
+      text: 'Typing er text onek boro ar time kom, ami ekhono 1st batch complete korte pari nai. Tobe live chat e dekhlam jara 1-2 mas practice korche tara thik e parche, dekhi chesta chalay jacchi.'
+    }
+  ]
+};
 
-  const list: StudentReview[] = [];
-  banglaNames.forEach((person, idx) => {
-    const tmpl = templates[idx % templates.length];
-    list.push({
-      id: `rev-${100 + idx}`,
-      name: person.name,
-      gender: person.gender,
-      location: person.loc,
-      roleBadge: tmpl.badge,
-      avatarUrl: (idx % 4 === 0) ? `https://images.unsplash.com/photo-${1530000000000 + (idx * 314159) % 100000000}?w=150&auto=format&fit=crop&q=80` : undefined,
-      rating: 5,
+const RELATIVE_DATES_EN = [
+  'Today · 14 mins ago',
+  'Today · 42 mins ago',
+  'Today · 1 hour ago',
+  'Today · 3 hours ago',
+  'Today · 5 hours ago',
+  'Yesterday',
+  '2 days ago',
+  '3 days ago',
+  '4 days ago',
+  '5 days ago',
+  '6 days ago',
+  '1 week ago',
+  '2 weeks ago'
+];
+
+// Pattern for the 100 displayed reviews:
+// - First 3 are 10/10
+// - Followed by 9, 10, 9, 8...
+// - Overall 10, 9, 8 dominate (~84 items) with clear representation of 7/10 (~16 items)
+const RATING_SEQUENCE_100: (7 | 8 | 9 | 10)[] = (() => {
+  const seq: (7 | 8 | 9 | 10)[] = [
+    10, 10, 10,
+    9, 9,
+    10, 10,
+    9,
+    8, 8
+  ];
+  const cycle: (7 | 8 | 9 | 10)[] = [
+    10, 9, 10, 8, 9, 7, 10, 9, 8, 10, 9, 8, 7, 10, 9, 8, 10, 7, 9, 8, 10, 9, 7, 8, 9
+  ];
+  let idx = 0;
+  while (seq.length < 100) {
+    seq.push(cycle[idx % cycle.length]);
+    idx++;
+  }
+  return seq.slice(0, 100);
+})();
+
+function seededInt(seed: number): number {
+  let x = (seed ^ 0x9e3779b9) >>> 0;
+  x = Math.imul(x ^ (x >>> 16), 0x85ebca6b) >>> 0;
+  x = Math.imul(x ^ (x >>> 13), 0xc2b2ae35) >>> 0;
+  return (x ^ (x >>> 16)) >>> 0;
+}
+
+const POOL_SIZE = 1360;
+
+function buildPoolByRating(): Record<7 | 8 | 9 | 10, StudentReview[]> {
+  const buckets: Record<7 | 8 | 9 | 10, StudentReview[]> = {
+    10: [],
+    9: [],
+    8: [],
+    7: []
+  };
+
+  const ratingsOrder: (7 | 8 | 9 | 10)[] = [10, 9, 10, 9, 8, 10, 9, 8, 7];
+
+  for (let i = 0; i < POOL_SIZE; i++) {
+    const h1 = seededInt(i * 19 + 101);
+    const h2 = seededInt(i * 37 + 307);
+    const h3 = seededInt(i * 59 + 709);
+
+    const rating = ratingsOrder[i % ratingsOrder.length];
+    const tmpls = TEMPLATES_BY_RATING[rating];
+    const tmpl = tmpls[(i + (h2 % 11)) % tmpls.length];
+
+    const isFemale = h1 % 10 < 4;
+    const fullName = isFemale
+      ? `${FEMALE_FIRST_EN[h1 % FEMALE_FIRST_EN.length]} ${FEMALE_LAST_EN[h2 % FEMALE_LAST_EN.length]}`
+      : `${MALE_FIRST_EN[h1 % MALE_FIRST_EN.length]} ${MALE_LAST_EN[h2 % MALE_LAST_EN.length]}`;
+
+    const location = DISTRICTS[h3 % DISTRICTS.length];
+    const avatarTone = AVATAR_TONES[(i + h1) % AVATAR_TONES.length];
+
+    // ~68% NO profile photo (colored monogram circle), ~32% casual flower/cat/nature image
+    const avatarUrl =
+      h2 % 10 < 3 ? CASUAL_AVATAR_URLS[h3 % CASUAL_AVATAR_URLS.length] : undefined;
+
+    const projectCode = String(1000000 + (seededInt(i * 97 + 13) % 8999999));
+
+    buckets[rating].push({
+      id: `rev-pool-${1000 + i}`,
+      name: fullName,
+      gender: isFemale ? 'female' : 'male',
+      location,
+      workRole: tmpl.workRole,
+      roleBadge: tmpl.roleBadge,
+      avatarUrl,
+      avatarTone,
+      rating: tmpl.rating,
       text: tmpl.text,
-      category: tmpl.cat,
-      date: tmpl.daysAgo,
-      likes: 15 + ((idx * 7) % 45),
+      category: tmpl.category,
+      date: RELATIVE_DATES_EN[i % RELATIVE_DATES_EN.length],
+      likes: 8 + (h3 % 64),
       earnings: tmpl.earnings,
+      projectSuccessId: projectCode,
       isVerified: true,
       status: 'approved'
     });
+  }
+
+  return buckets;
+}
+
+const POOL_BUCKETS = buildPoolByRating();
+
+export function getDailyRotatedReviews(now: Date = new Date()): {
+  reviews: StudentReview[];
+  dailyCount: number;
+  daySeed: number;
+} {
+  const daySeed = Math.floor(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000
+  );
+
+  const cursors: Record<7 | 8 | 9 | 10, number> = {
+    10: (daySeed * 11) % POOL_BUCKETS[10].length,
+    9: (daySeed * 9) % POOL_BUCKETS[9].length,
+    8: (daySeed * 7) % POOL_BUCKETS[8].length,
+    7: (daySeed * 3) % POOL_BUCKETS[7].length
+  };
+
+  const display100: StudentReview[] = RATING_SEQUENCE_100.map((targetRating, idx) => {
+    const bucket = POOL_BUCKETS[targetRating];
+    const item = bucket[cursors[targetRating] % bucket.length];
+    cursors[targetRating] += 1;
+
+    return {
+      ...item,
+      date: idx < 8 ? RELATIVE_DATES_EN[idx % 5] : item.date
+    };
   });
 
-  return list;
-};
+  return {
+    reviews: display100,
+    dailyCount: 100,
+    daySeed
+  };
+}
 
-export const ALL_DEFAULT_REVIEWS: StudentReview[] = [
-  ...INITIAL_STUDENT_REVIEWS,
-  ...generateAdditionalReviews()
-];
+export const ALL_DEFAULT_REVIEWS: StudentReview[] = getDailyRotatedReviews().reviews;

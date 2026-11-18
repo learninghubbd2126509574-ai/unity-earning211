@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  TrendingUp, 
-  CheckCircle2, 
-  ArrowUpRight, 
-  Receipt, 
-  Clock, 
-  Users, 
-  ShieldCheck, 
-  RefreshCw,
+import {
+  TrendingUp,
+  CheckCircle2,
+  Receipt,
   Wallet,
-  Sparkles,
   ArrowRightLeft
 } from 'lucide-react';
 import { db } from '../lib/firebase';
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { useAuth } from '../contexts/AuthContext';
 
 interface PaymentRecord {
   id: string;
@@ -56,7 +51,7 @@ const INITIAL_NAMES = [
 ];
 
 const PAYMENT_AMOUNTS = [
-  130, 150, 200, 250, 320, 450, 500, 600, 700, 750, 850, 920, 1000, 
+  130, 150, 200, 250, 320, 450, 500, 600, 700, 750, 850, 920, 1000,
   1150, 1200, 1350, 1400, 1500, 1650, 1750, 1850, 1920, 1980
 ];
 
@@ -65,16 +60,16 @@ const METHODS: PaymentRecord['type'][] = [
 ];
 
 export const LivePayments: React.FC = () => {
+  const { user } = useAuth();
   const [records, setRecords] = useState<PaymentRecord[]>([]);
   const [realTransfers, setRealTransfers] = useState<PaymentRecord[]>([]);
   const [filter, setFilter] = useState<'all' | 'transfer' | 'payout'>('all');
   const [lastUpdated, setLastUpdated] = useState<string>('Just now');
 
-  // Generate 130 realistic top payment records
+  // Generate 130+ realistic top payment records
   useEffect(() => {
     const generated: PaymentRecord[] = [];
-    
-    // Specific requested records
+
     generated.push({
       id: 'seed-top-1',
       name: 'Md. Ibrahim',
@@ -130,17 +125,17 @@ export const LivePayments: React.FC = () => {
       status: 'Completed'
     });
 
-    const PAYMENT_AMOUNTS = [
-      120, 130, 150, 200, 250, 320, 450, 500, 600, 700, 750, 850, 920, 1000, 
+    const SEED_AMOUNTS = [
+      120, 130, 150, 200, 250, 320, 450, 500, 600, 700, 750, 850, 920, 1000,
       1150, 1200, 1350, 1400, 1500, 1650, 1750, 1850, 1920, 1980, 2100, 2500
     ];
 
     for (let i = 6; i < 420; i++) {
       const name = INITIAL_NAMES[i % INITIAL_NAMES.length];
       const randomId = (1000000 + ((i * 73939 + 18273) % 8999999)).toString();
-      const amount = PAYMENT_AMOUNTS[(i * 7 + 3) % PAYMENT_AMOUNTS.length];
+      const amount = SEED_AMOUNTS[(i * 7 + 3) % SEED_AMOUNTS.length];
       const type = METHODS[(i * 3 + 1) % METHODS.length];
-      
+
       const minsAgo = (i * 3) + ((i * 2) % 11);
       let timeAgo = `${minsAgo} mins ago`;
       if (minsAgo === 1) timeAgo = '1 min ago';
@@ -167,10 +162,19 @@ export const LivePayments: React.FC = () => {
 
   // Real-time Firestore transfers listener
   useEffect(() => {
+    if (!user?.uid) return;
     try {
-      const q = query(collection(db, 'transfers'), orderBy('createdAt', 'desc'), limit(20));
+      const q = query(collection(db, 'transfers'), where('status', '==', 'completed'));
       const unsub = onSnapshot(q, (snap) => {
-        const liveList: PaymentRecord[] = snap.docs.map((docSnap) => {
+        const docsSorted = [...snap.docs]
+          .sort((a, b) => {
+            const ta = new Date(a.data()?.createdAt || 0).getTime();
+            const tb = new Date(b.data()?.createdAt || 0).getTime();
+            return tb - ta;
+          })
+          .slice(0, 20);
+
+        const liveList: PaymentRecord[] = docsSorted.map((docSnap) => {
           const d = docSnap.data();
           return {
             id: docSnap.id,
@@ -185,27 +189,25 @@ export const LivePayments: React.FC = () => {
         });
         setRealTransfers(liveList);
       }, (error) => {
-        console.error("Transfers sync:", error);
+        console.warn("Transfers sync warning:", error);
       });
 
       return () => unsub();
     } catch (err) {
       console.error(err);
     }
-  }, []);
+  }, [user?.uid]);
 
   // Dynamic live auto-update ticker every 1 to 3 minutes randomly
   useEffect(() => {
     let timeoutId: any = null;
 
     const runTicker = () => {
-      // Pick a random interval between 60 and 180 seconds (1 to 3 minutes)
       const randomSeconds = Math.floor(Math.random() * (180 - 60 + 1)) + 60;
-      
+
       timeoutId = setTimeout(() => {
         setRecords((prev) => {
           if (prev.length < 5) return prev;
-          // Pick a random user from list and generate a new live transaction at the top
           const randomName = INITIAL_NAMES[Math.floor(Math.random() * INITIAL_NAMES.length)];
           const randomId = (1000000 + Math.floor(Math.random() * 9000000)).toString();
           const randomAmount = PAYMENT_AMOUNTS[Math.floor(Math.random() * PAYMENT_AMOUNTS.length)];
@@ -221,8 +223,7 @@ export const LivePayments: React.FC = () => {
             status: 'Completed'
           };
 
-          const updated = [newRecord, ...prev.slice(0, 420)];
-          return updated;
+          return [newRecord, ...prev.slice(0, 420)];
         });
 
         setLastUpdated('Updated just now');
@@ -246,75 +247,60 @@ export const LivePayments: React.FC = () => {
   });
 
   return (
-    <div className="p-4 pb-24 h-full overflow-y-auto space-y-5 bg-slate-50">
-      
-      {/* Top Statistics & Live Feed Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-950 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden border border-slate-800">
-        
-        {/* Glow effect */}
-        <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+    <div className="p-3.5 sm:p-5 pb-24 space-y-4 bg-[#F4F5F7]">
 
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-emerald-400 text-xs font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>LIVE PAYMENTS & TRANSFERS</span>
-            </div>
-
-            <div className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
-              <RefreshCw size={12} className="animate-spin text-emerald-400" />
-              <span>Auto-Sync</span>
-            </div>
-          </div>
-
+      {/* Top Formal Summary Header */}
+      <div className="bg-[#0A4D8C] rounded-xl p-5 text-white shadow-xs space-y-4">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-xl font-black tracking-tight">Verified Payouts & Transfers</h1>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Real-time member balance transfers and automated gateway withdrawals.
+            <p className="text-[11px] uppercase tracking-wider text-white/75 font-medium">Transaction Ledger</p>
+            <h1 className="text-lg sm:text-xl font-semibold tracking-tight mt-0.5">Verified Payouts & Transfers</h1>
+            <p className="text-xs text-white/80 mt-1">
+              Member balance transfers and automated gateway disbursements.
             </p>
           </div>
+          <span className="text-[11px] text-white/80 font-mono shrink-0">{lastUpdated}</span>
+        </div>
 
-          {/* Balance Transfer Instant Action */}
-          <div className="pt-3 border-t border-slate-800/90 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent('open_balance_transfer'))}
-              className="w-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 active:scale-[0.98] text-white py-2.5 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20 transition cursor-pointer border border-orange-400/30"
-            >
-              <ArrowRightLeft size={15} />
-              <span>Instant Balance Transfer (P2P)</span>
-            </button>
-          </div>
+        <div className="pt-3 border-t border-white/15">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('open_balance_transfer'))}
+            className="w-full sm:w-auto bg-white hover:bg-slate-100 text-[#0A4D8C] py-2.5 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+          >
+            <ArrowRightLeft size={14} />
+            <span>New Balance Transfer</span>
+          </button>
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex bg-slate-200/80 p-1 rounded-2xl border border-slate-300/60 text-xs font-bold">
+      <div className="grid grid-cols-3 bg-white p-1 rounded-xl border border-slate-200/90 text-xs font-medium">
         <button
           onClick={() => setFilter('all')}
-          className={`flex-1 py-2 rounded-xl transition-all ${
+          className={`py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
             filter === 'all'
-              ? 'bg-white text-slate-900 shadow-sm'
+              ? 'bg-[#0A4D8C] text-white font-semibold'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          All Activity (130+)
+          All Activity
         </button>
         <button
           onClick={() => setFilter('transfer')}
-          className={`flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
             filter === 'transfer'
-              ? 'bg-white text-slate-900 shadow-sm'
+              ? 'bg-[#0A4D8C] text-white font-semibold'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <ArrowRightLeft size={13} />
-          <span>Balance Transfers</span>
+          <span>Transfers</span>
         </button>
         <button
           onClick={() => setFilter('payout')}
-          className={`flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
             filter === 'payout'
-              ? 'bg-white text-slate-900 shadow-sm'
+              ? 'bg-[#0A4D8C] text-white font-semibold'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -323,69 +309,54 @@ export const LivePayments: React.FC = () => {
         </button>
       </div>
 
-      {/* Payment Transactions List */}
-      <div className="space-y-2.5">
-        <div className="flex justify-between items-center px-1">
-          <div className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-            <Receipt size={14} className="text-orange-500" />
-            <span>Top Recent Transfers & Payouts</span>
+      {/* Ledger Container */}
+      <div className="bg-white rounded-xl border border-slate-200/90 overflow-hidden shadow-2xs">
+        <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between bg-[#F8FAFC]">
+          <div className="text-xs font-semibold text-slate-800 flex items-center gap-2">
+            <Receipt size={15} className="text-[#0A4D8C]" />
+            <span>Recent Transactions</span>
           </div>
-          <span className="text-[10px] font-mono text-slate-400">{lastUpdated}</span>
+          <span className="text-[11px] font-mono text-slate-500 tabular-nums">{filtered.length} entries</span>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="divide-y divide-slate-100">
           {filtered.map((item, index) => {
             const isTransfer = item.type === 'Balance Transfer';
 
             return (
               <div
                 key={item.id + index}
-                className={`p-3.5 rounded-2xl border transition-all ${
-                  item.isReal
-                    ? 'bg-orange-50/70 border-orange-200 shadow-xs'
-                    : 'bg-white border-slate-100 shadow-xs hover:border-slate-200'
+                className={`px-4 py-3 flex items-center justify-between gap-3 ${
+                  item.isReal ? 'bg-[#EEF5FC]/60' : 'hover:bg-[#F8FAFC]'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      isTransfer 
-                        ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
-                        : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                    }`}>
-                      {isTransfer ? <ArrowRightLeft size={18} /> : <TrendingUp size={18} />}
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="text-xs font-bold text-slate-800">{item.name}</h4>
-                        {item.isReal && (
-                          <span className="bg-orange-500 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full uppercase">
-                            LIVE
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
-                        <span className="font-mono bg-slate-100 px-1.5 py-0.2 rounded text-slate-600 font-medium">
-                          ID: {item.studentId}
-                        </span>
-                        <span>•</span>
-                        <span>{item.type}</span>
-                      </div>
-                    </div>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-lg bg-[#EEF5FC] border border-[#D4E4F7] text-[#0A4D8C] flex items-center justify-center shrink-0">
+                    {isTransfer ? <ArrowRightLeft size={16} strokeWidth={1.75} /> : <TrendingUp size={16} strokeWidth={1.75} />}
                   </div>
 
-                  <div className="text-right">
-                    <div className="text-sm font-black text-slate-800 font-mono">
-                      BDT {item.amount.toLocaleString()}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-[13px] font-semibold text-slate-900 truncate">{item.name}</h4>
+                      {item.isReal && (
+                        <span className="text-[10.5px] font-semibold text-[#0A4D8C]">Recent</span>
+                      )}
                     </div>
-                    <div className="flex items-center justify-end gap-1 mt-0.5 text-[10px] text-emerald-600 font-semibold">
-                      <CheckCircle2 size={11} className="shrink-0" />
-                      <span>{item.status}</span>
-                      <span className="text-slate-300">•</span>
-                      <span className="text-slate-400 font-mono font-normal">{item.timeAgo}</span>
-                    </div>
+                    <p className="text-[11px] text-slate-500 mt-0.5 truncate tabular-nums">
+                      ID {item.studentId} <span className="mx-1 text-slate-300">·</span> {item.type}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <div className="text-[13px] font-semibold text-slate-900 font-mono tabular-nums">
+                    BDT {item.amount.toLocaleString()}
+                  </div>
+                  <div className="flex items-center justify-end gap-1 mt-0.5 text-[10.5px] text-[#0D7A5F] font-medium">
+                    <CheckCircle2 size={11} className="shrink-0" />
+                    <span>{item.status}</span>
+                    <span className="text-slate-300">·</span>
+                    <span className="text-slate-400 font-mono font-normal tabular-nums">{item.timeAgo}</span>
                   </div>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ModuleGuard } from '../components/ModuleGuard';
-import { Eye, CheckCircle2, AlertCircle, ExternalLink, Timer, Sparkles, Trophy } from 'lucide-react';
+import { Eye, CheckCircle2, ExternalLink, Timer, Trophy, ShieldCheck } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,7 +15,7 @@ const SPONSORED_ADS = [
     website: 'https://example.com/techvanguard',
     duration: 10,
     reward: 0.50,
-    bannerColor: 'from-blue-600 to-indigo-700'
+    accentColor: 'bg-[#0A4D8C]'
   },
   {
     id: 'ad_2',
@@ -26,7 +26,7 @@ const SPONSORED_ADS = [
     website: 'https://example.com/finpulse',
     duration: 10,
     reward: 0.50,
-    bannerColor: 'from-emerald-600 to-teal-700'
+    accentColor: 'bg-[#22262C]'
   },
   {
     id: 'ad_3',
@@ -37,7 +37,7 @@ const SPONSORED_ADS = [
     website: 'https://example.com/apex-growth',
     duration: 10,
     reward: 0.50,
-    bannerColor: 'from-orange-500 to-rose-600'
+    accentColor: 'bg-[#0A4D8C]'
   },
   {
     id: 'ad_4',
@@ -48,7 +48,7 @@ const SPONSORED_ADS = [
     website: 'https://example.com/cybershield',
     duration: 10,
     reward: 0.50,
-    bannerColor: 'from-purple-600 to-slate-900'
+    accentColor: 'bg-[#22262C]'
   }
 ];
 
@@ -114,127 +114,133 @@ const AdViewingApp: React.FC = () => {
   };
 
   return (
-    <div className="p-4 pb-24 h-full overflow-y-auto space-y-5">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 text-teal-200 text-xs font-bold uppercase tracking-wider mb-2">
-            <Sparkles size={16} /> Partner Campaign Network
+    <div className="min-h-full bg-[#F4F5F7] p-4 pb-24">
+      <div className="max-w-2xl mx-auto space-y-4">
+        {/* Header Banner */}
+        <div className="bg-[#0A4D8C] rounded-xl p-5 text-white border border-[#083D70]">
+          <div className="flex items-center gap-1.5 text-white/80 text-[11px] font-medium mb-1">
+            <ShieldCheck size={14} />
+            <span>Partner Campaign Network</span>
           </div>
-          <h1 className="text-xl font-bold">Sponsored Ad Viewing</h1>
-          <p className="text-xs text-teal-100 mt-1 leading-relaxed max-w-sm">
+          <h1 className="text-lg font-semibold tracking-tight">Sponsored Ad Viewing</h1>
+          <p className="text-xs text-white/80 mt-1 leading-relaxed">
             Watch verified partner sponsor promotions for the required duration to receive guaranteed balance credits.
           </p>
 
-          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-teal-500/50">
+          <div className="flex items-center gap-6 mt-4 pt-3.5 border-t border-white/15">
             <div>
-              <div className="text-[10px] text-teal-200 uppercase font-bold">Completed Today</div>
-              <div className="text-lg font-mono font-bold">{completedCount} Ads</div>
+              <div className="text-[11px] text-white/75 font-medium">Completed Today</div>
+              <div className="text-base font-mono tabular-nums font-semibold mt-0.5">{completedCount} Ads</div>
             </div>
-            <div className="w-px h-8 bg-teal-500/50"></div>
+            <div className="w-px h-8 bg-white/15" />
             <div>
-              <div className="text-[10px] text-teal-200 uppercase font-bold">Earnings Claimed</div>
-              <div className="text-lg font-mono font-bold text-amber-300">BDT {totalEarned.toFixed(2)}</div>
+              <div className="text-[11px] text-white/75 font-medium">Earnings Claimed</div>
+              <div className="text-base font-mono tabular-nums font-semibold mt-0.5">BDT {totalEarned.toFixed(2)}</div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Ad Stage */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-md p-6 space-y-5">
-        <div className="flex justify-between items-start">
-          <div>
-            <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md uppercase tracking-wider">
-              {activeAd.category}
-            </span>
-            <h3 className="text-base font-bold text-slate-800 mt-2">{activeAd.sponsor}</h3>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] text-slate-400 uppercase font-bold">Reward</div>
-            <div className="text-base font-bold text-emerald-600">+BDT {activeAd.reward.toFixed(2)}</div>
-          </div>
-        </div>
-
-        {/* Sponsor Banner Mockup */}
-        <div className={`p-6 rounded-2xl bg-gradient-to-br ${activeAd.bannerColor} text-white shadow-md relative overflow-hidden transition-all duration-300 min-h-[160px] flex flex-col justify-between`}>
-          <div className="relative z-10">
-            <h4 className="text-lg font-extrabold leading-snug">{activeAd.headline}</h4>
-            <p className="text-xs text-white/80 mt-2 line-clamp-3 leading-relaxed">
-              {activeAd.tagline}
-            </p>
-          </div>
-
-          <div className="relative z-10 flex items-center justify-between mt-4 pt-3 border-t border-white/20 text-xs">
-            <span className="text-white/70 font-mono text-[11px] flex items-center gap-1">
-              <ExternalLink size={12} /> {activeAd.website}
-            </span>
-            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-semibold">
-              Verified Sponsor
-            </span>
-          </div>
-        </div>
-
-        {/* Viewing Controls & Timer */}
-        {!isViewing && !isCompleted && (
-          <button
-            onClick={startAdSession}
-            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-2xl transition shadow-md flex items-center justify-center gap-2"
-          >
-            <Eye size={18} /> Start 10-Second Ad View
-          </button>
-        )}
-
-        {isViewing && (
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center space-y-3">
-            <div className="flex items-center justify-center gap-2 text-slate-600 text-xs font-semibold">
-              <Timer size={16} className="text-teal-600 animate-spin" />
-              <span>Verifying active viewport view...</span>
+        {/* Main Ad Stage */}
+        <div className="bg-white rounded-xl border border-slate-200/90 p-5 space-y-4">
+          <div className="flex justify-between items-start gap-3">
+            <div>
+              <span className="text-[11px] font-medium text-[#0A4D8C]">
+                {activeAd.category}
+              </span>
+              <h3 className="text-base font-semibold text-[#111827] mt-0.5">{activeAd.sponsor}</h3>
             </div>
-            
-            <div className="text-3xl font-mono font-extrabold text-teal-600">
-              00:{secondsRemaining.toString().padStart(2, '0')}
+            <div className="text-right shrink-0">
+              <div className="text-[11px] text-slate-500 font-medium">Reward</div>
+              <div className="text-sm font-semibold font-mono tabular-nums text-[#0D7A5F]">
+                +BDT {activeAd.reward.toFixed(2)}
+              </div>
+            </div>
+          </div>
+
+          {/* Sponsor Display Panel */}
+          <div className={`p-5 rounded-xl ${activeAd.accentColor} text-white min-h-[150px] flex flex-col justify-between`}>
+            <div>
+              <h4 className="text-base font-semibold leading-snug">{activeAd.headline}</h4>
+              <p className="text-xs text-white/80 mt-2 line-clamp-3 leading-relaxed">
+                {activeAd.tagline}
+              </p>
             </div>
 
-            {/* Progress Bar */}
-            <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-              <div
-                className="bg-teal-500 h-full transition-all duration-1000 ease-linear rounded-full"
-                style={{ width: `${((10 - secondsRemaining) / 10) * 100}%` }}
-              />
+            <div className="flex items-center justify-between gap-2 mt-4 pt-3 border-t border-white/15 text-xs">
+              <span className="text-white/75 font-mono text-[11px] flex items-center gap-1.5 truncate">
+                <ExternalLink size={12} className="shrink-0" />
+                <span className="truncate">{activeAd.website}</span>
+              </span>
+              <span className="text-[11px] font-medium text-white/90 whitespace-nowrap shrink-0">
+                Verified Sponsor
+              </span>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Please keep this screen open until the verification timer reaches zero.
-            </p>
           </div>
-        )}
 
-        {isCompleted && (
-          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-center space-y-3">
-            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-              <CheckCircle2 size={28} />
-            </div>
-            <h4 className="text-base font-bold text-emerald-800">Ad Verification Complete!</h4>
-            <p className="text-xs text-emerald-700">
-              You have completed viewing this sponsored promotion. Claim your reward below.
-            </p>
+          {/* Viewing Controls & Timer */}
+          {!isViewing && !isCompleted && (
             <button
-              onClick={handleClaimReward}
-              disabled={isProcessing}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+              onClick={startAdSession}
+              className="w-full bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold py-3 rounded-lg transition-colors text-xs flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Trophy size={16} /> {isProcessing ? 'Crediting Account...' : `Claim BDT ${activeAd.reward.toFixed(2)} Reward`}
+              <Eye size={16} />
+              <span>Start 10-Second Ad View</span>
             </button>
-          </div>
-        )}
-      </div>
+          )}
 
-      {/* Rules Notice */}
-      <div className="p-4 bg-slate-100/80 rounded-2xl border border-slate-200 text-xs text-slate-500 space-y-1">
-        <div className="font-bold text-slate-700 mb-1">Ad Viewing Guidelines:</div>
-        <div>• Each ad must be actively viewed for the full 10-second countdown.</div>
-        <div>• Automated scripts or bots are detected and will result in task deactivation.</div>
-        <div>• Balance is credited immediately upon clicking the claim reward button.</div>
+          {isViewing && (
+            <div className="p-4 bg-[#F8FAFC] rounded-xl border border-slate-200 text-center space-y-3">
+              <div className="flex items-center justify-center gap-2 text-slate-700 text-xs font-medium">
+                <Timer size={15} className="text-[#0A4D8C]" />
+                <span>Verifying active viewport view...</span>
+              </div>
+              
+              <div className="text-3xl font-mono tabular-nums font-semibold text-[#0A4D8C]">
+                00:{secondsRemaining.toString().padStart(2, '0')}
+              </div>
+
+              <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                <div
+                  className="bg-[#0A4D8C] h-full transition-all duration-1000 ease-linear rounded-full"
+                  style={{ width: `${((10 - secondsRemaining) / 10) * 100}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Keep this screen open until the verification timer reaches zero.
+              </p>
+            </div>
+          )}
+
+          {isCompleted && (
+            <div className="p-4 bg-[#ECFDF5] rounded-xl border border-[#A7F3D0] text-center space-y-3">
+              <div className="w-11 h-11 bg-white border border-[#A7F3D0] text-[#0D7A5F] rounded-xl flex items-center justify-center mx-auto">
+                <CheckCircle2 size={24} />
+              </div>
+              <h4 className="text-sm font-semibold text-[#065F46]">Ad Verification Complete</h4>
+              <p className="text-xs text-[#047857]">
+                You have completed viewing this sponsored promotion. Claim your balance credit below.
+              </p>
+              <button
+                onClick={handleClaimReward}
+                disabled={isProcessing}
+                className="w-full bg-[#0D7A5F] hover:bg-[#09604A] text-white font-semibold py-2.5 rounded-lg transition-colors text-xs flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              >
+                <Trophy size={15} />
+                <span>{isProcessing ? 'Crediting Account...' : `Claim BDT ${activeAd.reward.toFixed(2)} Reward`}</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Guidelines Notice */}
+        <div className="p-4 bg-[#FEF7E0] rounded-xl border border-[#F3DFA2] text-xs text-[#5F4B16] space-y-1.5">
+          <div className="font-semibold text-[#47380F]">Ad Viewing Guidelines</div>
+          <div>1. Each ad must be actively viewed for the full 10-second countdown.</div>
+          <div>2. Automated scripts or bots are detected and result in task deactivation.</div>
+          <div>3. Balance is credited immediately upon clicking Claim Reward.</div>
+        </div>
       </div>
     </div>
   );
 };
+

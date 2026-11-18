@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ModuleGuard } from '../components/ModuleGuard';
-import { Gamepad2, Trophy, Timer, CheckCircle2, XCircle, Sparkles, Award } from 'lucide-react';
+import { Gamepad2, Trophy, Timer, Award, CheckCircle2 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
@@ -46,7 +46,7 @@ const GamingTournamentApp: React.FC = () => {
     if (gameState === 'playing' && !isAnswerChecked && timeLeft > 0) {
       timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (gameState === 'playing' && !isAnswerChecked && timeLeft === 0) {
-      handleOptionSelect(-1); // Timed out
+      handleOptionSelect(-1);
     }
     return () => {
       if (timer) clearTimeout(timer);
@@ -99,111 +99,117 @@ const GamingTournamentApp: React.FC = () => {
   };
 
   return (
-    <div className="p-4 pb-24 h-full overflow-y-auto space-y-5">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-fuchsia-600 to-purple-700 rounded-3xl p-6 text-white shadow-lg">
-        <div className="flex items-center gap-2 text-fuchsia-200 text-xs font-bold uppercase tracking-wider mb-2">
-          <Sparkles size={16} /> Competitive E-Sports Arena
-        </div>
-        <h1 className="text-xl font-bold">Gaming Tournament</h1>
-        <p className="text-xs text-fuchsia-100 mt-1 leading-relaxed">
-          Test your speed and digital knowledge in real-time speed rounds to claim instant tournament rewards.
-        </p>
-      </div>
-
-      {gameState === 'lobby' && (
-        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-md text-center space-y-4">
-          <div className="w-16 h-16 bg-fuchsia-50 text-fuchsia-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
-            <Gamepad2 size={36} />
+    <div className="min-h-full bg-[#F4F5F7] p-4 pb-24">
+      <div className="max-w-2xl mx-auto space-y-4">
+        {/* Header Banner */}
+        <div className="bg-[#0A4D8C] rounded-xl p-5 text-white border border-[#083D70]">
+          <div className="text-[11px] font-medium text-white/80 mb-1">
+            Competitive Assessment Arena
           </div>
-          <h3 className="text-lg font-bold text-slate-800">Knowledge Speed Challenge</h3>
-          <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
-            Answer 3 fast questions under 10 seconds each. Earn up to <span className="font-bold text-emerald-600">BDT 1.50</span> for high accuracy!
+          <h1 className="text-lg font-semibold tracking-tight">Gaming Tournament</h1>
+          <p className="text-xs text-white/80 mt-1 leading-relaxed">
+            Test your speed and digital knowledge in timed speed rounds to claim instant tournament rewards.
           </p>
-
-          <button
-            onClick={startTournament}
-            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition shadow-md text-xs active:scale-[0.99]"
-          >
-            Enter Tournament Round
-          </button>
         </div>
-      )}
 
-      {gameState === 'playing' && (
-        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-md space-y-5">
-          <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-            <span className="text-xs font-bold text-slate-400 font-mono">
-              Question {currentQIndex + 1} of {QUESTIONS.length}
-            </span>
-            <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-fuchsia-600 bg-fuchsia-50 px-3 py-1 rounded-full">
-              <Timer size={14} className="animate-spin" /> {timeLeft}s
+        {gameState === 'lobby' && (
+          <div className="bg-white rounded-xl p-6 border border-slate-200/90 text-center space-y-4">
+            <div className="w-14 h-14 bg-[#EEF5FC] text-[#0A4D8C] rounded-xl flex items-center justify-center mx-auto border border-[#D4E4F7]">
+              <Gamepad2 size={28} />
             </div>
-          </div>
+            <h3 className="text-base font-semibold text-[#111827]">Knowledge Speed Challenge</h3>
+            <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
+              Answer 3 quick questions under 10 seconds each. Earn up to <span className="font-semibold font-mono text-[#0D7A5F]">BDT 1.50</span> for high accuracy.
+            </p>
 
-          <h3 className="text-sm font-bold text-slate-800 leading-snug">
-            {QUESTIONS[currentQIndex].question}
-          </h3>
-
-          <div className="grid grid-cols-1 gap-2.5">
-            {QUESTIONS[currentQIndex].options.map((opt, idx) => {
-              let btnStyle = 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300';
-              if (isAnswerChecked) {
-                if (idx === QUESTIONS[currentQIndex].correct) {
-                  btnStyle = 'border-emerald-500 bg-emerald-50 text-emerald-900 font-bold';
-                } else if (idx === selectedOption) {
-                  btnStyle = 'border-rose-500 bg-rose-50 text-rose-900';
-                }
-              }
-
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  disabled={isAnswerChecked}
-                  onClick={() => handleOptionSelect(idx)}
-                  className={`p-3 rounded-xl border text-left text-xs transition-all ${btnStyle}`}
-                >
-                  <span className="font-mono font-bold mr-2 text-slate-400">{String.fromCharCode(65 + idx)}.</span>
-                  <span>{opt}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {gameState === 'result' && (
-        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-md text-center space-y-4">
-          <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto">
-            <Trophy size={36} />
-          </div>
-          <h3 className="text-lg font-bold text-slate-800">Tournament Completed!</h3>
-          <p className="text-xs text-slate-500">
-            You scored <span className="font-bold text-slate-800">{score}</span> out of <span className="font-bold text-slate-800">{QUESTIONS.length}</span> correct answers.
-          </p>
-
-          {!rewardClaimed ? (
             <button
-              onClick={handleClaimPrize}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition shadow-md text-xs flex items-center justify-center gap-1.5"
+              onClick={startTournament}
+              className="w-full bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold py-3 rounded-lg transition-colors text-xs cursor-pointer"
             >
-              <Award size={16} /> Claim Tournament Prize ({score >= 2 ? 'BDT 1.50' : 'BDT 0.50'})
+              Enter Tournament Round
             </button>
-          ) : (
-            <div className="p-3 bg-emerald-50 text-emerald-800 font-bold text-xs rounded-xl border border-emerald-200">
-              ✓ Reward deposited into your account balance!
-            </div>
-          )}
+          </div>
+        )}
 
-          <button
-            onClick={startTournament}
-            className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 rounded-xl transition text-xs"
-          >
-            Play Another Round
-          </button>
-        </div>
-      )}
+        {gameState === 'playing' && (
+          <div className="bg-white rounded-xl p-5 border border-slate-200/90 space-y-4">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <span className="text-xs font-medium text-slate-500 font-mono tabular-nums">
+                Question {currentQIndex + 1} of {QUESTIONS.length}
+              </span>
+              <div className="flex items-center gap-1.5 font-mono tabular-nums text-xs font-semibold text-[#0A4D8C]">
+                <Timer size={14} />
+                <span>{timeLeft}s</span>
+              </div>
+            </div>
+
+            <h3 className="text-sm font-semibold text-[#111827] leading-snug">
+              {QUESTIONS[currentQIndex].question}
+            </h3>
+
+            <div className="grid grid-cols-1 gap-2">
+              {QUESTIONS[currentQIndex].options.map((opt, idx) => {
+                let btnStyle = 'border-slate-200 bg-[#F8FAFC] text-slate-700 hover:border-[#0A4D8C]/40';
+                if (isAnswerChecked) {
+                  if (idx === QUESTIONS[currentQIndex].correct) {
+                    btnStyle = 'border-[#0D7A5F] bg-[#ECFDF5] text-[#065F46] font-semibold';
+                  } else if (idx === selectedOption) {
+                    btnStyle = 'border-rose-400 bg-rose-50 text-rose-800';
+                  }
+                }
+
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    disabled={isAnswerChecked}
+                    onClick={() => handleOptionSelect(idx)}
+                    className={`p-3 rounded-lg border text-left text-xs transition-colors cursor-pointer ${btnStyle}`}
+                  >
+                    <span className="font-mono font-semibold mr-2 text-slate-400">{String.fromCharCode(65 + idx)}.</span>
+                    <span>{opt}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {gameState === 'result' && (
+          <div className="bg-white rounded-xl p-6 border border-slate-200/90 text-center space-y-4">
+            <div className="w-14 h-14 bg-[#FEF7E0] text-[#B47B00] border border-[#F3DFA2] rounded-xl flex items-center justify-center mx-auto">
+              <Trophy size={28} />
+            </div>
+            <h3 className="text-base font-semibold text-[#111827]">Tournament Completed</h3>
+            <p className="text-xs text-slate-600">
+              You scored <span className="font-semibold font-mono text-[#111827]">{score}</span> out of <span className="font-semibold font-mono text-[#111827]">{QUESTIONS.length}</span> correct answers.
+            </p>
+
+            {!rewardClaimed ? (
+              <button
+                onClick={handleClaimPrize}
+                className="w-full bg-[#0D7A5F] hover:bg-[#09604A] text-white font-semibold py-3 rounded-lg transition-colors text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Award size={15} />
+                <span>Claim Tournament Prize ({score >= 2 ? 'BDT 1.50' : 'BDT 0.50'})</span>
+              </button>
+            ) : (
+              <div className="p-3 bg-[#ECFDF5] text-[#065F46] font-medium text-xs rounded-lg border border-[#A7F3D0] flex items-center justify-center gap-2">
+                <CheckCircle2 size={15} />
+                <span>Reward deposited into your account balance.</span>
+              </div>
+            )}
+
+            <button
+              onClick={startTournament}
+              className="w-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold py-2.5 rounded-lg transition-colors text-xs cursor-pointer"
+            >
+              Play Another Round
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
+

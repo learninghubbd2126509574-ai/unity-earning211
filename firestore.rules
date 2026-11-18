@@ -1,0 +1,340 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.uid == '3zm8FLrkycMzOOI6tXI3Kf693JD3' ||
+        request.auth.token.email == '01919012426@portal.unityearning.internal' ||
+        request.auth.token.email == 'admin@portal.unityearning.internal' ||
+        request.auth.token.email == 'learninghubbd2126509574@gmail.com'
+      );
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Validation Blueprints
+    function isValidUser(data) {
+      return data.keys().hasAll(['fullName', 'whatsappNumber', 'studentIdCode', 'role', 'status']) &&
+        data.keys().hasOnly([
+          'uid', 'fullName', 'whatsappNumber', 'studentIdCode', 'email', 'passwordText',
+          'role', 'status', 'balance', 'microjobPoints', 'assignedJob', 'assignedJobs',
+          'preferredModules', 'courseCompleted', 'companyJoinDate', 'hasExperience',
+          'hasSelectedWorkKnowledge', 'hasCertificate', 'certificateUrl',
+          'teamLeaderName', 'teamTrainerName', 'photoUrl', 'createdAt', 'updatedAt'
+        ]) &&
+        data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 120 &&
+        data.whatsappNumber is string && data.whatsappNumber.size() >= 6 && data.whatsappNumber.size() <= 25 &&
+        data.studentIdCode is string && data.studentIdCode.size() <= 16 &&
+        data.role in ['student', 'admin'] &&
+        data.status in ['pending', 'active', 'blocked'] &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 160)) &&
+        (!('passwordText' in data) || (data.passwordText is string && data.passwordText.size() <= 128)) &&
+        (!('balance' in data) || (data.balance is number && data.balance >= 0 && data.balance <= 10000000)) &&
+        (!('microjobPoints' in data) || (data.microjobPoints is number && data.microjobPoints >= 0 && data.microjobPoints <= 1000000)) &&
+        (!('assignedJob' in data) || (data.assignedJob is string && data.assignedJob.size() <= 64)) &&
+        (!('assignedJobs' in data) || (data.assignedJobs is list && data.assignedJobs.size() <= 20)) &&
+        (!('preferredModules' in data) || (data.preferredModules is list && data.preferredModules.size() <= 20)) &&
+        (!('teamLeaderName' in data) || (data.teamLeaderName is string && data.teamLeaderName.size() <= 120)) &&
+        (!('teamTrainerName' in data) || (data.teamTrainerName is string && data.teamTrainerName.size() <= 120)) &&
+        (!('certificateUrl' in data) || (data.certificateUrl is string && data.certificateUrl.size() <= 900000)) &&
+        (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 900000));
+    }
+
+    function isValidDirectoryEntry(data) {
+      return data.keys().hasAll(['uid', 'studentIdCode', 'fullName']) &&
+        data.keys().hasOnly(['uid', 'studentIdCode', 'fullName', 'updatedAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+        data.studentIdCode is string && data.studentIdCode.matches('^[0-9]{7}$') &&
+        data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 120;
+    }
+
+    function isValidAuthLookup(data) {
+      return data.keys().hasAll(['email', 'uid']) &&
+        data.keys().hasOnly(['email', 'uid', 'updatedAt']) &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128;
+    }
+
+    function isValidSetting(data) {
+      return data.keys().hasOnly([
+        'accessPin', 'videoUrl', 'url', 'telegramUrl', 'whatsappUrl', 'logoUrl',
+        'message', 'title', 'buttonText', 'isActive', 'isVideoRequired', 'updatedAt'
+      ]) &&
+      (!('accessPin' in data) || (data.accessPin is string && data.accessPin.matches('^[0-9]{4}$'))) &&
+      (!('videoUrl' in data) || (data.videoUrl is string && data.videoUrl.size() <= 500)) &&
+      (!('url' in data) || (data.url is string && data.url.size() <= 500)) &&
+      (!('telegramUrl' in data) || (data.telegramUrl is string && data.telegramUrl.size() <= 500)) &&
+      (!('whatsappUrl' in data) || (data.whatsappUrl is string && data.whatsappUrl.size() <= 500)) &&
+      (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 900000)) &&
+      (!('message' in data) || (data.message is string && data.message.size() <= 5000)) &&
+      (!('title' in data) || (data.title is string && data.title.size() <= 200)) &&
+      (!('buttonText' in data) || (data.buttonText is string && data.buttonText.size() <= 100));
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll(['userId', 'name', 'rating', 'text', 'status']) &&
+        data.keys().hasOnly([
+          'userId', 'name', 'gender', 'location', 'workRole', 'roleBadge', 'avatarUrl',
+          'avatarTone', 'rating', 'text', 'category', 'projectSuccessId', 'date',
+          'likes', 'earnings', 'isVerified', 'status', 'submittedByStudentId',
+          'userPhone', 'createdAt', 'approvedAt'
+        ]) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.rating is number && data.rating >= 7 && data.rating <= 10 &&
+        data.text is string && data.text.size() >= 1 && data.text.size() <= 2000 &&
+        data.status in ['pending', 'approved'];
+    }
+
+    function isValidSubmission(data) {
+      return data.keys().hasAll(['userId', 'status']) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.status in ['pending', 'approved', 'rejected'];
+    }
+
+    function isValidProjectSubmission(data) {
+      return data.keys().hasAll(['userId', 'projectId', 'status']) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.projectId is string && data.projectId.size() <= 64 &&
+        data.status in ['Not Started', 'In Progress', 'Submitted', 'Under Review', 'Accepted', 'Rejected'];
+    }
+
+    function isValidTransfer(data) {
+      return data.keys().hasAll(['senderId', 'recipientStudentId', 'amount', 'status']) &&
+        data.keys().hasOnly([
+          'senderId', 'senderName', 'senderStudentId', 'recipientStudentId',
+          'recipientName', 'amount', 'createdAt', 'status'
+        ]) &&
+        data.senderId is string && data.senderId.size() <= 128 &&
+        data.recipientStudentId is string && data.recipientStudentId.size() <= 16 &&
+        data.amount is number && data.amount > 0 && data.amount <= 500000 &&
+        data.status in ['completed', 'pending'];
+    }
+
+    function isValidModeratorApplication(data) {
+      return data.keys().hasAll(['userId', 'applicantName', 'status']) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.applicantName is string && data.applicantName.size() >= 1 && data.applicantName.size() <= 120 &&
+        data.status in ['pending', 'approved', 'rejected'];
+    }
+
+    function isValidAffiliateSubmission(data) {
+      return data.keys().hasAll(['userId', 'sellerName', 'status']) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.sellerName is string && data.sellerName.size() >= 1 && data.sellerName.size() <= 120 &&
+        data.status in ['pending', 'approved_paid', 'rejected'];
+    }
+
+    function isValidMicrojob(data) {
+      return data.keys().hasAll(['userId', 'platform', 'url', 'isActive']) &&
+        data.keys().hasOnly(['userId', 'platform', 'url', 'notice', 'isActive', 'reward', 'createdAt']) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.platform is string && data.platform.size() >= 1 && data.platform.size() <= 40 &&
+        data.url is string && data.url.size() >= 1 && data.url.size() <= 500 &&
+        data.isActive is bool;
+    }
+
+    function isValidCampaignRegistration(data) {
+      return data.keys().hasAll(['userId', 'fullName', 'phone', 'studentIdCode', 'status']) &&
+        data.keys().hasOnly(['userId', 'fullName', 'phone', 'studentIdCode', 'tasksCompletedToday', 'campaignWeek', 'status', 'submittedAt']) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 120 &&
+        data.phone is string && data.phone.size() >= 6 && data.phone.size() <= 25 &&
+        data.studentIdCode is string && data.studentIdCode.matches('^[0-9]{7}$') &&
+        data.status in ['verified', 'pending'];
+    }
+
+    // Admins Registry
+    match /admins/{adminUid} {
+      allow get: if isValidId(adminUid) && (isAdmin() || isOwner(adminUid));
+      allow list, create, update, delete: if isAdmin();
+    }
+
+    // Connection Probe Document
+    match /test/{docId} {
+      allow get: if isValidId(docId);
+      allow list, write: if false;
+    }
+
+    // Users Collection (Strict PII & Password Isolation)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isAdmin() || isOwner(userId));
+      allow list: if isAdmin();
+      allow create: if isValidId(userId) && isSignedIn() && isValidUser(incoming()) && (
+        isAdmin() ||
+        (
+          isOwner(userId) &&
+          incoming().role == 'student' &&
+          incoming().status in ['active', 'pending'] &&
+          (!('balance' in incoming()) || incoming().balance == 0) &&
+          (!('microjobPoints' in incoming()) || incoming().microjobPoints == 0)
+        )
+      );
+      allow update: if isValidId(userId) && isSignedIn() && isValidUser(incoming()) && (
+        isAdmin() ||
+        (
+          isOwner(userId) &&
+          existing().status != 'blocked' &&
+          incoming().role == existing().role &&
+          incoming().status == existing().status &&
+          incoming().studentIdCode == existing().studentIdCode &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'whatsappNumber', 'photoUrl', 'balance', 'microjobPoints', 'updatedAt'])
+        ) ||
+        (
+          request.auth.uid != userId &&
+          existing().status == 'active' &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['balance', 'updatedAt']) &&
+          incoming().balance is number &&
+          incoming().balance > existing().balance &&
+          incoming().balance <= existing().balance + 500000
+        )
+      );
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // Safe 7-Digit ID Recipient Directory (No PII/Phone/Password)
+    match /memberDirectory/{studentIdCode} {
+      allow get: if isSignedIn() && isValidId(studentIdCode);
+      allow list: if isAdmin();
+      allow create, update: if isValidId(studentIdCode) && isSignedIn() && isValidDirectoryEntry(incoming()) && (
+        isAdmin() || incoming().uid == request.auth.uid
+      );
+      allow delete: if isValidId(studentIdCode) && isAdmin();
+    }
+
+    // Hash-keyed Email Alias Lookup (Zero enumeration)
+    match /authLookups/{lookupHash} {
+      allow get: if isValidId(lookupHash) && lookupHash.size() == 64;
+      allow list: if false;
+      allow create, update: if isValidId(lookupHash) && lookupHash.size() == 64 && isSignedIn() && isValidAuthLookup(incoming()) && (
+        isAdmin() || incoming().uid == request.auth.uid
+      );
+      allow delete: if isValidId(lookupHash) && isAdmin();
+    }
+
+    // Portal Settings (Video Guide Link, Support Channels, Access PIN, Notices)
+    match /settings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if isAdmin();
+      allow create, update: if isValidId(settingId) && isAdmin() && isValidSetting(incoming());
+      allow delete: if isValidId(settingId) && isAdmin();
+    }
+
+    // Work Submissions
+    match /submissions/{submissionId} {
+      allow get: if isValidId(submissionId) && (isAdmin() || (isSignedIn() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(submissionId) && isSignedIn() && isValidSubmission(incoming()) && (
+        isAdmin() || (incoming().userId == request.auth.uid && incoming().status == 'pending')
+      );
+      allow update: if isValidId(submissionId) && isSignedIn() && isValidSubmission(incoming()) && (
+        isAdmin() || (existing().userId == request.auth.uid && existing().status == 'pending' && incoming().status == 'pending')
+      );
+      allow delete: if isValidId(submissionId) && isAdmin();
+    }
+
+    // Data Entry & Form Fillup Project Submissions
+    match /projectSubmissions/{submissionId} {
+      allow get: if isValidId(submissionId) && (isAdmin() || (isSignedIn() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(submissionId) && isSignedIn() && isValidProjectSubmission(incoming()) && (
+        isAdmin() || (incoming().userId == request.auth.uid && incoming().status in ['In Progress', 'Submitted', 'Under Review'])
+      );
+      allow update: if isValidId(submissionId) && isSignedIn() && isValidProjectSubmission(incoming()) && (
+        isAdmin() || (
+          existing().userId == request.auth.uid &&
+          incoming().userId == existing().userId &&
+          existing().status in ['In Progress', 'Under Review'] &&
+          incoming().status in ['In Progress', 'Submitted', 'Under Review', 'Rejected']
+        )
+      );
+      allow delete: if isValidId(submissionId) && isAdmin();
+    }
+
+    // Student Reviews
+    match /reviews/{reviewId} {
+      allow get: if isValidId(reviewId) && (isAdmin() || existing().status == 'approved' || (isSignedIn() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && (resource.data.status == 'approved' || resource.data.userId == request.auth.uid));
+      allow create: if isValidId(reviewId) && isSignedIn() && isValidReview(incoming()) && (
+        isAdmin() || (incoming().userId == request.auth.uid && incoming().status == 'pending')
+      );
+      allow update: if isValidId(reviewId) && isAdmin() && isValidReview(incoming());
+      allow delete: if isValidId(reviewId) && isAdmin();
+    }
+
+    // Peer Balance Transfers
+    match /transfers/{transferId} {
+      allow get: if isValidId(transferId) && (isAdmin() || (isSignedIn() && existing().status == 'completed'));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.status == 'completed');
+      allow create: if isValidId(transferId) && isSignedIn() && isValidTransfer(incoming()) && (
+        isAdmin() || incoming().senderId == request.auth.uid
+      );
+      allow update, delete: if isValidId(transferId) && isAdmin();
+    }
+
+    // Content Moderator Applications
+    match /moderatorApplications/{appId} {
+      allow get: if isValidId(appId) && (isAdmin() || (isSignedIn() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(appId) && isSignedIn() && isValidModeratorApplication(incoming()) && (
+        isAdmin() || (incoming().userId == request.auth.uid && incoming().status == 'pending')
+      );
+      allow update, delete: if isValidId(appId) && isAdmin();
+    }
+
+    // Affiliate Sales Commission Submissions
+    match /affiliateSubmissions/{saleId} {
+      allow get: if isValidId(saleId) && (isAdmin() || (isSignedIn() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(saleId) && isSignedIn() && isValidAffiliateSubmission(incoming()) && (
+        isAdmin() || (incoming().userId == request.auth.uid && incoming().status == 'pending')
+      );
+      allow update, delete: if isValidId(saleId) && isAdmin();
+    }
+
+    // Microjobs Community Links
+    match /microjobs/{jobId} {
+      allow get: if isValidId(jobId) && (isAdmin() || (isSignedIn() && existing().isActive == true));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.isActive == true);
+      allow create: if isValidId(jobId) && isSignedIn() && isValidMicrojob(incoming()) && (
+        isAdmin() || incoming().userId == request.auth.uid
+      );
+      allow update, delete: if isValidId(jobId) && isAdmin();
+    }
+
+    // Weekly Bonus Campaign Registrations
+    match /campaign_registrations/{regId} {
+      allow get: if isValidId(regId) && (isAdmin() || (isSignedIn() && existing().userId == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(regId) && isSignedIn() && isValidCampaignRegistration(incoming()) && (
+        isAdmin() || incoming().userId == request.auth.uid
+      );
+      allow update, delete: if isValidId(regId) && isAdmin();
+    }
+  }
+}

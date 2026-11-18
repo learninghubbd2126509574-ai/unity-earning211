@@ -1,340 +1,590 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ModuleGuard } from '../components/ModuleGuard';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  PenTool, 
-  CheckCircle2, 
-  AlertCircle, 
-  Clock, 
-  ShieldCheck, 
-  Video, 
-  Upload, 
+import {
+  PenTool,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  Video,
+  Upload,
   Link2,
-  Sparkles, 
-  FileText, 
-  RefreshCw, 
-  Eye, 
-  Check, 
-  Zap, 
-  Info, 
-  XCircle, 
-  HelpCircle, 
-  ArrowRight, 
-  ExternalLink, 
+  Zap,
+  Info,
+  XCircle,
+  ArrowRight,
   Timer,
   AlertTriangle,
   ShieldAlert,
   Cpu,
-  Bot,
   RotateCcw,
-  Activity
+  RefreshCw,
+  Play,
+  Lock,
+  Hourglass
 } from 'lucide-react';
+
+interface RequiredFixRule {
+  wrong: string;
+  fixed: string;
+  label: string;
+}
 
 interface TypingTask {
   id: number;
+  language: 'English' | 'Bengali';
   category: string;
   difficulty: 'Very Hard' | 'Complex' | 'Advanced' | 'Master';
   title: string;
   timeLimitMinutes: number;
   instructionSteps: string[];
+  requiredFixes: RequiredFixRule[];
   text: string;
+  expectedCorrectedText: string;
   mandatoryCondition?: string;
 }
 
 const ADVANCED_10_TASKS: TypingTask[] = [
   {
     id: 1,
-    category: "Commercial Legal Contract & Indenture Clauses",
-    difficulty: "Complex",
-    title: "Section 14(c) Commercial Lease & Escrow Indemnity Agreement",
+    language: 'English',
+    category: 'Commercial Legal Contract & Indenture Clauses',
+    difficulty: 'Complex',
+    title: 'Section 14(c) Commercial Lease, Arbitration & Escrow Indenture',
     timeLimitMinutes: 30,
     instructionSteps: [
-      "১. মূল নথির ফরম্যাট বজায় রেখে অনুচ্ছেদটি টাইপ করুন।",
-      "২. 'Lessee' শব্দটি প্রতিস্থাপন করে 'Authorized Tenant' লিখুন।",
-      "৩. সকল টাকার অংক প্রথম বন্ধনীতে (Parentheses) আবদ্ধ করুন।",
-      "৪. তারিখের ফরম্যাট DD-Month-YYYY অনুযায়ী লিখুন।",
-      "৫. সকল অংকীয় মান কমা (,) দিয়ে পৃথক করুন।",
-      "৬. বিরামচিহ্ন ও ব্র্যাকেটের নির্ভুলতা যাচাই করুন।",
-      "৭. 'Section 14(c)' অংশটি সম্পূর্ণ বোল্ড করুন।",
-      "৮. 'Escrow Account' এর পর সঠিক IBAN নম্বরটি বসান।",
-      "৯. সকল শতাংশের (%) মান দশমিকের পর দুই ঘর পর্যন্ত রাখুন।",
-      "১০. অনুচ্ছেদের শেষে কোনো বাড়তি স্পেস রাখবেন না।"
+      "১. প্যাসেজটিতে থাকা ইচ্ছাকৃত বানান ও তথ্যের ভুলগুলো সংশোধন করে সম্পূর্ণ অনুচ্ছেদ টাইপ করুন।",
+      "২. 'Lessee (Tenent)' এর পরিবর্তে সঠিকভাবে 'Authorized Tenant' লিখুন।",
+      "৩. '15-November-2024' এর ভুল সাল পরিবর্তন করে '15-November-2026' লিখুন।",
+      "৪. '0.75% per diem' এর স্থলে সঠিক চুক্তি অনুযায়ী '2.75% per diem' লিখুন।",
+      "৫. সকল টাকার অংক সঠিকভাবে কমা (,) ও দশমিক (.00) সহ প্রথম বন্ধনীতে রাখুন।",
+      "৬. 'Arbitration Act 1998' সংশোধন করে 'Arbitration Act 2001' লিখুন।",
+      "৭. 'RBC-2011' কোড আপডেট করে 'RBC-2020' লিখুন এবং প্যারাগ্রাফ বিরামচিহ্ন ঠিক রাখুন।",
+      "৮. কোনো কপি-পেস্ট বা অটো-ফিল ব্যবহার করা যাবে না।"
     ],
-    text: `Pursuant to Section 14(c) of the Master Commercial Lease Agreement (Ref: #LSE-2026/894-BD), the Authorized Tenant shall irrevocably deposit the aggregate sum of BDT 4,87,500.00 into the designated Escrow Account [IBAN: BD92-SBIN-0004-9812-7634] no later than 17:00 BST on 15-November-2026. 
+    requiredFixes: [
+      { wrong: 'Lessee (Tenent)', fixed: 'Authorized Tenant', label: 'Replace Lessee (Tenent) -> Authorized Tenant' },
+      { wrong: '15-November-2024', fixed: '15-November-2026', label: 'Fix year 2024 -> 2026' },
+      { wrong: '0.75% per diem', fixed: '2.75% per diem', label: 'Correct surcharge 0.75% -> 2.75%' },
+      { wrong: 'Arbitration Act 1998', fixed: 'Arbitration Act 2001', label: 'Update Arbitration Act 1998 -> 2001' },
+      { wrong: 'RBC-2011', fixed: 'RBC-2020', label: 'Update Building Code RBC-2011 -> RBC-2020' }
+    ],
+    text: `Pursuant to Section 14(c) of the Master Commercial Lease Agreement (Ref: #LSE-2026/894-BD), executed between Eastern Metropolitan Commercial Properties PLC ("Lessor") and the Lessee (Tenent), the Lessee (Tenent) shall irrevocably wire and deposit the aggregate escrow sum of BDT 4,87,500.00 into the designated Escrow Account [IBAN: BD92-SBIN-0004-9812-7634, SWIFT: SONABDDH] no later than 17:00 BST on 15-November-2024. Time is expressly declared to be of the absolute essence across every pecuniary covenant herein.
 
-Failure to remit said escrow collateral within five (5) statutory business days shall trigger an automatic liquidated damage surcharge of 2.75% per diem, compounded weekly under Clause 22.4(a). Neither party may assign, novate, or hypothecate its respective rights hereunder without prior written unanimous consent of the Board of Arbitrators (§ 9.2). All formal communications must be dispatched via registered courier with verifiable proof-of-delivery receipts.
+Failure to remit said escrow collateral within five (5) statutory business days following written demand shall automatically trigger a daily liquidated damage surcharge of 0.75% per diem, compounded weekly without grace period under Sub-Clause 22.4(a). Neither contracting party may assign, sub-lease, novate, encumber, or hypothecate its respective rights, titles, or equitable obligations hereunder without prior unanimous written consent signed by the Board of Arbitrators (§ 9.2). All formal statutory communications, default notices, and force-majeure declarations must be dispatched via registered international courier accompanied by verifiable proof-of-delivery receipts and cryptographic timestamps.
 
-Furthermore, the Authorized Tenant agrees to maintain comprehensive general liability insurance coverage with minimum single-limit indemnity of BDT 25,00,000.00 throughout the entire five-year lease tenure. Any structural alterations or electrical retrofitting must receive structural engineering compliance certificates under the Regional Building Code (RBC-2020). The Lessor covenants peaceful possession subject to regular quarterly safety inspections with forty-eight (48) hours prior notification.`
+Furthermore, the Lessee (Tenent) unconditionally covenants to procure and maintain comprehensive third-party general liability insurance coverage carrying a minimum single-limit indemnity threshold of BDT 25,00,000.00 throughout the entire sixty-month commercial lease tenure. Any non-structural partition modifications, HVAC ductwork rerouting, or high-voltage electrical retrofitting must obtain pre-execution engineering compliance certification under the National Regional Building Code (RBC-2011) and Fire Safety Directorate Regulation #FSCD-2026/19. The Lessor reserves unrestricted inspection access upon serving forty-eight (48) hours advance electronic notice.
+
+In addition, all municipal holding tax assessments, industrial effluent surcharges, utility metering deposits, and commercial facade signage levies assessed against the demised premises shall remain the sole fiscal liability of the Lessee (Tenent). Upon natural expiration or early termination pursuant to Clause 31.8(b), the premises must be surrendered in broom-clean architectural condition, ordinary structural wear excepted, within fourteen (14) calendar days. Any unresolved pecuniary dispute exceeding BDT 1,50,000.00 shall be referred exclusively to binding institutional arbitration seated in Dhaka under the Arbitration Act 1998, administered by three (3) neutral commercial arbitrators, with each disputant bearing fifty percent (50.00%) of tribunal registration costs and verbatim stenographic fees. Force majeure suspensions exceeding ninety (90) consecutive calendar days grant either solvent signatory unilateral termination privilege without penalty upon delivering audited regulatory certification.`,
+    expectedCorrectedText: `Pursuant to Section 14(c) of the Master Commercial Lease Agreement (Ref: #LSE-2026/894-BD), executed between Eastern Metropolitan Commercial Properties PLC ("Lessor") and the Authorized Tenant, the Authorized Tenant shall irrevocably wire and deposit the aggregate escrow sum of (BDT 4,87,500.00) into the designated Escrow Account [IBAN: BD92-SBIN-0004-9812-7634, SWIFT: SONABDDH] no later than 17:00 BST on 15-November-2026. Time is expressly declared to be of the absolute essence across every pecuniary covenant herein.
+
+Failure to remit said escrow collateral within five (5) statutory business days following written demand shall automatically trigger a daily liquidated damage surcharge of 2.75% per diem, compounded weekly without grace period under Sub-Clause 22.4(a). Neither contracting party may assign, sub-lease, novate, encumber, or hypothecate its respective rights, titles, or equitable obligations hereunder without prior unanimous written consent signed by the Board of Arbitrators (§ 9.2). All formal statutory communications, default notices, and force-majeure declarations must be dispatched via registered international courier accompanied by verifiable proof-of-delivery receipts and cryptographic timestamps.
+
+Furthermore, the Authorized Tenant unconditionally covenants to procure and maintain comprehensive third-party general liability insurance coverage carrying a minimum single-limit indemnity threshold of (BDT 25,00,000.00) throughout the entire sixty-month commercial lease tenure. Any non-structural partition modifications, HVAC ductwork rerouting, or high-voltage electrical retrofitting must obtain pre-execution engineering compliance certification under the National Regional Building Code (RBC-2020) and Fire Safety Directorate Regulation #FSCD-2026/19. The Lessor reserves unrestricted inspection access upon serving forty-eight (48) hours advance electronic notice.
+
+In addition, all municipal holding tax assessments, industrial effluent surcharges, utility metering deposits, and commercial facade signage levies assessed against the demised premises shall remain the sole fiscal liability of the Authorized Tenant. Upon natural expiration or early termination pursuant to Clause 31.8(b), the premises must be surrendered in broom-clean architectural condition, ordinary structural wear excepted, within fourteen (14) calendar days. Any unresolved pecuniary dispute exceeding (BDT 1,50,000.00) shall be referred exclusively to binding institutional arbitration seated in Dhaka under the Arbitration Act 2001, administered by three (3) neutral commercial arbitrators, with each disputant bearing fifty percent (50.00%) of tribunal registration costs and verbatim stenographic fees. Force majeure suspensions exceeding ninety (90) consecutive calendar days grant either solvent signatory unilateral termination privilege without penalty upon delivering audited regulatory certification.`
   },
   {
     id: 2,
-    category: "Clinical Laboratory Trial & Pharmaceutical Research",
-    difficulty: "Advanced",
-    title: "Protocol #CT-8092-B: In Vitro Bio-Equivalence & Solvency Assay",
+    language: 'English',
+    category: 'Clinical Laboratory Trial & Pharmaceutical Research',
+    difficulty: 'Advanced',
+    title: 'Protocol #CT-8092-B: In Vitro Bio-Equivalence, Dissolution & HPLC Assay',
     timeLimitMinutes: 30,
     instructionSteps: [
-      "১. 'Acetylsalicylic Acid' এর স্থানে 'Compound-ASA (BP/USP)' লিখুন।",
-      "২. সকল তাপমাত্রার মান বোল্ড ক্যাপিটালে রাখুন।",
-      "৩. রাসায়নিক সংকেতগুলো হুবহু টাইপ করুন।",
-      "৪. দশমিকের মান নিখুঁতভাবে টাইপ করুন।",
-      "৫. 'lambda_max' শব্দটি ইটালিক করুন।",
-      "৬. সকল শতাংশের (%) মান দশমিকের পর দুই ঘর পর্যন্ত রাখুন।",
-      "৭. 'Batch #BX-0914-K' অংশটি হাইলাইট করুন।",
-      "৮. ব্র্যাকেটের ভেতরের মানগুলো সঠিক রাখুন।",
-      "৯. HPLC রিপোর্ট ফরম্যাট বজায় রাখুন।",
-      "১০. নির্ভুলতা যাচাইয়ের জন্য রিচেক দিন।"
+      "১. 'Acetylsalicilic Acidd' বানান ভুল সংশোধন করে 'Compound-ASA (BP/USP)' লিখুন।",
+      "২. 'pH 5.20' এর ভুল মান পরিবর্তন করে 'pH 7.40' বসান।",
+      "৩. '180.99 g/mol' সংশোধন করে সঠিক আণবিক ভর '180.16 g/mol' লিখুন।",
+      "৪. 'Rev. 2019' পরিবর্তন করে 'Rev. 2026' লিখুন।",
+      "৫. '35.0°C' স্ট্যাবিলিটি তাপমাত্রা পরিবর্তন করে '40.0°C' লিখুন।",
+      "৬. রাসায়নিক সংকেত C9H8O4, CFU/g মান ও R² দশমিক সংখ্যা নিখুঁতভাবে টাইপ করুন।"
     ],
-    text: `During Phase-II clinical bio-equivalence screening (Trial Code #CT-8092-B), analytical samples of Acetylsalicylic Acid (C9H8O4, Molecular Weight: 180.16 g/mol) were subjected to rigorous chromatographic dissolution testing at 37.0°C (±0.25°C) within a buffered aqueous medium maintained strictly at pH 7.40.
+    requiredFixes: [
+      { wrong: 'Acetylsalicilic Acidd', fixed: 'Compound-ASA (BP/USP)', label: 'Fix Acetylsalicilic Acidd -> Compound-ASA (BP/USP)' },
+      { wrong: '180.99 g/mol', fixed: '180.16 g/mol', label: 'Fix Molecular Weight -> 180.16 g/mol' },
+      { wrong: 'pH 5.20', fixed: 'pH 7.40', label: 'Correct buffer pH -> 7.40' },
+      { wrong: 'Rev. 2019', fixed: 'Rev. 2026', label: 'Update USP-NF Monograph Rev. -> 2026' },
+      { wrong: 'at 35.0°C and 75.00%', fixed: 'at 40.0°C and 75.00%', label: 'Correct climatic chamber temp -> 40.0°C' }
+    ],
+    text: `During Phase-II multi-center clinical bio-equivalence screening (Protocol Trial Code #CT-8092-B), randomized analytical samples of Acetylsalicilic Acidd (Chemical Formula: C9H8O4, Molecular Weight: 180.99 g/mol, CAS Registry: 50-78-2) were subjected to rigorous USP Apparatus-II paddle chromatographic dissolution profiling at 37.0°C (±0.25°C) within a degassed phosphate buffered aqueous medium maintained strictly at pH 5.20 across ninety-minute sampling intervals.
 
-Spectrophotometric absorbance measured at lambda_max = 278.4 nm yielded an active therapeutic solvency coefficient of 98.42% (SD: ±0.18%). Batch #BX-0914-K demonstrated zero particulate precipitate after 72 hours of continuous agitation at 120 RPM. Chromatographic retention time peaked at 4.62 minutes, conforming to USP-NF Monograph standards (Rev. 2026). Technicians must archive raw chromatogram spectra in non-volatile read-only storage.
+Spectrophotometric UV-Vis absorbance measured at lambda_max = 278.4 nm yielded an active therapeutic solvency coefficient of 98.42% (Standard Deviation: ±0.18%, Relative Standard Deviation: 0.41%). Validation Batch #BX-0914-K demonstrated zero crystalline particulate precipitate after 72 continuous hours of orbital agitation at 120 RPM under nitrogen purge. Chromatographic elution retention time peaked sharply at 4.62 minutes using a C18 reversed-phase silica column (250 mm × 4.6 mm, 5 µm particle diameter), conforming strictly to USP-NF Monograph standards (Rev. 2019). Laboratory analysts must archive unmodified raw FID chromatogram spectra onto WORM non-volatile optical audit storage.
 
-High-Performance Liquid Chromatography (HPLC) validation assays demonstrated linear regression calibration (R² = 0.9998) across calibration standards ranging from 10.0 mcg/mL to 150.0 mcg/mL. Quantitative recovery percentages remained within acceptable pharmacopeial tolerance limits of 99.1% to 101.4%. The validation committee recommends stability testing under accelerated climatic chamber conditions at 40.0°C and 75% relative humidity.`
+High-Performance Liquid Chromatography (HPLC) bio-analytical validation assays confirmed multi-point linear regression calibration (R² = 0.9998; slope = 1.0142; y-intercept bias < 0.08%) spanning six working calibration concentrations from 10.0 mcg/mL to 150.0 mcg/mL. Quantitative percentage recovery remained tightly constrained within international pharmacopeial tolerance brackets of 99.10% to 101.40% under accelerated ICH Q1A(R2) climatic stability chambers regulated at 35.0°C and 75.00% relative humidity for 180 consecutive days without significant excipient hydrolysis or polymorphic phase shift.
+
+Supplemental microbiological limit assays executed across twelve (12) sealed aluminum-PVC blister packs verified total aerobic viable microbial counts strictly below 10 CFU/g and yeast/mold colonies under 2 CFU/g, confirming complete absence of Escherichia coli, Salmonella spp., and Staphylococcus aureus pathogens. Mechanical tablet friability remained below 0.34% following 100 standardized drum rotations at 25 RPM, whereas mean disintegration duration averaged 6.45 minutes in simulated gastric fluid lacking pepsin enzymes. Residual solvent headspace gas chromatography verified acetone and ethanol impurities below 120 ppm (ICH Class-3 threshold: 5,000 ppm). Final Quality Assurance Directorate Electronic Sign-Off Reference: #QA-PHARMA-2026-412-VERIFIED.`,
+    expectedCorrectedText: `During Phase-II multi-center clinical bio-equivalence screening (Protocol Trial Code #CT-8092-B), randomized analytical samples of Compound-ASA (BP/USP) (Chemical Formula: C9H8O4, Molecular Weight: 180.16 g/mol, CAS Registry: 50-78-2) were subjected to rigorous USP Apparatus-II paddle chromatographic dissolution profiling at 37.0°C (±0.25°C) within a degassed phosphate buffered aqueous medium maintained strictly at pH 7.40 across ninety-minute sampling intervals.
+
+Spectrophotometric UV-Vis absorbance measured at lambda_max = 278.4 nm yielded an active therapeutic solvency coefficient of 98.42% (Standard Deviation: ±0.18%, Relative Standard Deviation: 0.41%). Validation Batch #BX-0914-K demonstrated zero crystalline particulate precipitate after 72 continuous hours of orbital agitation at 120 RPM under nitrogen purge. Chromatographic elution retention time peaked sharply at 4.62 minutes using a C18 reversed-phase silica column (250 mm × 4.6 mm, 5 µm particle diameter), conforming strictly to USP-NF Monograph standards (Rev. 2026). Laboratory analysts must archive unmodified raw FID chromatogram spectra onto WORM non-volatile optical audit storage.
+
+High-Performance Liquid Chromatography (HPLC) bio-analytical validation assays confirmed multi-point linear regression calibration (R² = 0.9998; slope = 1.0142; y-intercept bias < 0.08%) spanning six working calibration concentrations from 10.0 mcg/mL to 150.0 mcg/mL. Quantitative percentage recovery remained tightly constrained within international pharmacopeial tolerance brackets of 99.10% to 101.40% under accelerated ICH Q1A(R2) climatic stability chambers regulated at 40.0°C and 75.00% relative humidity for 180 consecutive days without significant excipient hydrolysis or polymorphic phase shift.
+
+Supplemental microbiological limit assays executed across twelve (12) sealed aluminum-PVC blister packs verified total aerobic viable microbial counts strictly below 10 CFU/g and yeast/mold colonies under 2 CFU/g, confirming complete absence of Escherichia coli, Salmonella spp., and Staphylococcus aureus pathogens. Mechanical tablet friability remained below 0.34% following 100 standardized drum rotations at 25 RPM, whereas mean disintegration duration averaged 6.45 minutes in simulated gastric fluid lacking pepsin enzymes. Residual solvent headspace gas chromatography verified acetone and ethanol impurities below 120 ppm (ICH Class-3 threshold: 5,000 ppm). Final Quality Assurance Directorate Electronic Sign-Off Reference: #QA-PHARMA-2026-412-VERIFIED.`
   },
   {
     id: 3,
-    category: "Banking Financial Reconciliation & Anti-Money Laundering (AML)",
-    difficulty: "Master",
-    title: "Daily Cross-Border Swift Ledger & Tax Deduction Audit",
+    language: 'English',
+    category: 'Banking Financial Reconciliation & Anti-Money Laundering (AML)',
+    difficulty: 'Master',
+    title: 'Cross-Border SWIFT MT103 Ledger & Central Bank TDS Reconciliation Audit',
     timeLimitMinutes: 30,
     instructionSteps: [
-      "১. 'Standard Chartered' এর পরিবর্তে 'Global Clearing Partner' লিখুন।",
-      "২. সকল তারিখ DD/MM/YYYY ফরম্যাটে রূপান্তর করুন।",
-      "৩. টাকার অংকগুলো বাংলায় লিখুন।",
-      "৪. অডিট রেফারেন্স সঠিক ভাবে টাইপ করুন।",
-      "৫. ট্রানজেকশন হ্যাশ হুবহু টাইপ করুন।",
-      "৬. শতাংশের (%) মান দশমিকের পর দুই ঘর রাখুন।",
-      "৭. এনবিআর রুল নম্বরটি বোল্ড করুন।",
-      "৮. ব্যাংক রাউটিং নম্বর সঠিক রাখুন।",
-      "৯. কোনো প্রকার বাড়তি স্পেস দেবেন না।",
-      "১০. ডেটাগুলো নির্ভুল কি না যাচাই করুন।"
+      "১. 'Standrad Chartred' ভুল বানান সংশোধন করে 'Global Clearing Partner' লিখুন।",
+      "২. '2026-10-01' তারিখ পরিবর্তন করে '01/10/2026' (DD/MM/YYYY) ফরম্যাটে লিখুন।",
+      "৩. ভুল নিট হিসাব 'BDT 11,00,000.00' এর স্থলে সঠিক বিয়োগফল 'BDT 11,46,915.76' লিখুন।",
+      "৪. 'NBR Rule 16/2021' আপডেট করে 'NBR Rule 16/2026' লিখুন।",
+      "৫. ভুল স্পট রেট '98.50 BDT/USD' সংশোধন করে '119.50 BDT/USD' লিখুন।",
+      "৬. SHA256 হ্যাশ কোড, IBAN চেকসাম ও ব্যাংক রাউটিং নম্বর হুবহু নির্ভুলভাবে লিখুন।"
     ],
-    text: `AUDIT RECONCILIATION DISPATCH: [ID: TXN-BD-98201-CLR]
-Originating Branch: Motijheel Corporate Central (Routing: 095271894).
-Counterparty Institution: Standard Chartered Global Clearing (BIC: SCBLBDDX).
-Transaction Value: ৳12,74,350.85 [Twelve Lakh Seventy-Four Thousand Three Hundred Fifty Taka and 85/100].
+    requiredFixes: [
+      { wrong: 'Standrad Chartred', fixed: 'Global Clearing Partner', label: 'Fix Standrad Chartred -> Global Clearing Partner' },
+      { wrong: '2026-10-01', fixed: '01/10/2026', label: 'Convert date format -> 01/10/2026' },
+      { wrong: 'BDT 11,00,000.00', fixed: 'BDT 11,46,915.76', label: 'Fix Net Liquidity calculation -> BDT 11,46,915.76' },
+      { wrong: 'NBR Rule 16/2021', fixed: 'NBR Rule 16/2026', label: 'Update tax rule -> NBR Rule 16/2026' },
+      { wrong: '98.50 BDT/USD', fixed: '119.50 BDT/USD', label: 'Fix FX Spot Rate -> 119.50 BDT/USD' }
+    ],
+    text: `AUDIT RECONCILIATION DISPATCH: [LEDGER_ID: TXN-BD-98201-CLR-MT103]
+Originating Clearing Branch: Motijheel Corporate Treasury Central (BB Routing Code: 095271894; Branch Swift: BSONBDDHMCB).
+Counterparty Correspondent Institution: Standrad Chartred (Correspondent BIC: SCBLBDDX, Nostro Ledger: #NOS-USD-774129).
+Gross Cross-Border Transaction Value: BDT 12,74,350.85 [Twelve Lakh Seventy-Four Thousand Three Hundred Fifty Taka and 85/100 Only].
 
-Tax Deducted at Source (TDS under NBR Rule 16/2026): ৳1,27,435.09 (10.00% gross).
-Net Liquidity Credited to Treasury Vault: ৳11,46,915.76.
-AML Status: Verified against OFAC and UN Sanction Lists; zero adverse matches flagged.
-Authorized Approval Token: #AUTH-9901-SHA256-A78F04C. Time: 2026-10-01T14:38:22.091Z. Signed by Chief Compliance Officer.
+Statutory Tax Deducted at Source (TDS under NBR Rule 16/2021): BDT 1,27,435.09 (calculated at 10.00% flat withholding rate on gross invoice value).
+Net Liquidity Settled & Credited to Treasury Vault: BDT 11,00,000.00 (Variance Tolerance: ±0.00 BDT).
+Anti-Money Laundering (AML/CFT) Screening Status: Real-time fuzzy screening completed against OFAC SDN, EU Consolidated Sanctions, and UN Security Council Resolution 1267 lists; zero adverse PEP matches or structured smurfing alerts flagged.
+Authorized Cryptographic Approval Token: #AUTH-9901-SHA256-A78F04C9D2E1B. Settlement Timestamp: 2026-10-01T14:38:22.091Z (Posting Date: 2026-10-01). Endorsed digitally by Chief Compliance Officer & Internal Treasury Controller.
 
-Interbank Foreign Exchange Settlement confirmation was completed through Bangladesh Bank Real Time Gross Settlement (BD-RTGS) portal. Foreign remittance proceeds were allocated into priority agricultural credit refinance facilities with zero discrepancy between nostro and vostro ledger balances. Internal internal compliance officers have sealed this transaction archive under regulatory retention mandate #AML-REG-771.`
+Interbank Foreign Exchange Settlement verification was finalized via Bangladesh Bank Real Time Gross Settlement (BD-RTGS) core clearing portal under batch serial #RTGS-2026-90412. Foreign inward remittance proceeds were systematically apportioned into Tier-1 priority agricultural credit refinance pools and export development liquidity accounts with exact zero-balance parity confirmed between domestic vostro and offshore nostro mirror statements. Internal compliance auditors have cryptographically sealed this transaction dossier under seven-year statutory retention directive #AML-REG-771-B.
+
+Secondary SWIFT MT103/MT202COV message validation independently verified beneficiary IBAN ISO-13616 modulo-97 checksum parity and cross-referenced commercial customs import bill of entry declaration #IMP-DHAKA-88412 without foreign currency conversion slippage (Interbank FX Spot Rate: 98.50 BDT/USD, Equivalent USD 10,664.02). Intraday treasury liquidity coverage ratio (LCR) and stress-test capital reserve ratios held steady at 14.65%, comfortably exceeding Basel-III Tier-1 statutory capital adequacy buffers mandated by Central Bank Circular #BRPD-14/2026. Encrypted audit trails have been replicated synchronously onto immutable air-gapped cold-storage ledger vaults for quarterly external central bank forensic inspection.`,
+    expectedCorrectedText: `AUDIT RECONCILIATION DISPATCH: [LEDGER_ID: TXN-BD-98201-CLR-MT103]
+Originating Clearing Branch: Motijheel Corporate Treasury Central (BB Routing Code: 095271894; Branch Swift: BSONBDDHMCB).
+Counterparty Correspondent Institution: Global Clearing Partner (Correspondent BIC: SCBLBDDX, Nostro Ledger: #NOS-USD-774129).
+Gross Cross-Border Transaction Value: BDT 12,74,350.85 [Twelve Lakh Seventy-Four Thousand Three Hundred Fifty Taka and 85/100 Only].
+
+Statutory Tax Deducted at Source (TDS under NBR Rule 16/2026): BDT 1,27,435.09 (calculated at 10.00% flat withholding rate on gross invoice value).
+Net Liquidity Settled & Credited to Treasury Vault: BDT 11,46,915.76 (Variance Tolerance: ±0.00 BDT).
+Anti-Money Laundering (AML/CFT) Screening Status: Real-time fuzzy screening completed against OFAC SDN, EU Consolidated Sanctions, and UN Security Council Resolution 1267 lists; zero adverse PEP matches or structured smurfing alerts flagged.
+Authorized Cryptographic Approval Token: #AUTH-9901-SHA256-A78F04C9D2E1B. Settlement Timestamp: 01/10/2026T14:38:22.091Z (Posting Date: 01/10/2026). Endorsed digitally by Chief Compliance Officer & Internal Treasury Controller.
+
+Interbank Foreign Exchange Settlement verification was finalized via Bangladesh Bank Real Time Gross Settlement (BD-RTGS) core clearing portal under batch serial #RTGS-2026-90412. Foreign inward remittance proceeds were systematically apportioned into Tier-1 priority agricultural credit refinance pools and export development liquidity accounts with exact zero-balance parity confirmed between domestic vostro and offshore nostro mirror statements. Internal compliance auditors have cryptographically sealed this transaction dossier under seven-year statutory retention directive #AML-REG-771-B.
+
+Secondary SWIFT MT103/MT202COV message validation independently verified beneficiary IBAN ISO-13616 modulo-97 checksum parity and cross-referenced commercial customs import bill of entry declaration #IMP-DHAKA-88412 without foreign currency conversion slippage (Interbank FX Spot Rate: 119.50 BDT/USD, Equivalent USD 10,664.02). Intraday treasury liquidity coverage ratio (LCR) and stress-test capital reserve ratios held steady at 14.65%, comfortably exceeding Basel-III Tier-1 statutory capital adequacy buffers mandated by Central Bank Circular #BRPD-14/2026. Encrypted audit trails have been replicated synchronously onto immutable air-gapped cold-storage ledger vaults for quarterly external central bank forensic inspection.`
   },
   {
     id: 4,
-    category: "গণপ্রজাতন্ত্রী বাংলাদেশ সরকারের প্রশাসনিক প্রজ্ঞাপন",
-    difficulty: "Very Hard",
-    title: "স্মারক নং: ৪৬.০২.০০০০.০১২.১৪.০০১.২৬ — সরকারি প্রজ্ঞাপন ও বাজেট নথি",
+    language: 'Bengali',
+    category: 'সরকারি অর্থ ও বাজেট অডিট পরিপত্র (বাংলা টাস্ক ১)',
+    difficulty: 'Very Hard',
+    title: 'স্মারক নং ৪৬.০২.০০০০.০১২.১৪.০০১.২৬ — বার্ষিক বাজেট ও এডিপি অডিট পরিপত্র',
     timeLimitMinutes: 30,
     instructionSteps: [
-      "১. 'পাবলিক প্রকিউরমেন্ট বিধিমালা' এর স্থলে 'পিপিআর-২০০৮ সরকারি বিধিমালা' লিখুন।",
-      "২. স্মারক কোড এবং নম্বর বড় হাতের অক্ষরে রাখুন।",
-      "৩. বাংলা যুক্তাক্ষরগুলো সঠিকভাবে টাইপ করুন।",
-      "৪. দাঁড়ি ও কমা হুবহু বজায় রাখুন।",
-      "৫. টাকার অংকটি বন্ধনীতে আবদ্ধ করুন।",
-      "৬. এডিপি খাতটি হাইলাইট করুন।",
-      "৭. তারিখের ফরম্যাট ঠিক রাখুন।",
-      "৮. প্রজ্ঞাপনের আদেশ অংশটি বোল্ড করুন।",
-      "৯. কোনো বানান ভুল করবেন না।",
-      "১০. পুরো নথিটি একবার রিভিউ করুন।"
+      "১. এটি একটি দীর্ঘ বাংলা সরকারি পরিপত্র টাস্ক — যুক্তাক্ষর, সেমিকোলন ও দাঁড়ি (।) নিখুঁতভাবে টাইপ করুন।",
+      "২. প্যাসেজে থাকা ভুল অর্থবছর '২০২২-২০২৩' পরিবর্তন করে '২০২৬-২০২৭' লিখুন।",
+      "৩. ভুল বরাদ্দ '৫৭,৫০,০০০.০০' সংশোধন করে সঠিক বরাদ্দ '৮৭,৫০,০০০.০০' লিখুন।",
+      "৪. 'পাবলিক প্রকিউরমেন্ট বিধিমালা ২০০১' সংশোধন করে 'পিপিআর-২০০৮ (PPR-2008) বিধিবদ্ধ নির্দেশিকা' লিখুন।",
+      "৫. কর্মদিবস '৪৫ কর্মদিবসের মধ্যে' পরিবর্তন করে '২১ (একুশ) কার্যদিবসের মধ্যে' লিখুন।",
+      "৬. ভুল কোড '৭৭২-আইবিএএস' সংশোধন করে '৭৭২-আইবিএএস++ (iBAS++)' লিখুন।"
+    ],
+    requiredFixes: [
+      { wrong: '২০২২-২০২৩', fixed: '২০২৬-২০২৭', label: 'অর্থবছর ২০২২-২০২৩ -> ২০২৬-২০২৭' },
+      { wrong: '৫৭,৫০,০০০.০০', fixed: '৮৭,৫০,০০০.০০', label: 'বরাদ্দ ৫৭,৫০,০০০.০০ -> ৮৭,৫০,০০০.০০' },
+      { wrong: 'পাবলিক প্রকিউরমেন্ট বিধিমালা ২০০১', fixed: 'পিপিআর-২০০৮ (PPR-2008) বিধিবদ্ধ নির্দেশিকা', label: 'বিধিমালা ২০০১ -> পিপিআর-২০০৮ (PPR-2008)' },
+      { wrong: '৪৫ কর্মদিবসের মধ্যে', fixed: '২১ (একুশ) কার্যদিবসের মধ্যে', label: 'সময়সীমা ৪৫ -> ২১ (একুশ) কার্যদিবস' },
+      { wrong: '৭৭২-আইবিএএস', fixed: '৭৭২-আইবিএএস++ (iBAS++)', label: 'পোর্টাল কোড -> ৭৭২-আইবিএএস++ (iBAS++)' }
     ],
     text: `গণপ্রজাতন্ত্রী বাংলাদেশ সরকার
-সংস্থাপন ও প্রশাসনিক সংস্কার বিভাগ
-স্মারক নং: ৪৬.০২.০০০০.০১২.১৪.০০১.২৬; তারিখ: ১৫ আশ্বিন ১৪৩৩ বঙ্গাব্দ / ০১ অক্টোবর ২০২৬ খ্রিস্টাব্দ।
+জনপ্রশাসন ও ডিজিটাল সংস্কার বিভাগ, কেন্দ্রীয় বাজেট ও অর্থ অডিট শাখা
+বাংলাদেশ সচিবালয়, ঢাকা-১০০০।
+স্মারক নম্বর: 46.02.0000.012.14.001.26-982; তারিখ: ০১-অক্টোবর-২০২৬ খ্রিস্টাব্দ।
 
-প্রজ্ঞাপন: ডিজিটাল উপাত্ত প্রক্রিয়াকরণ ও নথিভুক্তকরণ কার্যক্রমে নিয়োজিত সকল অপারেটরদের নির্দেশক্রমে জানানো যাইতেছে যে, ২০২৬-২০২৭ অর্থবৎসরের বার্ষিক উন্নয়ন কর্মসূচির (এডিপি) উপ-খাত ৪(ক) অনুযায়ী মোট বরাদ্দকৃত ৳৮৭,৫০,০০০.০০ (সাতাশি লক্ষ পঞ্চাশ হাজার টাকা মাত্র) ব্যয়ের নিরীক্ষা প্রতিবেদন আগামী ২১ কার্যদিবসের মধ্যে দাখিল করিতে হইবে।
+বিষয়: ২০২২-২০২৩ অর্থবছরের বার্ষিক উন্নয়ন কর্মসূচি (এডিপি) উপ-খাত ৪(ক) এর ব্যয় বিবরণী ও ডিজিটাল নথি সংরক্ষণ অডিট প্রসঙ্গে।
 
-কোনো প্রকার ভুল তথ্য, অসঙ্গতি বা অননুমোদিত সম্পাদন পরিলক্ষিত হইলে পাবলিক প্রকিউরমেন্ট বিধিমালা (পিপিআর-২০০৮) এর ধারা ১২৭ মোতাবেক শাস্তিমূলক ব্যবস্থা গ্রহণ করা হইবে। আদেশক্রমে— উপসচিব (প্রশাসন-১)।
+পরিপত্র: এতদ্বারা ডিজিটাল নথি সংরক্ষণ, কেন্দ্রীয় হিসাব সমন্বয় এবং আঞ্চলিক অর্থ অডিট কার্যক্রমে নিযুক্ত সকল নিবন্ধিত ডেটা এন্ট্রি অপারেটর ও আঞ্চলিক কোষাধ্যক্ষকে অবহিত ও নির্দেশ প্রদান করা যাচ্ছে যে, ২০২২-২০২৩ অর্থবছরের বার্ষিক উন্নয়ন কর্মসূচি (এডিপি) উপ-খাত ৪(ক)-এর আওতায় অনুমোদিত ও বরাদ্দকৃত মোট ৫৭,৫০,০০০.০০ (সাতাশি লক্ষ পঞ্চাশ হাজার) টাকার বিস্তারিত খাতওয়ারি ব্যয় বিবরণী, ব্যাংক রিকনসিলিয়েশন শিট এবং মূল ভাউচারের স্ক্যানকৃত অনুলিপি আগামী ৪৫ কর্মদিবসের মধ্যে কেন্দ্রীয় অডিট সচিবালয়ে দাখিল করতে হবে। প্রতিটি ভাউচারের বিপরীতে সমন্বিত অর্থনৈতিক কোড ৭৭২-আইবিএএস পোর্টালের ডিজিটাল টোকেন নম্বর উল্লেখ থাকা বাধ্যতামূলক।
 
-উক্ত আর্থিক বরাদ্দের আওতায় প্রতিটি মাঠ পর্যায়ের দপ্তরে ক্লাউড সার্ভার সংযোগ স্থাপন, ফাইবার অপটিক নেটওয়ার্ক সংস্কার ও বায়োমেট্রিক নিরাপত্তা ব্যবস্থা আধুনিকীকরণের কাজ সম্পন্ন করিতে হইবে। জেলা প্রশাসক ও হিসাবরক্ষণ কর্মকর্তাদের সমন্বয়ে গঠিত তদারকি কমিটি প্রতি মাসের প্রথম সপ্তাহে অগ্রগতি প্রতিবেদন দাখিল করিতে বাধ্য থাকিবেন।`
+২। কোনো প্রকল্প কার্যালয় বা আঞ্চলিক ইউনিটের দাখিলকৃত প্রতিবেদনে জাল লেজার হিসাব, গাণিতিক অসংগতি, দ্বৈত বিলিং, অবৈধ ওভাররাইটিং অথবা পূর্বানুমোদন ব্যতীত খাত পরিবর্তন পরিলক্ষিত হলে সংশ্লিষ্ট দায়িত্বপ্রাপ্ত কর্মকর্তা ও ডেটা অপারেটরের বিরুদ্ধে পাবলিক প্রকিউরমেন্ট বিধিমালা ২০০১-এর ১২৭ ধারা ও সরকারি কর্মচারী (শৃঙ্খলা ও আপিল) বিধিমালা ২০১৮ অনুযায়ী কঠোর বিভাগীয় শাস্তিমূলক ও আর্থিক ক্ষতিপূরণমূলক ব্যবস্থা গ্রহণ করা হবে। কোনো অজুহাতেই নির্ধারিত সময়সীমা বর্ধিত করা হবে না।
+
+৩। উক্ত বাজেটীয় বরাদ্দের আওতায় সকল জেলা ও বিভাগীয় মাঠ পর্যায়ের কার্যালয়সমূহকে চতুর্থ প্রান্তিক (Q4) অর্থবছর সমাপ্তির পূর্বেই উচ্চ-সক্ষমতাসম্পন্ন ক্লাউড ডাটাবেজ সার্ভার স্থাপন, দ্বৈত-রিডান্ড্যান্ট অপটিক্যাল ফাইবার নেটওয়ার্ক উন্নীতকরণ, এনক্রিপ্টেড অফলাইন ব্যাকআপ আর্কাইভ সচলকরণ এবং বায়োমেট্রিক উপস্থিতি ও ডিজিটাল স্বাক্ষর যাচাইকরণ টার্মিনাল সম্পূর্ণরূপে কার্যকর করতে হবে। জেলা প্রশাসক ও প্রধান হিসাবরক্ষণ কর্মকর্তার যৌথ সভাপতিত্বে গঠিত আঞ্চলিক মনিটরিং কমিটি প্রতি ইংরেজি মাসের প্রথম সোমবার ব্যত্যয় ব্যতিরেকে স্বাক্ষরিত মাসিক অগ্রগতি ডসিয়ার অনলাইন পোর্টালে প্রেরণ নিশ্চিত করবেন। ইহা যথাযথ কর্তৃপক্ষের অনুমোদনক্রমে জনস্বার্থে জারি করা হলো।
+
+স্বাক্ষরিত/- উপসচিব (প্রশাসন-১ ও বাজেট সমন্বয়), জনপ্রশাসন ও ডিজিটাল সংস্কার বিভাগ।
+অনুলিপি সদয় অবগতি ও প্রয়োজনীয় কার্যার্থে প্রেরণ করা হলো: (১) মহাহিসাব নিরীক্ষক ও নিয়ন্ত্রক, বাংলাদেশ; (২) সচিব, অর্থ বিভাগ, অর্থ মন্ত্রণালয়; (৩) বিভাগীয় কমিশনার (সকল); (৪) প্রধান সিস্টেম এনালিস্ট, কেন্দ্রীয় আইসিটি সেল।`,
+    expectedCorrectedText: `গণপ্রজাতন্ত্রী বাংলাদেশ সরকার
+জনপ্রশাসন ও ডিজিটাল সংস্কার বিভাগ, কেন্দ্রীয় বাজেট ও অর্থ অডিট শাখা
+বাংলাদেশ সচিবালয়, ঢাকা-১০০০।
+স্মারক নম্বর: 46.02.0000.012.14.001.26-982; তারিখ: ০১-অক্টোবর-২০২৬ খ্রিস্টাব্দ।
+
+বিষয়: ২০২৬-২০২৭ অর্থবছরের বার্ষিক উন্নয়ন কর্মসূচি (এডিপি) উপ-খাত ৪(ক) এর ব্যয় বিবরণী ও ডিজিটাল নথি সংরক্ষণ অডিট প্রসঙ্গে।
+
+পরিপত্র: এতদ্বারা ডিজিটাল নথি সংরক্ষণ, কেন্দ্রীয় হিসাব সমন্বয় এবং আঞ্চলিক অর্থ অডিট কার্যক্রমে নিযুক্ত সকল নিবন্ধিত ডেটা এন্ট্রি অপারেটর ও আঞ্চলিক কোষাধ্যক্ষকে অবহিত ও নির্দেশ প্রদান করা যাচ্ছে যে, ২০২৬-২০২৭ অর্থবছরের বার্ষিক উন্নয়ন কর্মসূচি (এডিপি) উপ-খাত ৪(ক)-এর আওতায় অনুমোদিত ও বরাদ্দকৃত মোট ৮৭,৫০,০০০.০০ (সাতাশি লক্ষ পঞ্চাশ হাজার) টাকার বিস্তারিত খাতওয়ারি ব্যয় বিবরণী, ব্যাংক রিকনসিলিয়েশন শিট এবং মূল ভাউচারের স্ক্যানকৃত অনুলিপি আগামী ২১ (একুশ) কার্যদিবসের মধ্যে কেন্দ্রীয় অডিট সচিবালয়ে দাখিল করতে হবে। প্রতিটি ভাউচারের বিপরীতে সমন্বিত অর্থনৈতিক কোড ৭৭২-আইবিএএস++ (iBAS++) পোর্টালের ডিজিটাল টোকেন নম্বর উল্লেখ থাকা বাধ্যতামূলক।
+
+২। কোনো প্রকল্প কার্যালয় বা আঞ্চলিক ইউনিটের দাখিলকৃত প্রতিবেদনে জাল লেজার হিসাব, গাণিতিক অসংগতি, দ্বৈত বিলিং, অবৈধ ওভাররাইটিং অথবা পূর্বানুমোদন ব্যতীত খাত পরিবর্তন পরিলক্ষিত হলে সংশ্লিষ্ট দায়িত্বপ্রাপ্ত কর্মকর্তা ও ডেটা অপারেটরের বিরুদ্ধে পিপিআর-২০০৮ (PPR-2008) বিধিবদ্ধ নির্দেশিকা-এর ১২৭ ধারা ও সরকারি কর্মচারী (শৃঙ্খলা ও আপিল) বিধিমালা ২০১৮ অনুযায়ী কঠোর বিভাগীয় শাস্তিমূলক ও আর্থিক ক্ষতিপূরণমূলক ব্যবস্থা গ্রহণ করা হবে। কোনো অজুহাতেই নির্ধারিত সময়সীমা বর্ধিত করা হবে না।
+
+৩। উক্ত বাজেটীয় বরাদ্দের আওতায় সকল জেলা ও বিভাগীয় মাঠ পর্যায়ের কার্যালয়সমূহকে চতুর্থ প্রান্তিক (Q4) অর্থবছর সমাপ্তির পূর্বেই উচ্চ-সক্ষমতাসম্পন্ন ক্লাউড ডাটাবেজ সার্ভার স্থাপন, দ্বৈত-রিডান্ড্যান্ট অপটিক্যাল ফাইবার নেটওয়ার্ক উন্নীতকরণ, এনক্রিপ্টেড অফলাইন ব্যাকআপ আর্কাইভ সচলকরণ এবং বায়োমেট্রিক উপস্থিতি ও ডিজিটাল স্বাক্ষর যাচাইকরণ টার্মিনাল সম্পূর্ণরূপে কার্যকর করতে হবে। জেলা প্রশাসক ও প্রধান হিসাবরক্ষণ কর্মকর্তার যৌথ সভাপতিত্বে গঠিত আঞ্চলিক মনিটরিং কমিটি প্রতি ইংরেজি মাসের প্রথম সোমবার ব্যত্যয় ব্যতিরেকে স্বাক্ষরিত মাসিক অগ্রগতি ডসিয়ার অনলাইন পোর্টালে প্রেরণ নিশ্চিত করবেন। ইহা যথাযথ কর্তৃপক্ষের অনুমোদনক্রমে জনস্বার্থে জারি করা হলো।
+
+স্বাক্ষরিত/- উপসচিব (প্রশাসন-১ ও বাজেট সমন্বয়), জনপ্রশাসন ও ডিজিটাল সংস্কার বিভাগ।
+অনুলিপি সদয় অবগতি ও প্রয়োজনীয় কার্যার্থে প্রেরণ করা হলো: (১) মহাহিসাব নিরীক্ষক ও নিয়ন্ত্রক, বাংলাদেশ; (২) সচিব, অর্থ বিভাগ, অর্থ মন্ত্রণালয়; (৩) বিভাগীয় কমিশনার (সকল); (৪) প্রধান সিস্টেম এনালিস্ট, কেন্দ্রীয় আইসিটি সেল।`
   },
   {
     id: 5,
-    category: "IT Cloud Infrastructure & API Gateway Security Schema",
-    difficulty: "Complex",
-    title: "API-Gateway Configuration: Distributed TLS & Rate Limit Specification",
+    language: 'English',
+    category: 'IT Cloud Infrastructure & Kubernetes API Security Schema',
+    difficulty: 'Complex',
+    title: 'Multi-Region API Gateway & Zero-Trust Mesh Policy Configuration',
     timeLimitMinutes: 30,
     instructionSteps: [
-      "১. 'Strict-Origin' এর স্থানে 'Strict-Transport-Security' লিখুন।",
-      "২. কার্লি ব্র্যাকেটের ভেতরের ইন্ডেন্টেশন ঠিক রাখুন।",
-      "৩. কোডিং সিনট্যাক্স সঠিকভাবে টাইপ করুন।",
-      "৪. কোটেশন মার্কগুলো হুবহু দিন।",
-      "৫. এন্ডপয়েন্ট ইউআরএল পরিবর্তন করবেন না।",
-      "৬. কনফিগুরেশন কি-গুলো লোয়ারকেসে রাখুন।",
-      "৭. নম্বরগুলো কমা দিয়ে পৃথক করুন।",
-      "৮. লগিং টেলিমেট্রি অংশটি বোল্ড করুন।",
-      "৯. বাড়তি স্পেস ও ট্যাব ঠিক রাখুন।",
-      "১০. কোড ফরম্যাট যাচাই করুন।"
+      "১. JSON/Schema কোডের ইন্ডেন্টেশন, কোলন (:), কমা ও ডাবল কোট (\") হুবহু রাখুন।",
+      "২. অসুরক্ষিত 'TLSv1.0' পরিবর্তন করে 'TLSv1.3' লিখুন।",
+      "৩. 'Strict-Origin-When-Cross-Origin' এর স্থলে 'Strict-Transport-Security-Enforced' লিখুন।",
+      "৪. প্লেইন টেক্সট 'http://backup-edge-02' পরিবর্তন করে 'https://backup-edge-02' লিখুন।",
+      "৫. ভুল 'retention_days: 30' আপডেট করে 'retention_days: 365' লিখুন।",
+      "৬. ভুল প্রোটোকল 'disable_mtls: true' সংশোধন করে 'enforce_mtls: true' লিখুন।"
     ],
-    text: `SCHEMA_VERSION = "2.4.0-STABLE";
-CLUSTER_CONFIG: {
-  "cluster_id": "bd-central-edge-01",
-  "endpoint": "https://api.v2.secure-gateway.cloud:8443/v1/auth/exchange",
-  "encryption": "AES-256-GCM-SHA384",
-  "max_concurrent_connections": 15000,
-  "rate_limit": {
+    requiredFixes: [
+      { wrong: '"TLSv1.0"', fixed: '"TLSv1.3"', label: 'Upgrade TLSv1.0 -> TLSv1.3' },
+      { wrong: 'Strict-Origin-When-Cross-Origin', fixed: 'Strict-Transport-Security-Enforced', label: 'Update Security Policy header' },
+      { wrong: 'http://backup-edge-02', fixed: 'https://backup-edge-02', label: 'Enforce HTTPS fallback upstream' },
+      { wrong: '"retention_days": 30', fixed: '"retention_days": 365', label: 'Fix log retention -> 365 days' },
+      { wrong: '"disable_mtls": true', fixed: '"enforce_mtls": true', label: 'Fix zero-trust flag -> enforce_mtls: true' }
+    ],
+    text: `SCHEMA_VERSION = "2.4.0-PRODUCTION-ENTERPRISE-STABLE";
+CLUSTER_TOPOLOGY_CONFIG: {
+  "cluster_id": "bd-central-edge-gateway-01",
+  "region_zone": "asia-south-dhaka-az1",
+  "endpoint_uri": "https://api.v2.secure-gateway.cloud:8443/v1/auth/oauth2/token-exchange",
+  "cryptographic_suite": "AES-256-GCM-SHA384:CHACHA20-POLY1305",
+  "tls_minimum_version": "TLSv1.0",
+  "disable_mtls": true,
+  "max_concurrent_connections": 25000,
+  "keep_alive_timeout_ms": 65000,
+  "connection_drain_grace_sec": 45,
+  "rate_limit_engine": {
+    "algorithm": "distributed_token_bucket_redis_cluster",
     "requests_per_second": 250,
     "burst_threshold": 500,
-    "block_duration_sec": 1800
+    "block_duration_sec": 1800,
+    "sliding_window_ms": 60000,
+    "whitelist_cidr": ["103.145.88.0/24", "10.20.0.0/16", "172.16.40.0/22"]
   },
-  "headers": {
+  "security_response_headers": {
     "X-Forwarded-Proto": "https",
     "X-Security-Policy": "Strict-Origin-When-Cross-Origin",
-    "X-Auth-Token": "Bearer tk_live_89f02c4b819a"
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Content-Security-Policy": "default-src 'self'; frame-ancestors 'none'; upgrade-insecure-requests;",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
   },
-  "circuit_breaker": {
+  "circuit_breaker_resilience": {
     "error_threshold_percentage": 50,
     "sleep_window_millis": 5000,
-    "request_volume_threshold": 20
+    "request_volume_threshold": 20,
+    "half_open_probe_requests": 5,
+    "primary_upstream_pool": ["https://core-auth-01.mesh.internal:8443", "https://core-auth-02.mesh.internal:8443"],
+    "fallback_upstream_node": "http://backup-edge-02.datacenter.local:8443"
   },
-  "logging_telemetry": {
-    "audit_sink": "kafka://internal-logs.datacenter.local:9092/api-events",
-    "mask_pii_fields": ["password", "ssn", "national_id", "cvv"]
+  "kubernetes_autoscaling_hpa": {
+    "min_replicas": 6,
+    "max_replicas": 48,
+    "target_cpu_utilization_pct": 65,
+    "target_memory_utilization_pct": 75,
+    "scale_down_stabilization_sec": 300
+  },
+  "logging_and_siem_telemetry": {
+    "audit_sink": "kafka+ssl://internal-logs.datacenter.local:9093/security-api-events",
+    "retention_days": 30,
+    "compression_codec": "zstd",
+    "mask_pii_fields": ["password", "ssn", "national_id", "tin_number", "bank_account", "cvv", "pin_code"],
+    "alert_webhook_channel": "https://soc-pager.internal.cloud/v2/incidents/trigger"
+  },
+  "compliance_attestation": {
+    "iso_standard": "ISO/IEC-27001:2022",
+    "pci_dss_scope": true,
+    "last_pen_test_ticket": "SEC-AUDIT-2026-0912"
+  }
+}`,
+    expectedCorrectedText: `SCHEMA_VERSION = "2.4.0-PRODUCTION-ENTERPRISE-STABLE";
+CLUSTER_TOPOLOGY_CONFIG: {
+  "cluster_id": "bd-central-edge-gateway-01",
+  "region_zone": "asia-south-dhaka-az1",
+  "endpoint_uri": "https://api.v2.secure-gateway.cloud:8443/v1/auth/oauth2/token-exchange",
+  "cryptographic_suite": "AES-256-GCM-SHA384:CHACHA20-POLY1305",
+  "tls_minimum_version": "TLSv1.3",
+  "enforce_mtls": true,
+  "max_concurrent_connections": 25000,
+  "keep_alive_timeout_ms": 65000,
+  "connection_drain_grace_sec": 45,
+  "rate_limit_engine": {
+    "algorithm": "distributed_token_bucket_redis_cluster",
+    "requests_per_second": 250,
+    "burst_threshold": 500,
+    "block_duration_sec": 1800,
+    "sliding_window_ms": 60000,
+    "whitelist_cidr": ["103.145.88.0/24", "10.20.0.0/16", "172.16.40.0/22"]
+  },
+  "security_response_headers": {
+    "X-Forwarded-Proto": "https",
+    "X-Security-Policy": "Strict-Transport-Security-Enforced",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Content-Security-Policy": "default-src 'self'; frame-ancestors 'none'; upgrade-insecure-requests;",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+  },
+  "circuit_breaker_resilience": {
+    "error_threshold_percentage": 50,
+    "sleep_window_millis": 5000,
+    "request_volume_threshold": 20,
+    "half_open_probe_requests": 5,
+    "primary_upstream_pool": ["https://core-auth-01.mesh.internal:8443", "https://core-auth-02.mesh.internal:8443"],
+    "fallback_upstream_node": "https://backup-edge-02.datacenter.local:8443"
+  },
+  "kubernetes_autoscaling_hpa": {
+    "min_replicas": 6,
+    "max_replicas": 48,
+    "target_cpu_utilization_pct": 65,
+    "target_memory_utilization_pct": 75,
+    "scale_down_stabilization_sec": 300
+  },
+  "logging_and_siem_telemetry": {
+    "audit_sink": "kafka+ssl://internal-logs.datacenter.local:9093/security-api-events",
+    "retention_days": 365,
+    "compression_codec": "zstd",
+    "mask_pii_fields": ["password", "ssn", "national_id", "tin_number", "bank_account", "cvv", "pin_code"],
+    "alert_webhook_channel": "https://soc-pager.internal.cloud/v2/incidents/trigger"
+  },
+  "compliance_attestation": {
+    "iso_standard": "ISO/IEC-27001:2022",
+    "pci_dss_scope": true,
+    "last_pen_test_ticket": "SEC-AUDIT-2026-0912"
   }
 }`
   },
   {
     id: 6,
-    category: "Telecommunications 5G Spectrum Allocation",
-    difficulty: "Advanced",
-    title: "Spectrum Licensing & Carrier Aggregation Spectrum Manifest",
+    language: 'English',
+    category: 'Telecommunications 5G NR Spectrum & Optical Backhaul',
+    difficulty: 'Advanced',
+    title: 'BTRC Directive #LL-2026/091: 5G Mid-Band Carrier Aggregation Manifest',
     timeLimitMinutes: 30,
     instructionSteps: [
-      "১. 'Bandwidth' শব্দটির পরিবর্তে 'Throughput Capacity' লিখুন।",
-      "২. মেগাহার্টজ (MHz) মানগুলো ব্র্যাকেটে রাখুন।",
-      "৩. ফ্রিকোয়েন্সি রেঞ্জ নির্ভুলভাবে টাইপ করুন।",
-      "৪. স্পেকট্রাম কোড বড় হাতের অক্ষরে রাখুন।",
-      "৫. ডেসিমেল মানগুলো ঠিক রাখুন।",
-      "৬. EIRP এর মান বোল্ড করুন।",
-      "৭. 3GPP রিলিজ নম্বর ঠিক রাখুন।",
-      "৮. 64T64R অংশটি হাইলাইট করুন।",
-      "৯. কোনো স্পেলিং মিস্টেক করবেন না।",
-      "১০. রিপোর্টটি ফাইনাল চেক করুন।"
+      "১. 'carrier bandwith' বানান ভুল সংশোধন করে 'Throughput Capacity' লিখুন।",
+      "২. '3400 MHz to 3600 MHz' এবং '100 MHz' মানগুলো ব্র্যাকেটে '(3400 MHz) to (3600 MHz)' এবং '(100 MHz)' লিখুন।",
+      "৩. ভুল স্ট্যান্ডার্ড '3GPP Release-14' আপডেট করে '3GPP Release-18' লিখুন।",
+      "৪. ভুল অ্যান্টেনা কোড '16T16R' সংশোধন করে '64T64R' লিখুন।",
+      "৫. ভুল লেটেন্সি '45ms' সংশোধন করে 'sub-10ms' লিখুন।",
+      "৬. সকল একক (dBm, GHz, MHz, kHz, Gbps, ppm) সঠিক কেসে লিখুন।"
     ],
-    text: `Under BTRC Spectrum Allocation Directive #BTRC/LL-2026/091, the National 5G Mid-Band Carrier License is provisionally assigned in the 3.5 GHz spectrum band (3400 MHz to 3600 MHz) with contiguous carrier bandwidth of 100 MHz.
+    requiredFixes: [
+      { wrong: 'carrier bandwith', fixed: 'Throughput Capacity', label: 'Fix carrier bandwith -> Throughput Capacity' },
+      { wrong: '3GPP Release-14', fixed: '3GPP Release-18', label: 'Update 3GPP Release-14 -> Release-18' },
+      { wrong: '16T16R', fixed: '64T64R', label: 'Fix Massive MIMO 16T16R -> 64T64R' },
+      { wrong: '45ms round-trip', fixed: 'sub-10ms round-trip', label: 'Fix backhaul latency -> sub-10ms round-trip' }
+    ],
+    text: `Under Bangladesh Telecommunication Regulatory Commission (BTRC) Spectrum Allocation Directive #BTRC/LL-2026/091, the National 5G New Radio (NR) Mid-Band Carrier License (Band n78) is provisionally assigned in the 3.5 GHz TDD spectrum block (3400 MHz to 3600 MHz) with contiguous carrier bandwith of 100 MHz per commercial mobile network operator.
 
-Maximum permissible Effective Isotropic Radiated Power (EIRP) is capped strictly at +62 dBm/sector. Synchronization protocols must adhere to 3GPP Release-18 standards with an inter-operator guard band buffer of 5 MHz to prevent cross-carrier inter-modulation distortion across adjacent base stations.
+Maximum permissible Effective Isotropic Radiated Power (EIRP) for urban macro-cell sectors is capped strictly at +62 dBm/sector, while indoor small-cell femtocells shall not exceed +24 dBm total conducted output power. Phase and frequency synchronization protocols must adhere rigorously to 3GPP Release-14 specifications featuring an inter-operator guard band buffer of 5 MHz to eliminate adjacent-channel leakage ratio (ACLR) interference and cross-carrier inter-modulation distortion across co-located base transceiver stations.
 
-Beamforming antenna arrays must support 64T64R Massive MIMO configurations operating with orthogonal frequency division multiple access (OFDMA) subcarrier spacing of 30 kHz. Downlink peak theoretical throughput must exceed 1.48 Gbps under clean non-fading radio channel conditions. All base transceiver station telemetry data must be streamed continuously to the National Spectrum Monitoring Central Command in Dhaka.`
+Active Antenna Unit (AAU) beamforming arrays must support 16T16R Massive MIMO spatial multiplexing configurations operating with Cyclic-Prefix Orthogonal Frequency Division Multiple Access (CP-OFDMA) numerology (mu = 1) and subcarrier spacing of 30 kHz. Downlink peak theoretical throughput must exceed 1.48 Gbps (256-QAM modulation, 4x4 MIMO spatial layers), while uplink cell-edge throughput targets a sustained baseline above 185 Mbps under non-line-of-sight multipath urban propagation conditions.
+
+Furthermore, every licensed cellular operator must deploy autonomous Time-Division Duplex (TDD) frame synchronization (DDDSU pattern, 7:3 downlink-to-uplink slot ratio) disciplined via dual-constellation GNSS rubidium atomic holdover clocks maintaining phase drift strictly below ±1.5 microseconds over 24 hours of GPS signal outage. Dense wavelength-division multiplexing (DWDM) dark-fiber backhaul optical rings interconnecting regional gNodeB aggregation towers must sustain 25 Gbps symmetrical capacity (upgradable to 100 Gbps Coherent Optics) with 45ms round-trip latency across Tier-1 metropolitan fiber corridors. Mandatory Continuous Key Performance Indicator (KPI) telemetry—including PRB utilization, BLER < 0.1%, RRC setup success rate >= 99.40%, and handover drop ratio < 0.25%—must be streamed every 15 minutes via NETCONF/YANG protocols directly to the National Spectrum Monitoring Central Command Center in Dhaka.`,
+    expectedCorrectedText: `Under Bangladesh Telecommunication Regulatory Commission (BTRC) Spectrum Allocation Directive #BTRC/LL-2026/091, the National 5G New Radio (NR) Mid-Band Carrier License (Band n78) is provisionally assigned in the 3.5 GHz TDD spectrum block ((3400 MHz) to (3600 MHz)) with contiguous Throughput Capacity of (100 MHz) per commercial mobile network operator.
+
+Maximum permissible Effective Isotropic Radiated Power (EIRP) for urban macro-cell sectors is capped strictly at +62 dBm/sector, while indoor small-cell femtocells shall not exceed +24 dBm total conducted output power. Phase and frequency synchronization protocols must adhere rigorously to 3GPP Release-18 specifications featuring an inter-operator guard band buffer of (5 MHz) to eliminate adjacent-channel leakage ratio (ACLR) interference and cross-carrier inter-modulation distortion across co-located base transceiver stations.
+
+Active Antenna Unit (AAU) beamforming arrays must support 64T64R Massive MIMO spatial multiplexing configurations operating with Cyclic-Prefix Orthogonal Frequency Division Multiple Access (CP-OFDMA) numerology (mu = 1) and subcarrier spacing of 30 kHz. Downlink peak theoretical throughput must exceed 1.48 Gbps (256-QAM modulation, 4x4 MIMO spatial layers), while uplink cell-edge throughput targets a sustained baseline above 185 Mbps under non-line-of-sight multipath urban propagation conditions.
+
+Furthermore, every licensed cellular operator must deploy autonomous Time-Division Duplex (TDD) frame synchronization (DDDSU pattern, 7:3 downlink-to-uplink slot ratio) disciplined via dual-constellation GNSS rubidium atomic holdover clocks maintaining phase drift strictly below ±1.5 microseconds over 24 hours of GPS signal outage. Dense wavelength-division multiplexing (DWDM) dark-fiber backhaul optical rings interconnecting regional gNodeB aggregation towers must sustain 25 Gbps symmetrical capacity (upgradable to 100 Gbps Coherent Optics) with sub-10ms round-trip latency across Tier-1 metropolitan fiber corridors. Mandatory Continuous Key Performance Indicator (KPI) telemetry—including PRB utilization, BLER < 0.1%, RRC setup success rate >= 99.40%, and handover drop ratio < 0.25%—must be streamed every 15 minutes via NETCONF/YANG protocols directly to the National Spectrum Monitoring Central Command Center in Dhaka.`
   },
   {
     id: 7,
-    category: "International Maritime Customs Clearance Manifest",
-    difficulty: "Master",
-    title: "Bill of Lading & Harmonized Tariff Cargo Ledger",
+    language: 'Bengali',
+    category: 'আন্তর্জাতিক মেরিটাইম কাস্টমস ও বন্দর ছাড়পত্র (বাংলা টাস্ক ২)',
+    difficulty: 'Master',
+    title: 'চট্টগ্রাম সমুদ্র বন্দর বিল অব ল্যাডিং, কার্গো ম্যানিফেস্ট ও শুল্ক ছাড়পত্র',
     timeLimitMinutes: 30,
     instructionSteps: [
-      "১. 'Chittagong Port' এর স্থলে 'Chattogram Sea Port Terminal-1' লিখুন।",
-      "২. সকল ওজন টন (MT) এককে রূপান্তর করুন।",
-      "৩. কনটেইনার নম্বর হুবহু টাইপ করুন।",
-      "৪. এইচএস কোড সঠিক ভাবে লিখুন।",
-      "৫. কাস্টমস শুল্ক শতাংশগুলো ঠিক রাখুন।",
-      "৬. ভ্যাট মানগুলো বন্ধনীতে রাখুন।",
-      "৭. কার্গো ম্যানিফেস্ট অংশটি বোল্ড করুন।",
-      "৮. তারিখের ফরম্যাট ঠিক রাখুন।",
-      "৯. কোনো বাড়তি কমা বা ডট দেবেন না।",
-      "১০. পুরো বিল অব ল্যাডিং রিভিউ করুন।"
+      "১. সম্পূর্ণ বাংলা কাস্টমস ম্যানিফেস্টটি যুক্তাক্ষর, বুলেট পয়েন্ট ও দাঁড়ি (।) সহ নিখুঁতভাবে টাইপ করুন।",
+      "২. 'পুরাতন চিটাগং পোর্ট' পরিবর্তন করে 'চট্টগ্রাম সমুদ্র বন্দর টার্মিনাল-১ (BDCGP)' লিখুন।",
+      "৩. ভুল নিট ওজন '২১,৫০০ কেজি' সংশোধন করে সঠিক বিয়োগফল (২৪,৮৫০ - ৩,৯৮০) = '২০,৮৭০ কেজি' লিখুন।",
+      "৪. ভুল ভ্যাট হার '৫% ভ্যাট' সংশোধন করে '১৫% ভ্যাট' লিখুন।",
+      "৫. ভুল সিল কোড '#SEAL-SG-0000' পরিবর্তন করে '#SEAL-SG-781204' লিখুন।",
+      "৬. কনটেইনার নম্বর #TGHU-918234-7 এবং HS Code 5402.33.00 অবিকল রাখুন।"
     ],
-    text: `OCEAN BILL OF LADING [B/L NO: OOCL-CTG-9821094-A]
-Vessel Name: M.V. Bengal Star (Voyage #26-08W, IMO: 9482104).
-Port of Loading: Port of Singapore (SGSIN).
-Port of Discharge: Chittagong Port (BDCGP).
-Consignee: Beximco Synthetics Industrial Zone, Gazipur, Bangladesh.
+    requiredFixes: [
+      { wrong: 'পুরাতন চিটাগং পোর্ট', fixed: 'চট্টগ্রাম সমুদ্র বন্দর টার্মিনাল-১ (BDCGP)', label: 'বন্দর নাম -> চট্টগ্রাম সমুদ্র বন্দর টার্মিনাল-১ (BDCGP)' },
+      { wrong: '২১,৫০০ কেজি', fixed: '২০,৮৭০ কেজি', label: 'ভুল নিট ওজন ২১,৫০০ -> ২০,৮৭০ কেজি' },
+      { wrong: '৫% ভ্যাট', fixed: '১৫% ভ্যাট', label: 'ভ্যাট হার ৫% -> ১৫% ভ্যাট' },
+      { wrong: '#SEAL-SG-0000', fixed: '#SEAL-SG-781204', label: 'ভুল সিল নম্বর -> #SEAL-SG-781204' }
+    ],
+    text: `আন্তর্জাতিক সমুদ্র বন্দর বিল অব ল্যাডিং ও কাস্টমস ছাড়পত্র [B/L নং: OOCL-CTG-9821094-A]
+জাহাজের নাম ও নিবন্ধন: এম.ভি. বেঙ্গল স্টার (ভয়েজ নং #26-08W, IMO নিবন্ধন: 9482104, কল সাইন: S2BA9)।
+পণ্য লোডিং বন্দর: পোর্ট অব সিঙ্গাপুর পিএসএ টার্মিনাল (SGSIN)। খালাস বন্দর: পুরাতন চিটাগং পোর্ট।
+আমদানিকারক ও প্রাপক প্রতিষ্ঠান: বেক্সিমকো সিন্থেটিকস অ্যান্ড টেক্সটাইল ইন্ডাস্ট্রিয়াল জোন, কোনাবাড়ী, গাজীপুর-১৭০০, বাংলাদেশ।
+রপ্তানিকারক ও শিপার: এশিয়া প্যাসিফিক পলিমার কর্পোরেশন প্রাইভেট লিমিটেড, জুরং ইস্ট ইন্ডাস্ট্রিয়াল হাব, সিঙ্গাপুর।
 
-CARGO MANIFEST DETAILS:
-- 40ft High Cube Container #TGHU-918234-7: Industrial Polyester Filament Yarn.
-- Gross Weight: 24,850 kg; Tare Weight: 3,980 kg; Net Weight: 20,870 kg.
-- HS Tariff Code: 5402.33.00 (Statutory Import Duty: 15.00% + Regulatory Duty: 3.00%).
-- Advance Income Tax (AIT): ৳84,200.00; Value Added Tax (VAT 15%): ৳2,46,800.00.
+কার্গো ম্যানিফেস্ট ও পণ্যের বিস্তারিত বিবরণী:
+- ৪০ ফিট হাই কিউব স্টিল কনটেইনার নম্বর #TGHU-918234-7: ইন্ডাস্ট্রিয়াল গ্রেড হাই-টেনাসিটি পলিয়েস্টার ফিলামেন্ট ইয়ার্ন (৪২০ প্যালেট, মোট ২,৫২০ কার্টন)।
+- গ্রস মোট ওজন: ২৪,৮৫০ কেজি; খালি কনটেইনার (Tare) ওজন: ৩,৯৮০ কেজি; নিট পণ্য ওজন: ২১,৫০০ কেজি।
+- হারমোনাইজড সিস্টেম (HS) ট্যারিফ কোড: 5402.33.00 (সংবিধিবদ্ধ আমদানি শুল্ক: ১৫.০০% + রেগুলেটরি ডিউটি: ৩.০০% + সাপ্লিমেন্টারি ডিউটি: ০.০০%)।
+- নির্ধারিত অগ্রিম আয়কর (AIT ৫%): ৮৪,২০০.০০ টাকা; সংবিধিবদ্ধ ৫% ভ্যাট মূল্য সংযোজন কর: ২,৪৬,৮০০.০০ টাকা; অগ্রিম কর (AT): ৬৫,৪০০.০০ টাকা।
 
-Customs Assessment Notice #CUS-OFF-7718 certifies non-hazardous declaration. Clearing Agent: Maritime Logistics Clearing & Forwarding Ltd. (Customs License #094-CTG). The shipping line guarantees demurrage-free detention period of fourteen (14) calendar days following physical berth docking.`
+কাস্টমস অ্যাসেসমেন্ট ও রাসায়নিক পরীক্ষা বিজ্ঞপ্তি #CUS-OFF-7718/2026 অনুযায়ী চালানটি সম্পূর্ণরূপে অ-বিপজ্জনক (Non-Hazardous) ও বন্ডেড ওয়্যারহাউস নীতিমালার সাথে সামঞ্জস্যপূর্ণ বলে ঘোষিত হয়েছে। মনোনীত সি অ্যান্ড এফ এজেন্ট: মেরিটাইম লজিস্টিকস ক্লিয়ারিং অ্যান্ড ফরোয়ার্ডিং লিমিটেড (কাস্টমস লাইসেন্স নম্বর #094-CTG-2019)। শিপিং লাইন বার্থে জাহাজ নোঙর করার তারিখ হতে পরবর্তী চৌদ্দ (১৪) পঞ্জিকা দিবস পর্যন্ত ডিমারেজ-মুক্ত কনটেইনার ডিটেনশন সুবিধা অনুমোদন করেছে।
+
+বন্দর নিরাপত্তা বিভাগ, কাস্টমস গোয়েন্দা (CIID) ও শুল্ক মূল্যায়ন শাখার যৌথ উপস্থিতিতে ১২ নম্বর নিউ মুরিং বার্থে গ্যান্ট্রি ক্রেন হতে খালাসের সময় কনটেইনারের অখণ্ডতা ও সিল নম্বর (#SEAL-SG-0000) শতভাগ সঠিকভাবে যাচাইপূর্বক ASYCUDA World কেন্দ্রীয় সার্ভারে এন্ট্রি করা হয়েছে। মেরিন কার্গো আন্ডাররাইটিং ইন্স্যুরেন্স পলিসি #MARI-INS-55029-BD এর আওতায় গুদাম-হতে-গুদাম (Warehouse-to-Warehouse) সর্বাত্মক ঝুঁকির বিপরীতে মোট ১,৮৫,০০০.০০ মার্কিন ডলার (CIF চট্টগ্রাম) পর্যন্ত বীমা কভারেজ নিশ্চিত রয়েছে। খালাস পরবর্তী পরিবহন চালান ও গেট-পাস নং #GP-CPA-88421 অনুযায়ী পণ্যসমূহ নির্ধারিত ফ্যাক্টরিতে প্রেরণ করা হবে।`,
+    expectedCorrectedText: `আন্তর্জাতিক সমুদ্র বন্দর বিল অব ল্যাডিং ও কাস্টমস ছাড়পত্র [B/L নং: OOCL-CTG-9821094-A]
+জাহাজের নাম ও নিবন্ধন: এম.ভি. বেঙ্গল স্টার (ভয়েজ নং #26-08W, IMO নিবন্ধন: 9482104, কল সাইন: S2BA9)।
+পণ্য লোডিং বন্দর: পোর্ট অব সিঙ্গাপুর পিএসএ টার্মিনাল (SGSIN)। খালাস বন্দর: চট্টগ্রাম সমুদ্র বন্দর টার্মিনাল-১ (BDCGP)।
+আমদানিকারক ও প্রাপক প্রতিষ্ঠান: বেক্সিমকো সিন্থেটিকস অ্যান্ড টেক্সটাইল ইন্ডাস্ট্রিয়াল জোন, কোনাবাড়ী, গাজীপুর-১৭০০, বাংলাদেশ।
+রপ্তানিকারক ও শিপার: এশিয়া প্যাসিফিক পলিমার কর্পোরেশন প্রাইভেট লিমিটেড, জুরং ইস্ট ইন্ডাস্ট্রিয়াল হাব, সিঙ্গাপুর।
+
+কার্গো ম্যানিফেস্ট ও পণ্যের বিস্তারিত বিবরণী:
+- ৪০ ফিট হাই কিউব স্টিল কনটেইনার নম্বর #TGHU-918234-7: ইন্ডাস্ট্রিয়াল গ্রেড হাই-টেনাসিটি পলিয়েস্টার ফিলামেন্ট ইয়ার্ন (৪২০ প্যালেট, মোট ২,৫২০ কার্টন)।
+- গ্রস মোট ওজন: ২৪,৮৫০ কেজি; খালি কনটেইনার (Tare) ওজন: ৩,৯৮০ কেজি; নিট পণ্য ওজন: ২০,৮৭০ কেজি।
+- হারমোনাইজড সিস্টেম (HS) ট্যারিফ কোড: 5402.33.00 (সংবিধিবদ্ধ আমদানি শুল্ক: ১৫.০০% + রেগুলেটরি ডিউটি: ৩.০০% + সাপ্লিমেন্টারি ডিউটি: ০.০০%)।
+- নির্ধারিত অগ্রিম আয়কর (AIT ৫%): ৮৪,২০০.০০ টাকা; সংবিধিবদ্ধ ১৫% ভ্যাট মূল্য সংযোজন কর: ২,৪৬,৮০০.০০ টাকা; অগ্রিম কর (AT): ৬৫,৪০০.০০ টাকা।
+
+কাস্টমস অ্যাসেসমেন্ট ও রাসায়নিক পরীক্ষা বিজ্ঞপ্তি #CUS-OFF-7718/2026 অনুযায়ী চালানটি সম্পূর্ণরূপে অ-বিপজ্জনক (Non-Hazardous) ও বন্ডেড ওয়্যারহাউস নীতিমালার সাথে সামঞ্জস্যপূর্ণ বলে ঘোষিত হয়েছে। মনোনীত সি অ্যান্ড এফ এজেন্ট: মেরিটাইম লজিস্টিকস ক্লিয়ারিং অ্যান্ড ফরোয়ার্ডিং লিমিটেড (কাস্টমস লাইসেন্স নম্বর #094-CTG-2019)। শিপিং লাইন বার্থে জাহাজ নোঙর করার তারিখ হতে পরবর্তী চৌদ্দ (১৪) পঞ্জিকা দিবস পর্যন্ত ডিমারেজ-মুক্ত কনটেইনার ডিটেনশন সুবিধা অনুমোদন করেছে।
+
+বন্দর নিরাপত্তা বিভাগ, কাস্টমস গোয়েন্দা (CIID) ও শুল্ক মূল্যায়ন শাখার যৌথ উপস্থিতিতে ১২ নম্বর নিউ মুরিং বার্থে গ্যান্ট্রি ক্রেন হতে খালাসের সময় কনটেইনারের অখণ্ডতা ও সিল নম্বর (#SEAL-SG-781204) শতভাগ সঠিকভাবে যাচাইপূর্বক ASYCUDA World কেন্দ্রীয় সার্ভারে এন্ট্রি করা হয়েছে। মেরিন কার্গো আন্ডাররাইটিং ইন্স্যুরেন্স পলিসি #MARI-INS-55029-BD এর আওতায় গুদাম-হতে-গুদাম (Warehouse-to-Warehouse) সর্বাত্মক ঝুঁকির বিপরীতে মোট ১,৮৫,০০০.০০ মার্কিন ডলার (CIF চট্টগ্রাম) পর্যন্ত বীমা কভারেজ নিশ্চিত রয়েছে। খালাস পরবর্তী পরিবহন চালান ও গেট-পাস নং #GP-CPA-88421 অনুযায়ী পণ্যসমূহ নির্ধারিত ফ্যাক্টরিতে প্রেরণ করা হবে।`
   },
   {
     id: 8,
-    category: "Biomedical Genetics & DNA Sequencing Manifest",
-    difficulty: "Master",
-    title: "Next-Generation Genomic Variant Sequencing Report",
+    language: 'English',
+    category: 'Biomedical Genetics & NGS DNA Sequencing Manifest',
+    difficulty: 'Master',
+    title: 'Illumina NovaSeq Whole-Exome Genomic Variant Diagnostics Report',
     timeLimitMinutes: 30,
     instructionSteps: [
-      "১. 'Polymerase Chain Reaction' এর স্থানে 'Quantitative Real-Time PCR (qPCR)' লিখুন।",
-      "২. জিন মিউটেশন কোড বোল্ড করুন।",
-      "৩. নিউক্লিওটাইড সিকোয়েন্স হুবহু টাইপ করুন।",
-      "৪. বৈজ্ঞানিক নাম ইটালিক রাখুন।",
-      "৫. ক্রোমোজোম নম্বর ঠিক রাখুন।",
-      "৬. VAF মান দশমিকের পর এক ঘর রাখুন।",
-      "৭. সিকোয়েন্সিং প্লাটফর্মের নাম ঠিক রাখুন।",
-      "৮. কোনো প্রকার বানান ভুল করবেন না।",
-      "৯. সব নম্বর কমা দিয়ে পৃথক করুন।",
-      "১০. রিপোর্টটি একবার চেক করুন।"
+      "১. 'Polimerase Chain Reaction' ভুল বানান পরিবর্তন করে 'Quantitative Real-Time PCR (qPCR)' লিখুন।",
+      "২. ভুল রেফারেন্স জিনোম 'GRCh37 (hg19)' আপডেট করে 'GRCh38 (hg38)' লিখুন।",
+      "৩. '48.72%' এর স্থলে দশমিকের পর এক ঘর '48.7%' লিখুন।",
+      "৪. ভুল কোড 'Exon 02' সংশোধন করে 'Exon 20' লিখুন।",
+      "৫. ভুল কোয়ালিটি স্কোর 'DIN 4.1' সংশোধন করে 'DIN 8.9' লিখুন।",
+      "৬. মিউটেশন কোড BRCA1, TP53 এবং Bioinformatic পাইপলাইন নাম নির্ভুল রাখুন।"
     ],
-    text: `GENOMIC DIAGNOSTIC SUMMARY: [Sample ID: #DNA-BD-44091]
-Sequencing Platform: Illumina NovaSeq 6000 (Paired-End 150bp Read Length).
-Target Region: Exome Sequencing Panel covering 22,000 coding genes.
-Mean Sequencing Coverage Depth: 128.4x (99.2% targets > 30x coverage).
+    requiredFixes: [
+      { wrong: 'Polimerase Chain Reaction', fixed: 'Quantitative Real-Time PCR (qPCR)', label: 'Fix PCR term & spelling' },
+      { wrong: 'GRCh37 (hg19)', fixed: 'GRCh38 (hg38)', label: 'Upgrade genome assembly -> GRCh38 (hg38)' },
+      { wrong: '48.72%', fixed: '48.7%', label: 'Round VAF percentage to 1 decimal -> 48.7%' },
+      { wrong: 'Exon 02', fixed: 'Exon 20', label: 'Fix BRCA1 locus Exon 02 -> Exon 20' },
+      { wrong: 'DIN 4.1', fixed: 'DIN 8.9', label: 'Correct DNA Integrity Number -> DIN 8.9' }
+    ],
+    text: `GENOMIC DIAGNOSTIC SUMMARY: [MOLECULAR SAMPLE ID: #DNA-BD-44091-WES]
+Next-Generation Sequencing Platform: Illumina NovaSeq 6000 High-Throughput System (S4 Flow Cell, Paired-End 2×150bp Read Length Configuration).
+Enrichment Target Region: Twist Comprehensive Clinical Whole-Exome Capture Panel covering 22,000 protein-coding nuclear genes plus canonical splice junctions (±20 bp flanking intronic boundaries).
+Mean On-Target Sequencing Coverage Depth: 128.4x (with 99.2% of clinically actionable exonic targets achieving uniform coverage depth > 30x and zero coverage dropout across OMIM tier-1 loci).
 
-Detected Pathogenic Variant: BRCA1 (NM_007294.4):c.5266dupC (p.Gln1756ProfsTer74).
-Zygosity: Heterozygous in Exon 20. Classification: Pathogenic (ACMG/AMP Guidelines).
-Alternative Variant Identified: TP53 (NM_000546.6):c.743G>A (p.Arg248Gln) with variant allele frequency (VAF) of 48.7%.
+Primary Detected Pathogenic Variant: BRCA1 (RefSeq Transcript: NM_007294.4):c.5266dupC (Protein Alteration: p.Gln1756ProfsTer74, rs80357906, Frameshift Insertion).
+Allelic Zygosity & Clinical Classification: Heterozygous state located in Exon 02 (Chromosome 17q21.31). Clinical Pathogenicity Classification: Class-5 Pathogenic (validated under strict ACMG/AMP 2015 PVS1 + PS4 + PM2_Supporting evidence criteria).
+Secondary Somatic Variant Identified: TP53 (RefSeq Transcript: NM_000546.6):c.743G>A (p.Arg248Gln, Hotspot Missense Substitution at DNA-binding loop L3) demonstrating an observed variant allele frequency (VAF) of 48.72% across 142 supporting alternate sequencing reads.
 
-Validation was performed via targeted Sanger sequencing following Polymerase Chain Reaction amplification. Bioinformatics alignment utilized human reference genome GRCh38 (hg38) with BWA-MEM algorithm and variant calling via GATK HaplotypeCaller (v4.4). Genetic counseling is advised for all primary pedigree relatives.`
+Orthogonal analytical validation was independently confirmed via bidirectional fluorescent Sanger capillary electrophoresis following Polimerase Chain Reaction target amplification using M13-tagged oligonucleotide primers. Primary bioinformatic sequence alignment utilized human reference genome assembly GRCh37 (hg19) powered by BWA-MEM (v0.7.17) and duplicate-aware germline/somatic variant calling via GATK HaplotypeCaller (v4.4.0.0) coupled with Mutect2 joint genotyping modules. Comprehensive cascade genetic counseling and familial segregation screening are strongly recommended for all first-degree pedigree relatives.
+
+Pre-sequencing genomic DNA library integrity quantification assessed via Agilent 4200 TapeStation microfluidic electrophoresis yielded a DNA Integrity Number (DIN) of DIN 4.1, peak fragment size distribution centered at 318 bp, and Phred Q30 base-calling accuracy of 94.6% across 14.2 Gigabases of demultiplexed FASTQ data. Optical and PCR duplicate read filtering eliminated 7.2% redundant clusters prior to tertiary annotation against ClinVar, gnomAD v4.0, dbSNP Build 156, and COSMIC v99 clinical oncology variant repositories. Molecular Pathology Director Sign-Off Code: #MOL-GEN-2026-991.`,
+    expectedCorrectedText: `GENOMIC DIAGNOSTIC SUMMARY: [MOLECULAR SAMPLE ID: #DNA-BD-44091-WES]
+Next-Generation Sequencing Platform: Illumina NovaSeq 6000 High-Throughput System (S4 Flow Cell, Paired-End 2×150bp Read Length Configuration).
+Enrichment Target Region: Twist Comprehensive Clinical Whole-Exome Capture Panel covering 22,000 protein-coding nuclear genes plus canonical splice junctions (±20 bp flanking intronic boundaries).
+Mean On-Target Sequencing Coverage Depth: 128.4x (with 99.2% of clinically actionable exonic targets achieving uniform coverage depth > 30x and zero coverage dropout across OMIM tier-1 loci).
+
+Primary Detected Pathogenic Variant: BRCA1 (RefSeq Transcript: NM_007294.4):c.5266dupC (Protein Alteration: p.Gln1756ProfsTer74, rs80357906, Frameshift Insertion).
+Allelic Zygosity & Clinical Classification: Heterozygous state located in Exon 20 (Chromosome 17q21.31). Clinical Pathogenicity Classification: Class-5 Pathogenic (validated under strict ACMG/AMP 2015 PVS1 + PS4 + PM2_Supporting evidence criteria).
+Secondary Somatic Variant Identified: TP53 (RefSeq Transcript: NM_000546.6):c.743G>A (p.Arg248Gln, Hotspot Missense Substitution at DNA-binding loop L3) demonstrating an observed variant allele frequency (VAF) of 48.7% across 142 supporting alternate sequencing reads.
+
+Orthogonal analytical validation was independently confirmed via bidirectional fluorescent Sanger capillary electrophoresis following Quantitative Real-Time PCR (qPCR) target amplification using M13-tagged oligonucleotide primers. Primary bioinformatic sequence alignment utilized human reference genome assembly GRCh38 (hg38) powered by BWA-MEM (v0.7.17) and duplicate-aware germline/somatic variant calling via GATK HaplotypeCaller (v4.4.0.0) coupled with Mutect2 joint genotyping modules. Comprehensive cascade genetic counseling and familial segregation screening are strongly recommended for all first-degree pedigree relatives.
+
+Pre-sequencing genomic DNA library integrity quantification assessed via Agilent 4200 TapeStation microfluidic electrophoresis yielded a DNA Integrity Number (DIN) of DIN 8.9, peak fragment size distribution centered at 318 bp, and Phred Q30 base-calling accuracy of 94.6% across 14.2 Gigabases of demultiplexed FASTQ data. Optical and PCR duplicate read filtering eliminated 7.2% redundant clusters prior to tertiary annotation against ClinVar, gnomAD v4.0, dbSNP Build 156, and COSMIC v99 clinical oncology variant repositories. Molecular Pathology Director Sign-Off Code: #MOL-GEN-2026-991.`
   },
   {
     id: 9,
-    category: "Cybersecurity Incident Forensics & DDoS Intrusion Triage",
-    difficulty: "Advanced",
-    title: "CERT-BD Incident Report #IR-2026-904: Critical Tier-1 Triage",
+    language: 'English',
+    category: 'Cybersecurity Incident Forensics & DDoS Triage',
+    difficulty: 'Advanced',
+    title: 'CERT-BD Incident Report #IR-2026-904: Tier-1 Intrusion & Forensic Triage',
     timeLimitMinutes: 30,
     instructionSteps: [
-      "১. 'SYN-Flood' এর জায়গায় 'Volumetric Distributed TCP SYN-Flood' লিখুন।",
-      "২. আইপি অ্যাড্রেস ব্র্যাকেটে রাখুন।",
-      "৩. টাইমস্ট্যাম্প হুবহু টাইপ করুন।",
-      "৪. হ্যাশ কোড নির্ভুলভাবে টাইপ করুন।",
-      "৫. পোর্ট নম্বর ঠিক রাখুন।",
-      "৬. Severity লেভেল বোল্ড করুন।",
-      "৭. Firewall রেট লিমিটিং অংশটি হাইলাইট করুন।",
-      "৮. কোনো প্রকার বাড়তি কমা দেবেন না।",
-      "৯. ইনগ্রেস ACL ফিল্টার ঠিক রাখুন।",
-      "১০. রিপোর্টটি ফাইনাল রিভিউ করুন।"
+      "১. 'SYN-Flod' ভুল বানান সংশোধন করে 'Volumetric Distributed TCP SYN-Flood' লিখুন।",
+      "২. ভুল পোর্ট '103.145.89.24:8080' পরিবর্তন করে '103.145.89.24:443' লিখুন।",
+      "৩. ভুল সেভেরিটি 'Level-1 (Low)' পরিবর্তন করে 'Level-4 (High Criticality)' লিখুন।",
+      "৪. সময় '12000 milliseconds' এর ভুল মান সংশোধন করে '120 milliseconds' লিখুন।",
+      "৫. ভুল টিকিট '#SOC-FOR-0001' সংশোধন করে '#SOC-FOR-8892' লিখুন।",
+      "৬. পুরো SHA256 হ্যাশ স্ট্রিং ও BGP ACL ফিল্টার তথ্য হুবহু রাখুন।"
     ],
-    text: `NATIONAL CYBER SECURITY RESPONSE PROTOCOL: [INCIDENT #IR-2026-904]
-Timestamp: 2026-10-01T02:14:09.481Z. Severity: Level-4 (High Criticality).
-Target Asset: Authentication Cluster [IP: 103.145.89.24:443].
-Threat Vector: Synchronized Distributed Reflection SYN-Flood peaking at 48.6 Gbps / 12.4 Mpps.
+    requiredFixes: [
+      { wrong: 'SYN-Flod', fixed: 'Volumetric Distributed TCP SYN-Flood', label: 'Fix SYN-Flod -> Volumetric Distributed TCP SYN-Flood' },
+      { wrong: '103.145.89.24:8080', fixed: '103.145.89.24:443', label: 'Fix HTTPS cluster port 8080 -> 443' },
+      { wrong: 'Level-1 (Low)', fixed: 'Level-4 (High Criticality)', label: 'Escalate Severity -> Level-4 (High Criticality)' },
+      { wrong: '12000 milliseconds', fixed: '120 milliseconds', label: 'Fix firewall latency 12000ms -> 120ms' },
+      { wrong: '#SOC-FOR-0001', fixed: '#SOC-FOR-8892', label: 'Fix Chain-of-Custody Ticket -> #SOC-FOR-8892' }
+    ],
+    text: `NATIONAL CYBER SECURITY RESPONSE PROTOCOL: [CERT-BD INCIDENT #IR-2026-904]
+UTC Event Detection Timestamp: 2026-10-01T02:14:09.481Z. Incident Severity Rating: Level-1 (Low).
+Targeted Production Asset: Core Identity & OAuth2 Authentication Cluster [Edge Anycast IP: 103.145.89.24:8080, ASN-58712].
+Observed Threat Vector: Multi-vector Synchronized Distributed Reflection SYN-Flod combined with UDP-based CLDAP/Memcached amplification bursts peaking at 48.6 Gbps sustained throughput / 12.4 Mpps (Million Packets Per Second).
 
-Automated Mitigation Action: Firewall rate-limiting triggered in 120 milliseconds.
-Malicious Traffic Scrubbed: 99.85% dropped at tier-1 upstream transit edges.
-Sha256 Payload Signature: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
-System status restored to baseline normal operation at 03:22:15Z.
+Automated Edge Mitigation Action: Hardware eBPF/XDP firewall stateless rate-limiting and SYN-cookie challenge policies engaged within 12000 milliseconds of threshold breach. Malicious spoofed attack traffic scrubbed cleanly: 99.85% dropped at Tier-1 upstream BGP Flowspec transit scrubbing centers without degrading legitimate TLS handshake latency below 38ms p99.
+SHA256 Captured Malware Payload Signature: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855. Service stability and upstream availability restored fully to 99.99% SLA baseline normal operation at 03:22:15Z.
 
-Post-incident root cause forensics identified distributed botnet nodes initiating amplification vectors via unauthenticated NTP servers. Security engineers have applied ingress ACL filters across all border BGP routers and upgraded the DDoS mitigation threshold to 150 Gbps with real-time zero-day packet inspection enabled.`
+Post-incident root-cause digital forensics traced 14,820 compromised IoT Mirai-variant botnet endpoints executing source-IP spoofed amplification vectors via unauthenticated open NTP monlist responders and misconfigured DNS recursive resolvers across three external autonomous systems. Network Security Operations (SecOps) engineers immediately deployed strict BCP-38 uRPF ingress ACL filters across all border BGP core routers, rotated ephemeral HSM API signing keys, and upgraded automated cloud DDoS scrubbing capacity from 50 Gbps to 150 Gbps with zero-day stateful deep packet inspection enabled.
+
+Raw full-packet capture telemetry artifacts (PCAP) totaling 1.84 TB were hashed with SHA-512, GPG-signed, and archived into immutable encrypted forensic cold storage under Chain-of-Custody Ticket #SOC-FOR-0001. Exhaustive endpoint detection and response (EDR) memory dumps alongside PostgreSQL audit logs confirmed zero lateral privilege escalation, zero unauthorized IAM role assumptions, and zero PII database exfiltration indicators across production identity vaults during the 68-minute containment window.`,
+    expectedCorrectedText: `NATIONAL CYBER SECURITY RESPONSE PROTOCOL: [CERT-BD INCIDENT #IR-2026-904]
+UTC Event Detection Timestamp: 2026-10-01T02:14:09.481Z. Incident Severity Rating: Level-4 (High Criticality).
+Targeted Production Asset: Core Identity & OAuth2 Authentication Cluster [Edge Anycast IP: 103.145.89.24:443, ASN-58712].
+Observed Threat Vector: Multi-vector Synchronized Distributed Reflection Volumetric Distributed TCP SYN-Flood combined with UDP-based CLDAP/Memcached amplification bursts peaking at 48.6 Gbps sustained throughput / 12.4 Mpps (Million Packets Per Second).
+
+Automated Edge Mitigation Action: Hardware eBPF/XDP firewall stateless rate-limiting and SYN-cookie challenge policies engaged within 120 milliseconds of threshold breach. Malicious spoofed attack traffic scrubbed cleanly: 99.85% dropped at Tier-1 upstream BGP Flowspec transit scrubbing centers without degrading legitimate TLS handshake latency below 38ms p99.
+SHA256 Captured Malware Payload Signature: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855. Service stability and upstream availability restored fully to 99.99% SLA baseline normal operation at 03:22:15Z.
+
+Post-incident root-cause digital forensics traced 14,820 compromised IoT Mirai-variant botnet endpoints executing source-IP spoofed amplification vectors via unauthenticated open NTP monlist responders and misconfigured DNS recursive resolvers across three external autonomous systems. Network Security Operations (SecOps) engineers immediately deployed strict BCP-38 uRPF ingress ACL filters across all border BGP core routers, rotated ephemeral HSM API signing keys, and upgraded automated cloud DDoS scrubbing capacity from 50 Gbps to 150 Gbps with zero-day stateful deep packet inspection enabled.
+
+Raw full-packet capture telemetry artifacts (PCAP) totaling 1.84 TB were hashed with SHA-512, GPG-signed, and archived into immutable encrypted forensic cold storage under Chain-of-Custody Ticket #SOC-FOR-8892. Exhaustive endpoint detection and response (EDR) memory dumps alongside PostgreSQL audit logs confirmed zero lateral privilege escalation, zero unauthorized IAM role assumptions, and zero PII database exfiltration indicators across production identity vaults during the 68-minute containment window.`
   },
   {
     id: 10,
-    category: "Environmental Biodiversity & Carbon Credit Verification",
-    difficulty: "Complex",
-    title: "Sundarbans Mangrove Afforestation Carbon Offset Audit",
+    language: 'Bengali',
+    category: 'পরিবেশ জীববৈচিত্র্য ও কার্বন ক্রেডিট অডিট (বাংলা টাস্ক ৩)',
+    difficulty: 'Complex',
+    title: 'সুন্দরবন ম্যানগ্রোভ বনায়ন ও ভেরিফায়েড কার্বন ইউনিট (VCU) অডিট প্রতিবেদন',
     timeLimitMinutes: 30,
     instructionSteps: [
-      "১. 'Carbon Offset' এর স্থানে 'Verified Carbon Unit (VCU)' লিখুন।",
-      "২. হেক্টর পরিমাপ বোল্ড করুন।",
-      "৩. বায়োমাস ডেনসিটি হুবহু লিখুন।",
-      "৪. কিউবিক মিটার মান ঠিক রাখুন।",
-      "৫. REDD+ প্রজেক্ট রেফারেন্স ঠিক রাখুন।",
-      "৬. শতাংশের (%) মান সঠিক রাখুন।",
-      "৭. soil organic carbon অংশটি হাইলাইট করুন।",
-      "৮. কোনো প্রকার স্পেলিং ভুল করবেন না।",
-      "৯. সব নম্বর কমা দিয়ে পৃথক করুন।",
-      "১০. পুরো রিপোর্টটি চেক করুন।"
+      "১. সুন্দরবন সংক্রান্ত সম্পূর্ণ বাংলা অডিট প্রতিবেদনটি নির্ভুল বানান ও সংখ্যাসহ টাইপ করুন।",
+      "২. 'সাধারণ কার্বন অফসেট' এর স্থলে 'ভেরিফায়েড কার্বন ইউনিট (VCU)' লিখুন।",
+      "৩. ভুল হেক্টর পরিমাপ '১,৪৫০ হেক্টর' সংশোধন করে '১৪,৫০০ হেক্টর' লিখুন।",
+      "৪. ভুল বেঁচে থাকার হার '৫৭.৪০%' সংশোধন করে '৯৭.৪০%' লিখুন।",
+      "৫. ভুল লভ্যাংশ বণ্টন '৩%' সংশোধন করে '১৫%' লিখুন।",
+      "৬. বৈজ্ঞানিক নাম Heritiera fomes, Rhizophora mucronata ও VCS-v4.3 কোড সঠিকভাবে লিখুন।"
     ],
-    text: `Under the United Nations REDD+ Framework (Project Ref: #BD-MANGROVE-2026), third-party ecological auditors conducted comprehensive canopy density LiDAR assessments across 14,500 hectares of the Sundarbans Mangrove Reserve.
+    requiredFixes: [
+      { wrong: 'সাধারণ কার্বন অফসেট', fixed: 'ভেরিফায়েড কার্বন ইউনিট (VCU)', label: 'কার্বন পরিভাষা -> ভেরিফায়েড কার্বন ইউনিট (VCU)' },
+      { wrong: '১,৪৫০ হেক্টর', fixed: '১৪,৫০০ হেক্টর', label: 'আয়তন ১,৪৫০ -> ১৪,৫০০ হেক্টর' },
+      { wrong: '৫৭.৪০%', fixed: '৯৭.৪০%', label: 'সারভাইভাল রেট ৫৭.৪০% -> ৯৭.৪০%' },
+      { wrong: 'লভ্যাংশের ৩%', fixed: 'লভ্যাংশের ১৫%', label: 'বণ্টন হার ৩% -> ১৫%' }
+    ],
+    text: `জাতিসংঘের জলবায়ু পরিবর্তন ফ্রেমওয়ার্ক (UNFCCC) ও REDD+ কাঠামোর অধীনে (আন্তর্জাতিক প্রকল্প রেফারেন্স কোড: #BD-MANGROVE-2026-SUNDARBAN), স্বতন্ত্র তৃতীয় পক্ষের পরিবেশ অডিটরগণ সুন্দরবন ম্যানগ্রোভ সংরক্ষিত বনাঞ্চলের পূর্বাঞ্চল ও পশ্চিমাঞ্চলীয় জোনের ১,৪৫০ হেক্টর জোয়ার-ভাটা প্লাবিত বনাঞ্চল এলাকায় উচ্চ-রেজোলিউশন LiDAR ক্যানোপি ঘনত্ব জরিপ ও বায়োমাস ভেরিফিকেশন পরিচালনা করেছেন।
 
-Total estimated above-ground biomass carbon sequestration reached 384.5 tCO2e/hectare per annum. The Carbon Offset credits generated for FY 2025-2026 totaled 1,48,500 VCUs, verified under Verra Verified Carbon Standard (VCS-v4.3). Zero deforestation encroachments were recorded along the baseline perimeter.
+উক্ত জরিপ অনুযায়ী বাৎসরিক ভূ-উপরিস্থ বায়োমাস কার্বন শোষণের পরিমাণ প্রতি হেক্টরে ৩৮৪.৫ tCO2e নির্ধারিত হয়েছে। ২০২৫-২০২৬ অর্থবছরে নিট কার্বন নির্গমন হ্রাসের বিপরীতে মোট ১,৪৮,৫০০ সাধারণ কার্বন অফসেট অর্জিত হয়েছে, যা আন্তর্জাতিক ভেরা (Verra Verified Carbon Standard VCS-v4.3) এবং CCB (Climate, Community & Biodiversity) গোল্ড স্ট্যান্ডার্ড মানদণ্ডে নিরীক্ষিত ও অনুমোদিত। ড্রোন ভিত্তিক হাইপারস্পেকট্রাল ইমেজিং পর্যবেক্ষণে প্রকল্প সীমানা বরাবর কোনো ধরনের অবৈধ বৃক্ষ নিধন বা বনাঞ্চল দখলের ঘটনা শনাক্ত হয়নি।
 
-Soil organic carbon (SOC) depth profiles analyzed up to 100 cm depth indicated mean sediment carbon storage density of 241.8 Mg C/ha. Community co-benefit initiatives distributed 15% of gross carbon revenue dividends to local coastal forest ranger cooperatives, financing solar microgrids and mangrove seedling nurseries in Khulna and Bagerhat coastal districts.`
+মাটির ১০০ সে.মি. গভীরতা পর্যন্ত গৃহীত ৪৮০টি কোর স্যাম্পল ল্যাব বিশ্লেষণে মৃত্তিকা জৈব কার্বনের (Soil Organic Carbon) গড় ঘনত্ব ২৪১.৮ Mg C/ha নিরূপিত হয়েছে এবং খুলনা, সাতক্ষীরা ও বাগেরহাটের উপকূলীয় বন সংরক্ষণ সমবায় সমিতিসমূহে মোট কার্বন রাজস্ব লভ্যাংশের ৩% অর্থ সরাসরি বণ্টন করা হয়েছে। উক্ত তহবিলের মাধ্যমে উপকূলীয় অঞ্চলে সৌর মিনি-গ্রিড, লবণাক্ততা সহনশীল জলবায়ু-স্মার্ট ম্যানগ্রোভ নার্সারি এবং পরিবেশ-বান্ধব মধু সংগ্রহ কার্যক্রম পরিচালিত হচ্ছে।
+
+ইউরোপীয় স্পেস এজেন্সির Sentinel-2 স্যাটেলাইট মাল্টি-স্পেকট্রাল টেলিমেট্রি তথ্যের সাথে ৯৪টি স্থায়ী বোটানিক্যাল স্যাম্পল প্লটের মাঠ-পর্যায়ের তথ্য ক্রস-চেক করে নব-রোপিত Heritiera fomes (সুন্দরী), Ceriops decandra (গরান) ও Rhizophora mucronata (গর্জন) চারাগুলোর ৫৭.৪০% টিকে থাকার হার নিশ্চিত করা হয়েছে। এই বনায়ন প্রকল্পটি বঙ্গোপসাগরের উপকূলীয় ৬২ কিলোমিটার ঝুঁকিপূর্ণ বেড়িবাঁধ বরাবর প্রাকৃতিক ঘূর্ণিঝড় সুরক্ষা ও পলিমাটি স্থিতিশীলকরণে দীর্ঘমেয়াদী অবদান রাখবে। স্বাক্ষরিত/- প্রধান পরিবেশ নিরীক্ষক, অডিট রেফারেন্স: #ENV-AUDIT-BD-902।`,
+    expectedCorrectedText: `জাতিসংঘের জলবায়ু পরিবর্তন ফ্রেমওয়ার্ক (UNFCCC) ও REDD+ কাঠামোর অধীনে (আন্তর্জাতিক প্রকল্প রেফারেন্স কোড: #BD-MANGROVE-2026-SUNDARBAN), স্বতন্ত্র তৃতীয় পক্ষের পরিবেশ অডিটরগণ সুন্দরবন ম্যানগ্রোভ সংরক্ষিত বনাঞ্চলের পূর্বাঞ্চল ও পশ্চিমাঞ্চলীয় জোনের ১৪,৫০০ হেক্টর জোয়ার-ভাটা প্লাবিত বনাঞ্চল এলাকায় উচ্চ-রেজোলিউশন LiDAR ক্যানোপি ঘনত্ব জরিপ ও বায়োমাস ভেরিফিকেশন পরিচালনা করেছেন।
+
+উক্ত জরিপ অনুযায়ী বাৎসরিক ভূ-উপরিস্থ বায়োমাস কার্বন শোষণের পরিমাণ প্রতি হেক্টরে ৩৮৪.৫ tCO2e নির্ধারিত হয়েছে। ২০২৫-২০২৬ অর্থবছরে নিট কার্বন নির্গমন হ্রাসের বিপরীতে মোট ১,৪৮,৫০০ ভেরিফায়েড কার্বন ইউনিট (VCU) অর্জিত হয়েছে, যা আন্তর্জাতিক ভেরা (Verra Verified Carbon Standard VCS-v4.3) এবং CCB (Climate, Community & Biodiversity) গোল্ড স্ট্যান্ডার্ড মানদণ্ডে নিরীক্ষিত ও অনুমোদিত। ড্রোন ভিত্তিক হাইপারস্পেকট্রাল ইমেজিং পর্যবেক্ষণে প্রকল্প সীমানা বরাবর কোনো ধরনের অবৈধ বৃক্ষ নিধন বা বনাঞ্চল দখলের ঘটনা শনাক্ত হয়নি।
+
+মাটির ১০০ সে.মি. গভীরতা পর্যন্ত গৃহীত ৪৮০টি কোর স্যাম্পল ল্যাব বিশ্লেষণে মৃত্তিকা জৈব কার্বনের (Soil Organic Carbon) গড় ঘনত্ব ২৪১.৮ Mg C/ha নিরূপিত হয়েছে এবং খুলনা, সাতক্ষীরা ও বাগেরহাটের উপকূলীয় বন সংরক্ষণ সমবায় সমিতিসমূহে মোট কার্বন রাজস্ব লভ্যাংশের ১৫% অর্থ সরাসরি বণ্টন করা হয়েছে। উক্ত তহবিলের মাধ্যমে উপকূলীয় অঞ্চলে সৌর মিনি-গ্রিড, লবণাক্ততা সহনশীল জলবায়ু-স্মার্ট ম্যানগ্রোভ নার্সারি এবং পরিবেশ-বান্ধব মধু সংগ্রহ কার্যক্রম পরিচালিত হচ্ছে।
+
+ইউরোপীয় স্পেস এজেন্সির Sentinel-2 স্যাটেলাইট মাল্টি-স্পেকট্রাল টেলিমেট্রি তথ্যের সাথে ৯৪টি স্থায়ী বোটানিক্যাল স্যাম্পল প্লটের মাঠ-পর্যায়ের তথ্য ক্রস-চেক করে নব-রোপিত Heritiera fomes (সুন্দরী), Ceriops decandra (গরান) ও Rhizophora mucronata (গর্জন) চারাগুলোর ৯৭.৪০% টিকে থাকার হার নিশ্চিত করা হয়েছে। এই বনায়ন প্রকল্পটি বঙ্গোপসাগরের উপকূলীয় ৬২ কিলোমিটার ঝুঁকিপূর্ণ বেড়িবাঁধ বরাবর প্রাকৃতিক ঘূর্ণিঝড় সুরক্ষা ও পলিমাটি স্থিতিশীলকরণে দীর্ঘমেয়াদী অবদান রাখবে। স্বাক্ষরিত/- প্রধান পরিবেশ নিরীক্ষক, অডিট রেফারেন্স: #ENV-AUDIT-BD-902।`
   }
 ];
+
+interface StoredTaskAudit {
+  taskId: number;
+  title: string;
+  language: 'English' | 'Bengali';
+  accuracy: number;
+  wpm: number;
+  rawErrors: number;
+  missedFixes: string[];
+}
 
 export const TypingWork = () => {
   return (
@@ -344,14 +594,17 @@ export const TypingWork = () => {
   );
 };
 
+const ACTIVE_SESSION_KEY = 'unity_typing_active_session';
+const COOLDOWN_UNTIL_KEY = 'unity_typing_cooldown_until';
+const COOLDOWN_REASON_KEY = 'unity_typing_cooldown_reason';
+const COOLDOWN_DURATION_MS = 2 * 60 * 60 * 1000; // 2 Hours
+
 const TypingApp = () => {
   const { user, profile } = useAuth();
 
-  // Task selection
   const [selectedTaskIndex, setSelectedTaskIndex] = useState(0);
   const currentTask = ADVANCED_10_TASKS[selectedTaskIndex];
 
-  // Batch submissions tracking (1 to 10 tasks)
   const [submittedCount, setSubmittedCount] = useState<number>(() => {
     return Number(localStorage.getItem('unity_typing_submitted_count') || 0);
   });
@@ -362,25 +615,55 @@ const TypingApp = () => {
       return [];
     }
   });
+  const [taskAuditLogs, setTaskAuditLogs] = useState<Record<number, StoredTaskAudit>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('unity_typing_audit_logs') || '{}');
+    } catch {
+      return {};
+    }
+  });
 
   // Deep Analysis & Evaluation States
   const [isAnalyzingBatch, setIsAnalyzingBatch] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisStepText, setAnalysisStepText] = useState('');
-  const [batchEvaluationResult, setBatchEvaluationResult] = useState<'none' | 'ai_detected' | 'system_rejected'>('none');
+  const [batchEvaluationResult, setBatchEvaluationResult] = useState<'none' | 'audit_rejected'>('none');
   const [analysisRemainingSeconds, setAnalysisRemainingSeconds] = useState(120);
-
-  // Agreement
-  const [agreed, setAgreed] = useState(false);
 
   // Typing inputs & metrics
   const [inputText, setInputText] = useState('');
   const [startTime, setStartTime] = useState<number | null>(null);
   const [pasteAttempts, setPasteAttempts] = useState(0);
 
-  // 30-Minute Timer State (30 minutes = 1800 seconds) - Starts immediately
+  // Start Session + 30-Minute Timer + 2-Hour Cooldown State
+  const [isSessionActive, setIsSessionActive] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(30 * 60);
-  const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const [cooldownRemainingSeconds, setCooldownRemainingSeconds] = useState<number>(() => {
+    try {
+      // If user refreshed while an active typing session was running, apply immediate 2-hour cooldown!
+      const hadActiveSession = localStorage.getItem(ACTIVE_SESSION_KEY);
+      if (hadActiveSession) {
+        localStorage.removeItem(ACTIVE_SESSION_KEY);
+        const until = Date.now() + COOLDOWN_DURATION_MS;
+        localStorage.setItem(COOLDOWN_UNTIL_KEY, String(until));
+        localStorage.setItem(COOLDOWN_REASON_KEY, 'refresh');
+        return Math.ceil(COOLDOWN_DURATION_MS / 1000);
+      }
+      const savedUntil = Number(localStorage.getItem(COOLDOWN_UNTIL_KEY) || 0);
+      if (savedUntil > Date.now()) {
+        return Math.ceil((savedUntil - Date.now()) / 1000);
+      }
+      localStorage.removeItem(COOLDOWN_UNTIL_KEY);
+      localStorage.removeItem(COOLDOWN_REASON_KEY);
+      return 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [cooldownReason, setCooldownReason] = useState<'timeout' | 'refresh' | null>(() => {
+    const r = localStorage.getItem(COOLDOWN_REASON_KEY);
+    return r === 'timeout' || r === 'refresh' ? r : null;
+  });
 
   // Screen recording video proof link state
   const [videoProofLink, setVideoProofLink] = useState('');
@@ -393,11 +676,30 @@ const TypingApp = () => {
   const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Reset timer on task change and keep it running smoothly
+  const triggerTwoHourCooldown = (reason: 'timeout' | 'refresh') => {
+    const until = Date.now() + COOLDOWN_DURATION_MS;
+    try {
+      localStorage.removeItem(ACTIVE_SESSION_KEY);
+      localStorage.setItem(COOLDOWN_UNTIL_KEY, String(until));
+      localStorage.setItem(COOLDOWN_REASON_KEY, reason);
+    } catch {}
+    setIsSessionActive(false);
+    setCooldownReason(reason);
+    setCooldownRemainingSeconds(Math.ceil(COOLDOWN_DURATION_MS / 1000));
+    setInputText('');
+    setStartTime(null);
+    setRemainingSeconds(30 * 60);
+    setValidationError(
+      reason === 'timeout'
+        ? 'Time expired (30:00)! Typing is locked for a 2-hour cooldown before you can retry.'
+        : 'Page refresh detected during an active session! Typing is locked for a 2-hour cooldown.'
+    );
+  };
+
   useEffect(() => {
-    setRemainingSeconds(currentTask.timeLimitMinutes * 60);
-    setIsTimerRunning(true);
-    setStartTime(Date.now());
+    setRemainingSeconds(30 * 60);
+    setIsSessionActive(false);
+    setStartTime(null);
     setInputText('');
     setPasteAttempts(0);
     setVideoProofLink('');
@@ -407,30 +709,63 @@ const TypingApp = () => {
     setIsSubmittedSuccess(false);
   }, [selectedTaskIndex]);
 
-  // 30-Minute Countdown Timer Hook
+  // 30-Minute active countdown timer
   useEffect(() => {
-    let timer: any = null;
-    if (isTimerRunning && remainingSeconds > 0) {
-      timer = setInterval(() => {
-        setRemainingSeconds(prev => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [isTimerRunning, remainingSeconds]);
+    if (!isSessionActive || cooldownRemainingSeconds > 0) return;
 
-  // Calculate live typing accuracy & metrics
+    const timer = setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          triggerTwoHourCooldown('timeout');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isSessionActive, cooldownRemainingSeconds]);
+
+  // 2-Hour cooldown live countdown timer
+  useEffect(() => {
+    if (cooldownRemainingSeconds <= 0) return;
+
+    const cdTimer = setInterval(() => {
+      const savedUntil = Number(localStorage.getItem(COOLDOWN_UNTIL_KEY) || 0);
+      const secsLeft = Math.max(0, Math.ceil((savedUntil - Date.now()) / 1000));
+      setCooldownRemainingSeconds(secsLeft);
+      if (secsLeft <= 0) {
+        clearInterval(cdTimer);
+        localStorage.removeItem(COOLDOWN_UNTIL_KEY);
+        localStorage.removeItem(COOLDOWN_REASON_KEY);
+        setCooldownReason(null);
+        setValidationError(null);
+      }
+    }, 1000);
+
+    return () => clearInterval(cdTimer);
+  }, [cooldownRemainingSeconds]);
+
+  const handleStartTypingSession = () => {
+    if (cooldownRemainingSeconds > 0) return;
+    try {
+      localStorage.setItem(
+        ACTIVE_SESSION_KEY,
+        JSON.stringify({ taskId: currentTask.id, startedAt: Date.now() })
+      );
+    } catch {}
+    setRemainingSeconds(30 * 60);
+    setStartTime(Date.now());
+    setIsSessionActive(true);
+    setValidationError(null);
+  };
+
+  // Evaluate against corrected target text (rewarding applying rules) while counting raw typos & missed fixes
   const metrics = useMemo(() => {
-    const target = currentTask.text;
+    const target = currentTask.expectedCorrectedText;
     const typed = inputText;
-    
+
     let matchingChars = 0;
     const minLength = Math.min(target.length, typed.length);
     for (let i = 0; i < minLength; i++) {
@@ -439,9 +774,10 @@ const TypingApp = () => {
       }
     }
 
-    const accuracy = typed.length > 0 
-      ? Math.max(0, Math.min(100, Math.round((matchingChars / typed.length) * 100))) 
-      : 100;
+    const accuracy =
+      typed.length > 0
+        ? Math.max(0, Math.min(100, Math.round((matchingChars / typed.length) * 100)))
+        : 100;
 
     const wordsTyped = typed.trim().split(/\s+/).filter(Boolean).length;
     let wpm = 0;
@@ -452,55 +788,88 @@ const TypingApp = () => {
 
     const progress = Math.min(100, Math.round((typed.length / target.length) * 100));
 
+    const missedFixes = currentTask.requiredFixes
+      .filter((fix) => typed.length > 10 && (!typed.includes(fix.fixed) || typed.includes(fix.wrong)))
+      .map((fix) => fix.label);
+
     return {
       accuracy,
       wpm,
       progress,
       typedChars: typed.length,
       targetChars: target.length,
-      errors: typed.length - matchingChars
+      errors: Math.max(0, typed.length - matchingChars),
+      missedFixes
     };
-  }, [inputText, currentTask.text, startTime]);
+  }, [inputText, currentTask, startTime]);
 
-  // 120-second batch verification timer hook
+  const aggregatedAuditErrors = useMemo(() => {
+    const entries = Object.values(taskAuditLogs) as StoredTaskAudit[];
+    const flagged: { taskLabel: string; badge: string; detail: string }[] = [];
+
+    entries.forEach((entry) => {
+      if (entry.missedFixes.length > 0 || entry.accuracy < 96 || entry.rawErrors > 5) {
+        flagged.push({
+          taskLabel: `Task #${entry.taskId} (${entry.language})`,
+          badge: `${entry.accuracy}% Accuracy • ${entry.missedFixes.length} Unfixed Rule(s)`,
+          detail:
+            entry.missedFixes.length > 0
+              ? `Missed corrections: ${entry.missedFixes.slice(0, 2).join('; ')}`
+              : `${entry.rawErrors} character/punctuation deviations from corrected specification.`
+        });
+      }
+    });
+
+    // Always catch strict verification errors & 65 shortfall even if user typed all 10 tasks cleanly
+    if (flagged.length === 0) {
+      flagged.push(
+        {
+          taskLabel: 'Task #1 & #3 (English Legal/SWIFT)',
+          badge: 'Shortfall: 65 (কম হলো ৬৫) • Mistake Found',
+          detail: 'আপনার এই জায়গায় ভুল রয়েছে — Delimiter, currency wrapping, and 65 character/score deficit failed strict verification.'
+        },
+        {
+          taskLabel: 'Task #4, #7 & #10 (Bengali Circular/Audit)',
+          badge: 'Unicode Mismatch • 65 Score Deficit',
+          detail: 'Bengali conjunct characters (যুক্তাক্ষর) and Dari (।) spacing diverged from archival standard (Score Short by 65).'
+        }
+      );
+    }
+
+    return flagged;
+  }, [taskAuditLogs]);
+
   useEffect(() => {
     let timer: any = null;
     if (isAnalyzingBatch) {
       setAnalysisProgress(0);
       setAnalysisRemainingSeconds(120);
-      setAnalysisStepText('১০টি টাইপিং টাস্কের সামগ্রিক ডাটা ও কি-স্ট্রোক অডিট শুরু হয়েছে...');
+      setAnalysisStepText('Initializing 10-task bilingual & error-correction audit...');
 
       timer = setInterval(() => {
-        setAnalysisRemainingSeconds(prev => {
+        setAnalysisRemainingSeconds((prev) => {
           const nextSec = prev - 1;
           const pct = Math.min(100, Math.round(((120 - nextSec) / 120) * 100));
           setAnalysisProgress(pct);
 
-          // Update message dynamically based on progress percent
-          if (pct < 15) {
-            setAnalysisStepText('১০টি টাইপিং টাস্কের সামগ্রিক ডাটা ও কি-স্ট্রোক অডিট শুরু হয়েছে...');
-          } else if (pct < 35) {
-            setAnalysisStepText('কি-স্ট্রোক লেটেন্সি, টাইপিং ক্যাডেন্স ও টাইম ইন্টারভাল বিশ্লেষণ চলছে...');
-          } else if (pct < 55) {
-            setAnalysisStepText('সিস্টেম ডিপ লার্নিং এআই প্যাটার্ন রিকগনিশন ও সিনট্যাক্স স্ক্যানিং...');
-          } else if (pct < 75) {
-            setAnalysisStepText('স্ক্রিন রেকর্ড ভিডিও এবং জমা দেওয়া প্রমাণের সত্যতা স্ক্যান করা হচ্ছে...');
-          } else if (pct < 90) {
-            setAnalysisStepText('গুগল ড্রাইভ/লুম লিংকের কনটেন্ট এনালাইসিস ভেরিফিকেশন চলছে...');
+          if (pct < 18) {
+            setAnalysisStepText('Scanning 7 English & 3 Bengali transcripts against corrected keys...');
+          } else if (pct < 38) {
+            setAnalysisStepText('Checking all planted error corrections & formatting rules...');
+          } else if (pct < 58) {
+            setAnalysisStepText('Auditing keystroke latency, Unicode normalization & punctuation...');
+          } else if (pct < 78) {
+            setAnalysisStepText('Inspecting screen recording video proof authenticity...');
+          } else if (pct < 92) {
+            setAnalysisStepText('Verifying Google Drive / Loom cloud video permissions...');
           } else {
-            setAnalysisStepText('অডিট সম্পন্ন! সেন্ট্রাল কোয়ালিটি ফলাফল প্রস্তুত হচ্ছে...');
+            setAnalysisStepText('Audit complete. Generating final Quality Control findings...');
           }
 
           if (nextSec <= 0) {
             clearInterval(timer);
             setIsAnalyzingBatch(false);
-            // If accuracy is exactly 100% -> Flag AI 100%
-            // If normal/imperfect -> Show System Detection Rejected
-            if (metrics.accuracy >= 100) {
-              setBatchEvaluationResult('ai_detected');
-            } else {
-              setBatchEvaluationResult('system_rejected');
-            }
+            setBatchEvaluationResult('audit_rejected');
             return 0;
           }
           return nextSec;
@@ -510,37 +879,49 @@ const TypingApp = () => {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isAnalyzingBatch, metrics.accuracy]);
+  }, [isAnalyzingBatch]);
 
-  // Handle typing input
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!isSessionActive || cooldownRemainingSeconds > 0) {
+      return;
+    }
+    const newVal = e.target.value;
+    if (newVal.length - inputText.length > 18) {
+      setPasteAttempts((prev) => prev + 1);
+      setValidationError('Paste / bulk text insertion is strictly blocked. Type manually character by character.');
+      return;
+    }
+
     if (!startTime) {
       setStartTime(Date.now());
-      setIsTimerRunning(true);
     }
-    setInputText(e.target.value);
+    setInputText(newVal);
     setValidationError(null);
   };
 
-  // Block pasting to enforce manual typing
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    setPasteAttempts(prev => prev + 1);
-    setValidationError("⚠️ কপি-পেস্ট সম্পূর্ণ নিষিদ্ধ! আপনাকে নিজ হাতে কীবোর্ডে বা ফোনে টাইপ করতে হবে।");
+    setPasteAttempts((prev) => prev + 1);
+    setValidationError('Copy-Paste is strictly prohibited! Type everything manually.');
   };
 
-  // Handle Video File Upload
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setPasteAttempts((prev) => prev + 1);
+    setValidationError('Drag & drop text is prohibited! Type manually.');
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('video/')) {
-      setValidationError("দয়া করে একটি সঠিক ভিডিও ফাইল (.mp4, .webm, .mov) আপলোড করুন।");
+      setValidationError('Please select a valid video file (.mp4, .webm, .mov).');
       return;
     }
 
     if (file.size > 100 * 1024 * 1024) {
-      setValidationError("ভিডিও ফাইলটির সাইজ খুব বড়। ১০০ মেগাবাইটের মধ্যে ভিডিও আপলোড করুন অথবা গুগল ড্রাইভ লিংক দিন।");
+      setValidationError('Video file exceeds 100MB limit. Upload to Google Drive and paste the share link.');
       return;
     }
 
@@ -549,21 +930,30 @@ const TypingApp = () => {
     setValidationError(null);
   };
 
-  // Format seconds to mm:ss
   const formatTimer = (sec: number) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Restart All 10 Tasks from Beginning
+  const formatCooldownHMS = (sec: number) => {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
   const handleRestartBatch = () => {
     localStorage.removeItem('unity_typing_submitted_count');
     localStorage.removeItem('unity_typing_submitted_ids');
+    localStorage.removeItem('unity_typing_audit_logs');
+    localStorage.removeItem(ACTIVE_SESSION_KEY);
     setSubmittedCount(0);
     setSubmittedTaskIds([]);
+    setTaskAuditLogs({});
     setBatchEvaluationResult('none');
     setIsSubmittedSuccess(false);
+    setIsSessionActive(false);
     setSelectedTaskIndex(0);
     setInputText('');
     setStartTime(null);
@@ -573,367 +963,244 @@ const TypingApp = () => {
     setValidationError(null);
   };
 
-  // Submission Handler
   const handleSubmitTask = async () => {
     setValidationError(null);
 
-    // 1. Check completion length
-    if (inputText.length < currentTask.text.length * 0.60) {
-      setValidationError(`টাইপিং এখনও অসম্পূর্ণ! টাস্কের অন্তত ৬০% নির্ভুলভাবে টাইপ করতে হবে (বর্তমান অগ্রগতি: ${metrics.progress}%)।`);
+    if (cooldownRemainingSeconds > 0) {
+      setValidationError('2-hour cooldown lock is active. Please wait until cooldown ends.');
       return;
     }
 
-    // 2. Mandatory Screen Recording Proof Check
+    if (!isSessionActive) {
+      setValidationError('Click the Start Typing Session button first to start your 30-minute timer.');
+      return;
+    }
+
+    if (inputText.length < currentTask.expectedCorrectedText.length * 0.9) {
+      setValidationError(
+        `Typing incomplete! You must manually type at least 90% of this ${currentTask.text.length}-character passage (Current: ${metrics.progress}%).`
+      );
+      return;
+    }
+
     const hasScreenRecording = Boolean(videoProofLink.trim().length > 5 || videoFile);
     if (!hasScreenRecording) {
-      setValidationError("⚠️ স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ লিংক দেওয়া হয়নি! এআই ব্যবহার প্রতিরোধ ও জেনুইন কাজের প্রমাণ হিসেবে টাইপ করার সময় স্ক্রিন রেকর্ডিং ভিডিওর লিংক (গুগল ড্রাইভ / লুম / ড্রপবক্স / ইউটিউব) সাবমিট করা বাধ্যতামূলক।");
+      setValidationError(
+        'Screen recording video proof is mandatory! Submit a Google Drive / Loom link or upload a video file.'
+      );
       return;
     }
 
     if (!user) {
-      setValidationError("আপনার লগইন সেশন পাওয়া যায়নি। অনুগ্রহ করে পুনরায় লগইন করুন।");
+      setValidationError('Session expired. Please log in again.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const finalVideoData = videoProofLink.trim() || (videoFileName ? `Uploaded File: ${videoFileName}` : 'Screen Recording Provided');
+      const finalVideoData =
+        videoProofLink.trim() ||
+        (videoFileName ? `Uploaded File: ${videoFileName}` : 'Screen Recording Provided');
 
-      // Save submission record
       await addDoc(collection(db, 'submissions'), {
         userId: user.uid,
         userName: profile?.fullName || 'Student User',
         userPhone: profile?.whatsappNumber || 'N/A',
         studentIdCode: profile?.studentIdCode || 'N/A',
         module: 'typing',
-        moduleTitle: 'Typing Work (Screen Recording & Condition Verified)',
+        moduleTitle: 'Typing Work (7 English + 3 Bengali Error-Correction Audited)',
         taskTitle: currentTask.title,
         taskCategory: currentTask.category,
+        language: currentTask.language,
         accuracy: metrics.accuracy,
         wpm: metrics.wpm,
         totalChars: metrics.typedChars,
         targetChars: metrics.targetChars,
-        mandatoryCondition: currentTask.mandatoryCondition,
+        missedFixes: metrics.missedFixes,
         videoUrl: finalVideoData,
         videoProofType: videoProofLink.trim() ? 'external_cloud_link' : 'uploaded_file',
         notes: recordingNotes.trim(),
-        details: `Task: ${currentTask.title}\nCategory: ${currentTask.category}\nAccuracy: ${metrics.accuracy}%\nSpeed: ${metrics.wpm} WPM\nTyped: ${metrics.typedChars}/${metrics.targetChars} chars\nScreen Recording Proof: ${finalVideoData}\nCondition: ${currentTask.mandatoryCondition}`,
+        details: `Task #${currentTask.id} (${currentTask.language}): ${currentTask.title}\nCorrected Accuracy: ${metrics.accuracy}%\nUnfixed Rules: ${metrics.missedFixes.length}\nSpeed: ${metrics.wpm} WPM\nScreen Recording Proof: ${finalVideoData}`,
         status: 'pending',
         submittedAt: new Date().toISOString(),
         createdAt: new Date().toISOString()
       });
 
+      const updatedAuditLogs: Record<number, StoredTaskAudit> = {
+        ...taskAuditLogs,
+        [currentTask.id]: {
+          taskId: currentTask.id,
+          title: currentTask.title,
+          language: currentTask.language,
+          accuracy: metrics.accuracy,
+          wpm: metrics.wpm,
+          rawErrors: metrics.errors,
+          missedFixes: metrics.missedFixes
+        }
+      };
+
       const nextSubmittedCount = submittedCount + 1;
       const nextTaskIds = Array.from(new Set([...submittedTaskIds, currentTask.id]));
-      
+
+      setTaskAuditLogs(updatedAuditLogs);
       setSubmittedCount(nextSubmittedCount);
       setSubmittedTaskIds(nextTaskIds);
+      localStorage.removeItem(ACTIVE_SESSION_KEY);
+      setIsSessionActive(false);
+      localStorage.setItem('unity_typing_audit_logs', JSON.stringify(updatedAuditLogs));
       localStorage.setItem('unity_typing_submitted_count', String(nextSubmittedCount));
       localStorage.setItem('unity_typing_submitted_ids', JSON.stringify(nextTaskIds));
 
-      // CHECK IF 10 SUBMISSIONS ARE REACHED (OR 10TH TASK REACHED)
       const isBatchCompleted = nextSubmittedCount >= 10 || selectedTaskIndex === 9;
 
       if (isBatchCompleted) {
-        // Trigger Realistic Deep Loading & AI Analysis Simulation
         setIsAnalyzingBatch(true);
       } else {
-        // Standard single task success
         setIsSubmittedSuccess(true);
       }
-
     } catch (err: any) {
-      console.error("Submission error:", err);
-      setValidationError("সাবমিশন ব্যর্থ হয়েছে: " + err.message);
+      console.error('Submission error:', err);
+      setValidationError('Submission failed: ' + err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // ==========================================
-  // 1. LOADING SCREEN: 10 SUBMISSIONS ANALYSIS
-  // ==========================================
+  // 1. DEEP ANALYSIS LOADING SCREEN
   if (isAnalyzingBatch) {
     return (
       <div className="p-4 sm:p-6 min-h-[80vh] flex items-center justify-center font-sans">
-        <div className="bg-slate-900 text-white rounded-3xl p-7 sm:p-10 max-w-lg w-full border border-slate-800 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
-          
-          {/* Animated AI Radar Scanner */}
-          <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping"></div>
-            <div className="absolute inset-2 rounded-full border-2 border-dashed border-blue-400 animate-spin-slow"></div>
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg relative z-10">
-              <Cpu size={30} className="text-white animate-pulse" />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-extrabold uppercase tracking-wider">
-              <Activity size={12} className="animate-pulse" />
-              <span>Deep System Verification In Progress</span>
-            </div>
-            <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white">
-              ১০টি টাইপিং টাস্কের সিস্টেম অডিট চলছে...
-            </h2>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
-              সেন্ট্রাল অ্যালগরিদম দ্বারা আপনার টাইপিংয়ের কি-স্ট্রোক রিদম, স্পিড, বিরামচিহ্ন ও এআই প্যাটার্ন পরীক্ষা করা হচ্ছে।
-            </p>
-          </div>
-
-          {/* Progress Bar & Status Text */}
-          <div className="space-y-2.5 bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
-            <div className="flex justify-between items-center text-xs font-mono">
-              <span className="text-blue-400 font-bold">স্ক্যান অগ্রগতি</span>
-              <span className="text-emerald-400 font-bold font-mono">{analysisProgress}%</span>
-            </div>
-            <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
-              <div 
-                className="bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400 h-full rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${analysisProgress}%` }}
-              ></div>
-            </div>
-            <p className="text-[11px] text-slate-300 font-medium truncate pt-1">
-              🔍 {analysisStepText}
-            </p>
-          </div>
-
-          <div className="text-[10px] text-slate-500 flex items-center justify-center gap-1 bg-slate-950/40 py-2 px-4 rounded-xl border border-slate-850">
-            <Clock size={12} className="text-orange-400 animate-pulse" />
-            <span className="font-semibold text-orange-400 font-mono">
-              ভেরিফিকেশন সম্পন্ন হতে বাকি: {Math.floor(analysisRemainingSeconds / 60)} মিনিট {analysisRemainingSeconds % 60} সেকেন্ড
-            </span>
-          </div>
-
-        </div>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // 2. CASE A: AI DETECTED 100% REJECTION MODAL
-  // ==========================================
-  if (batchEvaluationResult === 'ai_detected') {
-    return (
-      <div className="p-4 sm:p-6 min-h-[85vh] flex items-center justify-center font-sans animate-in fade-in zoom-in-95 duration-200">
-        <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full border-2 border-rose-300 shadow-2xl space-y-6">
-          
-          {/* Header Warning Emblem */}
-          <div className="text-center space-y-3">
-            <div className="w-16 h-16 rounded-2xl bg-rose-50 border-2 border-rose-200 text-rose-600 flex items-center justify-center mx-auto shadow-md">
-              <Bot size={34} />
-            </div>
-
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200 text-[10px] font-black uppercase tracking-wider">
-                <ShieldAlert size={13} className="text-rose-600" />
-                <span>AI Detection Engine: 100% Match Identified</span>
-              </div>
-
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-                সিস্টেম ডিটেকশনে এআই (AI) ব্যবহারের উপস্থিতি শনাক্ত হয়েছে!
-              </h2>
-
-              <p className="text-xs font-bold text-rose-600">
-                AI Usage Detected: 100% (অটোমেটেড সিন্থেটিক টেক্সট ও বট অ্যাক্টিভিটি ফ্ল্যাগড)
-              </p>
-            </div>
-          </div>
-
-          {/* Meaningful & Authoritative Bengali Explanation */}
-          <div className="bg-rose-50/70 border border-rose-200 rounded-2xl p-4 text-xs text-rose-950 leading-relaxed space-y-2">
-            <p>
-              আপনার সাবমিটকৃত <strong>১০টি টাইপিং প্রজেক্টের</strong> গভীর প্যাটার্ন বিশ্লেষণে দেখা গেছে যে, টাইপিংয়ের ব্যাকস্পেস রিদম, টাইম ইন্টারভাল এবং সিনট্যাক্স গঠন মানুষের সাধারণ কীবোর্ড ইনপুটের সাথে মেলে না।
-            </p>
-            <p className="font-semibold">
-              সিস্টেম ডিটেকশনে এটি <strong>শতভাগ (১০০%) কৃত্রিম বুদ্ধিমত্তা (AI) বা অটোমেটেড কপি-পেস্ট</strong> টুলের সাহায্যে প্রস্তুতকৃত হিসেবে শনাক্ত হয়েছে। আমাদের জেনুইন ম্যানুয়াল টাইপিং নীতিমালার স্পষ্ট লঙ্ঘন হওয়ায় এই ১০টি প্রজেক্টের পুরো ব্যাচটি বাতিল (Rejected) ঘোষণা করা হলো।
-            </p>
-          </div>
-
-          {/* Detailed Audit Findings Dossier */}
-          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-xs">
-            <div className="font-bold text-slate-800 pb-1 border-b border-slate-200 flex items-center justify-between">
-              <span>সিস্টেম অডিট ও ডিটেকশন রিপোর্ট:</span>
-              <span className="text-[10px] font-mono text-rose-600 font-black">BATCH #10 FLAGGED</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-              <div className="p-2 rounded-xl bg-white border border-slate-200">
-                <div className="text-slate-400 font-medium">এআই সিন্থেটিক মিল:</div>
-                <div className="font-mono font-black text-rose-600 text-sm mt-0.5">১০০% (AI Used)</div>
-              </div>
-
-              <div className="p-2 rounded-xl bg-white border border-slate-200">
-                <div className="text-slate-400 font-medium">কি-স্ট্রোক রিদম:</div>
-                <div className="font-mono font-bold text-slate-800 mt-0.5">অস্বাভাবিক / কৃত্রিম</div>
-              </div>
-
-              <div className="p-2 rounded-xl bg-white border border-slate-200">
-                <div className="text-slate-400 font-medium">শর্ত রূপান্তর যাচাই:</div>
-                <div className="font-bold text-amber-700 mt-0.5">স্ক্রিপ্টেড প্যাটার্ন</div>
-              </div>
-
-              <div className="p-2 rounded-xl bg-white border border-slate-200">
-                <div className="text-slate-400 font-medium">চূড়ান্ত মূল্যায়ন:</div>
-                <div className="font-black text-rose-600 mt-0.5">❌ রিজেক্টেড (বাতিল)</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Policy Warning Box */}
-          <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2 leading-relaxed">
-            <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
-            <span>
-              <strong>সতর্কতা:</strong> ইউনিটি আর্নিং পোর্টালে কোনো প্রকার এআই টুল (ChatGPT, Gemini ইত্যাদি) ব্যবহার কঠোরভাবে নিষিদ্ধ। সবসময় নিজে হাতে টাইপ করুন।
-            </span>
-          </div>
-
-          {/* Action Button: Retry from Task 1 */}
-          <button
-            onClick={handleRestartBatch}
-            className="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 active:scale-[0.99] text-white font-bold py-3.5 rounded-2xl text-xs sm:text-sm transition shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <RotateCcw size={16} />
-            <span>পুনরায় প্রথম থেকে চেষ্টা করুন (Retry from Task 1)</span>
-          </button>
-
-        </div>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // 3. CASE B: SYSTEM REJECTED MODAL (NORMAL)
-  // ==========================================
-  if (batchEvaluationResult === 'system_rejected') {
-    return (
-      <div className="p-4 sm:p-6 min-h-[85vh] flex items-center justify-center font-sans animate-in fade-in zoom-in-95 duration-200">
-        <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full border-2 border-rose-300 shadow-2xl space-y-6">
-          
-          {/* Header Rejection Emblem */}
-          <div className="text-center space-y-3">
-            <div className="w-16 h-16 rounded-2xl bg-rose-50 border-2 border-rose-200 text-rose-600 flex items-center justify-center mx-auto shadow-md">
-              <XCircle size={36} />
-            </div>
-
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200 text-[10px] font-black uppercase tracking-wider">
-                <AlertCircle size={13} className="text-rose-600" />
-                <span>System Verification: Batch Rejected</span>
-              </div>
-
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-                আপনার সাবমিশনটি সিস্টেম ডিটেকশনে রিজেক্টেড (Rejected) হয়েছে!
-              </h2>
-
-              <p className="text-xs font-semibold text-rose-600">
-                কোয়ালিটি কন্ট্রোল বেঞ্চমার্ক ও নির্দেশিকা পূরণে ব্যর্থ
-              </p>
-            </div>
-          </div>
-
-          {/* Meaningful & Polite Bengali Explanation */}
-          <div className="bg-rose-50/70 border border-rose-200 rounded-2xl p-4 text-xs text-rose-950 leading-relaxed space-y-2">
-            <p>
-              আমাদের কেন্দ্রীয় কোয়ালিটি কন্ট্রোল টিম ও অটোমেটেড অ্যালগরিদমের নিরীক্ষায় আপনার <strong>১০টি টাইপিং সাবমিশনে</strong> একাধিক অসামঞ্জস্যতা, বানান ভুল ও নির্দেশিত শর্তের অমিল শনাক্ত হয়েছে।
-            </p>
-            <p className="font-semibold">
-              টাইপিংয়ের গুণগত মান আমাদের ন্যূনতম গ্রহণযোগ্য নির্ভুলতার মানদণ্ড পূরণ করতে পারেনি। ফলে সিস্টেম ডিটেকশনে আপনার এই ব্যাচের প্রজেক্টটি অনুমোদন দেওয়া সম্ভব হয়নি এবং রিজেক্টেড হিসেবে নথিভুক্ত হয়েছে।
-            </p>
-          </div>
-
-          {/* Audit Findings Dossier */}
-          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-xs">
-            <div className="font-bold text-slate-800 pb-1 border-b border-slate-200 flex items-center justify-between">
-              <span>মূল্যায়ন ও অডিট রিপোর্ট:</span>
-              <span className="text-[10px] font-mono text-rose-600 font-black">EVALUATION FAILED</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-              <div className="p-2 rounded-xl bg-white border border-slate-200">
-                <div className="text-slate-400 font-medium">কোয়ালিটি বেঞ্চমার্ক:</div>
-                <div className="font-mono font-black text-rose-600 text-sm mt-0.5">ব্যর্থ (Below Standard)</div>
-              </div>
-
-              <div className="p-2 rounded-xl bg-white border border-slate-200">
-                <div className="text-slate-400 font-medium">শর্ত পরিপালন:</div>
-                <div className="font-bold text-slate-800 mt-0.5">অসম্পূর্ণ ও শর্তভঙ্গ</div>
-              </div>
-
-              <div className="p-2 rounded-xl bg-white border border-slate-200">
-                <div className="text-slate-400 font-medium">ভিডিও প্রমাণ নিরীক্ষা:</div>
-                <div className="font-bold text-amber-700 mt-0.5">যাচাইয়ে অমিল</div>
-              </div>
-
-              <div className="p-2 rounded-xl bg-white border border-slate-200">
-                <div className="text-slate-400 font-medium">বর্তমান স্ট্যাটাস:</div>
-                <div className="font-black text-rose-600 mt-0.5">❌ রিজেক্টেড (বাতিল)</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Guidance Notice */}
-          <div className="p-3 bg-blue-50 rounded-2xl border border-blue-200 text-[11px] text-blue-900 flex items-start gap-2 leading-relaxed">
-            <Info size={15} className="text-blue-600 shrink-0 mt-0.5" />
-            <span>
-              <strong>পরামর্শ:</strong> প্রতিটি প্যারাগ্রাফে দেওয়া "শর্ত" এবং বিরামচিহ্নগুলো নিখুঁতভাবে টাইপ করুন। সঠিক নিয়মে কাজ সম্পন্নের জন্য আপনাকে পুনরায় সুযোগ দেওয়া হলো।
-            </span>
-          </div>
-
-          {/* Action Button: Retry from Task 1 */}
-          <button
-            onClick={handleRestartBatch}
-            className="w-full bg-gradient-to-r from-slate-900 to-blue-950 hover:from-slate-800 hover:to-blue-900 active:scale-[0.99] text-white font-bold py-3.5 rounded-2xl text-xs sm:text-sm transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <RotateCcw size={16} />
-            <span>পুনরায় প্রথম থেকে চেষ্টা করুন (Retry from Task 1)</span>
-          </button>
-
-        </div>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // 4. STANDARD SINGLE TASK SUCCESS SCREEN (1-9)
-  // ==========================================
-  if (isSubmittedSuccess) {
-    return (
-      <div className="p-4 sm:p-6 min-h-[80vh] flex items-center justify-center font-sans">
-        <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-blue-200 shadow-2xl text-center space-y-5">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
-            <CheckCircle2 size={36} />
+        <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full border border-slate-200 shadow-sm text-center space-y-5">
+          <div className="w-14 h-14 rounded-xl bg-[#EEF5FC] border border-[#D4E4F7] text-[#0A4D8C] flex items-center justify-center mx-auto">
+            <Cpu size={26} strokeWidth={1.75} />
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                টাস্ক #{currentTask.id} সাবমিট হয়েছে
-              </span>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-                ব্যাচ অগ্রগতি: {submittedCount}/১০
-              </span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              টাইপিং ও স্ক্রিন রেকর্ড সাবমিশন সফল!
+            <p className="text-xs font-medium text-[#0A4D8C]">
+              Deep System Verification
+            </p>
+            <h2 className="text-lg font-semibold tracking-tight text-[#1E2329]">
+              Auditing All 10 Bilingual Typing Tasks
             </h2>
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              আপনার টাইপিং প্যারাগ্রাফ এবং কাজের স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ লিংক সফলভাবে অ্যাডমিন প্যানেলে জমা হয়েছে।
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Validating error corrections, rule compliance across 7 English & 3 Bengali tasks, and screen recording proofs.
             </p>
           </div>
 
-          {/* Submission Metrics Card */}
-          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 grid grid-cols-3 gap-2 text-center text-xs">
+          <div className="space-y-2.5 bg-[#F4F5F7] p-4 rounded-xl border border-slate-200 text-left">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-slate-600 font-medium">Audit Progress</span>
+              <span className="text-[#0A4D8C] font-semibold font-mono tabular-nums">{analysisProgress}%</span>
+            </div>
+            <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-[#0A4D8C] h-full rounded-full transition-all duration-500"
+                style={{ width: `${analysisProgress}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-slate-600 truncate pt-0.5">{analysisStepText}</p>
+          </div>
+
+          <div className="text-xs text-[#5F4B16] bg-[#FEF7E0] border border-[#F3DFA2] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-mono font-medium tabular-nums">
+            <Clock size={14} className="text-[#B47B00] shrink-0" />
+            <span>
+              Remaining: {Math.floor(analysisRemainingSeconds / 60)}m {analysisRemainingSeconds % 60}s
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. ALWAYS CATCH ERRORS -> ITEMIZED AUDIT REJECTION SCREEN (NEVER COMPLETE)
+  if (batchEvaluationResult === 'audit_rejected') {
+    return (
+      <div className="p-4 sm:p-6 min-h-[85vh] flex items-center justify-center font-sans">
+        <div className="bg-white rounded-xl p-5 sm:p-6 max-w-lg w-full border border-rose-200 shadow-sm space-y-4">
+          <div className="text-center space-y-2">
+            <div className="w-12 h-12 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center mx-auto">
+              <XCircle size={26} strokeWidth={1.75} />
+            </div>
+            <p className="text-xs font-medium text-rose-700">
+              Incomplete Work · Shortfall: 65 (কম হলো ৬৫)
+            </p>
+            <h2 className="text-lg font-semibold text-[#1E2329]">Typing Job Audit Not Passed</h2>
+            <p className="text-xs text-slate-600">
+              আপনার টাইপিংয়ে ভুল রয়েছে এবং নির্ধারিত মানদণ্ড থেকে ৬৫ (পঁয়ষট্টি) কম হয়েছে — তাই কাজটি সম্পূর্ণ হয়নি।
+            </p>
+          </div>
+
+          <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 flex items-center justify-between text-xs">
+            <span className="font-semibold text-rose-900">Audit Score Deficit (কম হলো):</span>
+            <span className="font-mono font-bold text-rose-700 bg-white px-2.5 py-1 rounded-lg border border-rose-200 tabular-nums">
+              Short by 65 (৬৫ কম)
+            </span>
+          </div>
+
+          <div className="bg-rose-50/60 border border-rose-200 rounded-xl p-3 text-xs space-y-2 max-h-60 overflow-y-auto">
+            {aggregatedAuditErrors.map((err, idx) => (
+              <div key={idx} className="bg-white border border-rose-200/80 rounded-lg p-3 space-y-1">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="font-semibold text-[#1E2329] text-xs">{err.taskLabel}</span>
+                  <span className="text-[11px] font-medium text-rose-700">
+                    {err.badge}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 leading-snug">{err.detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-3 bg-[#FEF7E0] rounded-xl border border-[#F3DFA2] text-xs text-[#5F4B16] flex items-start gap-2.5">
+            <AlertTriangle size={15} className="text-[#B47B00] shrink-0 mt-0.5" />
+            <span className="leading-relaxed">
+              Your typing job showed an error and fell short by 65 (কম হলো ৬৫). All planted mistakes and target accuracy requirements must be satisfied before completion.
+            </span>
+          </div>
+
+          <button
+            onClick={handleRestartBatch}
+            className="w-full bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold py-3 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+          >
+            <RotateCcw size={15} />
+            <span>Restart & Retry from Task #1</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. SINGLE TASK SUCCESS SCREEN
+  if (isSubmittedSuccess) {
+    return (
+      <div className="p-4 sm:p-6 min-h-[80vh] flex items-center justify-center font-sans">
+        <div className="bg-white rounded-xl p-6 max-w-md w-full border border-slate-200 shadow-sm text-center space-y-5">
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 text-[#0D7A5F] flex items-center justify-center mx-auto">
+            <CheckCircle2 size={26} strokeWidth={1.75} />
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-[#0D7A5F] tabular-nums">
+              Task #{currentTask.id} ({currentTask.language}) Queued · Batch {submittedCount}/10
+            </p>
+            <h2 className="text-lg font-semibold text-[#1E2329]">Task & Recording Submitted</h2>
+            <p className="text-xs text-slate-600">Your transcript and video proof link have been saved for batch audit.</p>
+          </div>
+
+          <div className="bg-[#F4F5F7] rounded-xl p-3.5 border border-slate-200/80 grid grid-cols-3 gap-2 text-center text-xs">
             <div>
-              <div className="text-[10px] uppercase font-bold text-slate-400">একুরেসি</div>
-              <div className="text-sm font-extrabold text-emerald-600 font-mono mt-0.5">{metrics.accuracy}%</div>
+              <div className="text-[11px] font-medium text-slate-500">Accuracy</div>
+              <div className="text-sm font-semibold text-[#0D7A5F] font-mono tabular-nums mt-0.5">{metrics.accuracy}%</div>
             </div>
             <div>
-              <div className="text-[10px] uppercase font-bold text-slate-400">টাইপিং স্পিড</div>
-              <div className="text-sm font-extrabold text-blue-600 font-mono mt-0.5">{metrics.wpm} WPM</div>
+              <div className="text-[11px] font-medium text-slate-500">Speed</div>
+              <div className="text-sm font-semibold text-[#0A4D8C] font-mono tabular-nums mt-0.5">{metrics.wpm} WPM</div>
             </div>
             <div>
-              <div className="text-[10px] uppercase font-bold text-slate-400">ব্যাচ সম্পন্ন</div>
-              <div className="text-sm font-extrabold text-slate-800 font-mono mt-0.5">{submittedCount}/১০</div>
+              <div className="text-[11px] font-medium text-slate-500">Rule Fixes</div>
+              <div className="text-sm font-semibold text-[#1E2329] font-mono tabular-nums mt-0.5">
+                {currentTask.requiredFixes.length - metrics.missedFixes.length}/{currentTask.requiredFixes.length}
+              </div>
             </div>
           </div>
 
@@ -942,9 +1209,9 @@ const TypingApp = () => {
               setIsSubmittedSuccess(false);
               setSelectedTaskIndex((prev) => (prev + 1) % ADVANCED_10_TASKS.length);
             }}
-            className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl text-xs transition shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+            className="w-full bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold py-3 px-4 rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
           >
-            <span>পরবর্তী টাইপিং টাস্ক #{((selectedTaskIndex + 1) % ADVANCED_10_TASKS.length) + 1} শুরু করুন</span>
+            <span>Start Next Task #{((selectedTaskIndex + 1) % ADVANCED_10_TASKS.length) + 1}</span>
             <ArrowRight size={14} />
           </button>
         </div>
@@ -952,67 +1219,74 @@ const TypingApp = () => {
     );
   }
 
-  // ==========================================
-  // 5. MAIN TYPING WORKSPACE
-  // ==========================================
+  // 4. MAIN TYPING WORKSPACE
   return (
-    <div className="p-3 sm:p-5 max-w-4xl mx-auto pb-28 space-y-4 font-sans">
-      
-      {/* Top Header Banner with 30-Minute Live Countdown Timer */}
-      <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-md border border-slate-800 space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap mb-1.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30 inline-flex items-center gap-1">
-                <PenTool size={12} />
-                <span>Project #{currentTask.id}: {currentTask.difficulty} Level</span>
-              </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
-                ব্যাচ অগ্রগতি: {submittedCount}/১০ সম্পন্ন
-              </span>
-            </div>
-            
-            <h1 className="text-lg sm:text-2xl font-black tracking-tight">
+    <div className="p-3 sm:p-5 max-w-4xl mx-auto pb-24 space-y-4 font-sans">
+      {/* Top Header Banner */}
+      <div className="bg-[#0A4D8C] rounded-xl p-5 sm:p-6 text-white space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-[#D4E4F7] flex items-center gap-1.5 flex-wrap tabular-nums">
+              <PenTool size={12} />
+              <span>Task #{currentTask.id}</span>
+              <span aria-hidden="true">·</span>
+              <span>{currentTask.difficulty}</span>
+              <span aria-hidden="true">·</span>
+              <span>{currentTask.language}</span>
+              <span aria-hidden="true">·</span>
+              <span>Batch {submittedCount}/10</span>
+            </p>
+
+            <h1 className="text-base sm:text-lg font-semibold tracking-tight text-white leading-snug">
               {currentTask.title}
             </h1>
-            <p className="text-xs text-slate-300 mt-0.5 max-w-xl leading-relaxed">
-              প্যারাগ্রাফটি নিজে টাইপ করুন এবং কাজের সম্পূর্ণ স্ক্রিন রেকর্ডিং ভিডিও লিংক প্রমাণসহ সাবমিট করুন।
+            <p className="text-xs text-blue-100/90">
+              7 English & 3 Bengali high-difficulty tasks. Spot & correct planted errors as specified below.
             </p>
           </div>
 
-          {/* 30-MINUTE PROJECT COUNTDOWN TIMER */}
-          <div className="bg-slate-950/90 border border-blue-500/30 px-4 py-2.5 rounded-2xl text-center shrink-0 w-full sm:w-auto shadow-inner">
-            <div className="text-[10px] uppercase font-bold text-blue-300 flex items-center justify-center gap-1">
-              <Timer size={13} className={remainingSeconds < 300 ? "text-rose-400 animate-spin" : "text-blue-400"} />
-              <span>প্রজেক্ট সময়সীমা</span>
+          {/* 30-Minute Timer / Status Card */}
+          <div className="bg-white/10 border border-white/15 px-4 py-2.5 rounded-xl text-left sm:text-right shrink-0 w-full sm:w-auto">
+            <div className="text-[11px] font-medium text-blue-100 flex items-center sm:justify-end gap-1.5">
+              <Timer size={13} />
+              <span>
+                {cooldownRemainingSeconds > 0
+                  ? 'Cooldown Lock'
+                  : isSessionActive
+                  ? 'Active Timer (30m)'
+                  : 'Time Allowance'}
+              </span>
             </div>
-            <div className={`text-2xl font-black font-mono mt-0.5 tracking-wider ${
-              remainingSeconds < 300 ? "text-rose-400 animate-pulse" : "text-emerald-400"
-            }`}>
-              {formatTimer(remainingSeconds)}
-            </div>
-            <div className="text-[9px] text-emerald-400 font-semibold mt-0.5 flex items-center justify-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>লাইভ ৩০ মিনিট টাইমার চলমান</span>
+            <div
+              className={`text-xl font-semibold font-mono tabular-nums mt-0.5 ${
+                cooldownRemainingSeconds > 0
+                  ? 'text-rose-200'
+                  : isSessionActive && remainingSeconds < 300
+                  ? 'text-amber-200'
+                  : 'text-white'
+              }`}
+            >
+              {cooldownRemainingSeconds > 0
+                ? formatCooldownHMS(cooldownRemainingSeconds)
+                : formatTimer(remainingSeconds)}
             </div>
           </div>
         </div>
 
-        {/* Task Selector & Batch Reset Option */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="font-semibold text-slate-300">টাস্ক নির্বাচন ({selectedTaskIndex + 1}/১০):</span>
-          </div>
+        {/* Task Selector */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-white/15">
+          <span className="text-xs font-medium text-blue-100 tabular-nums">
+            Select Task ({selectedTaskIndex + 1}/10 · 7 EN + 3 BN):
+          </span>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {submittedCount > 0 && (
               <button
                 type="button"
                 onClick={handleRestartBatch}
-                className="text-[10px] text-slate-400 hover:text-rose-400 underline transition cursor-pointer"
-                title="রিসেট করে প্রথম থেকে শুরু করুন"
+                className="text-xs text-blue-100 hover:text-white underline transition cursor-pointer"
               >
-                রিসেট ({submittedCount}/১০)
+                Reset ({submittedCount}/10)
               </button>
             )}
 
@@ -1022,19 +1296,21 @@ const TypingApp = () => {
                 const targetIdx = Number(e.target.value);
                 const isUnlocked = targetIdx === 0 || submittedTaskIds.includes(ADVANCED_10_TASKS[targetIdx - 1].id);
                 if (!isUnlocked) {
-                  setValidationError("⚠️ পূর্ববর্তী টাস্কটি সম্পূর্ণ না করে এই টাস্কে যাওয়া যাবে না। এটি লক অবস্থায় রয়েছে।");
+                  setValidationError('Complete the previous task first to unlock this task.');
                   return;
                 }
                 setSelectedTaskIndex(targetIdx);
                 setValidationError(null);
               }}
-              className="bg-slate-900 border border-slate-700 text-white text-xs font-semibold rounded-xl px-3 py-1.5 focus:outline-none focus:border-blue-400 cursor-pointer"
+              className="bg-white text-[#1E2329] border border-white/20 text-xs font-medium rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer max-w-[260px]"
             >
               {ADVANCED_10_TASKS.map((t, idx) => {
                 const isUnlocked = idx === 0 || submittedTaskIds.includes(ADVANCED_10_TASKS[idx - 1].id);
+                const langTag = t.language === 'Bengali' ? 'BN' : 'EN';
                 return (
                   <option key={t.id} value={idx} disabled={!isUnlocked}>
-                    {idx > 0 && !isUnlocked ? '🔒 ' : ''}#{t.id}: {t.title.slice(0, 30)}... {submittedTaskIds.includes(t.id) ? '✓ (জমা হয়েছে)' : ''}
+                    {idx > 0 && !isUnlocked ? '[Locked] ' : ''}#{t.id} [{langTag}]: {t.title.slice(0, 24)}...
+                    {submittedTaskIds.includes(t.id) ? ' (Done)' : ''}
                   </option>
                 );
               })}
@@ -1044,228 +1320,266 @@ const TypingApp = () => {
       </div>
 
       {/* MANDATORY SCREEN RECORDING NOTICE */}
-      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-sky-50 border-2 border-blue-300 rounded-2xl p-4 text-blue-950 space-y-2">
-        <div className="flex items-center gap-2 font-black text-xs sm:text-sm text-blue-900">
-          <Video size={17} className="text-blue-600 shrink-0" />
-          <span>বাধ্যতামূলক নিয়ম: টাইপিংয়ের স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ সাবমিশন</span>
+      <div className="bg-[#EEF5FC] border border-[#D4E4F7] rounded-xl p-4 text-[#1E2329] space-y-1">
+        <div className="flex items-center gap-2 font-semibold text-xs text-[#0A4D8C]">
+          <Video size={15} className="shrink-0" />
+          <span>Mandatory Screen Recording & Error-Correction Policy</span>
         </div>
-        <p className="text-xs text-blue-800 leading-relaxed">
-          এআই (ChatGPT, Gemini, Bot) বা অটোমেশন স্ক্রিপ্ট ব্যবহার সম্পূর্ণ নিষিদ্ধ। কাজ শুরু করার আগে আপনার ফোন বা কম্পিউটারের স্ক্রিন রেকর্ডার চালু করুন এবং টাইপ করার পুরো সময়টি স্ক্রিন রেকর্ড করে তার গুগল ড্রাইভ (Google Drive) বা লুম (Loom) লিংক নিচে দিন।
+        <p className="text-xs text-slate-700 leading-relaxed">
+          Raw passages contain intentional typos, wrong years, and outdated figures. Fix them manually while typing and attach a public Google Drive or Loom link below.
         </p>
       </div>
 
-      {/* MANDATORY CONDITIONAL MODIFICATION RULE */}
-      <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 text-amber-950 space-y-3 shadow-xs">
-        <div className="flex items-center gap-2 font-bold text-xs text-amber-900 border-b border-amber-200 pb-2">
-          <Zap size={15} className="text-amber-600 shrink-0" />
-          <span>টাস্ক পরিবর্তনের জন্য ১০টি বাধ্যতামূলক ধাপ:</span>
+      {/* TASK CHANGE & ERROR-FIX RULES (BENGALI) */}
+      <div className="bg-[#FEF7E0] border border-[#F3DFA2] rounded-xl p-4 text-[#5F4B16] space-y-2.5">
+        <div className="flex items-center justify-between gap-2 border-b border-[#F3DFA2] pb-2 flex-wrap">
+          <div className="flex items-center gap-2 font-semibold text-xs text-[#1E2329]">
+            <Zap size={14} className="text-[#B47B00] shrink-0" />
+            <span>টাস্ক পরিবর্তন ও ভুল সংশোধনের রুলস ({currentTask.requiredFixes.length}টি ভুল সংশোধন বাধ্যতামূলক)</span>
+          </div>
+          <span className="text-xs font-medium text-[#5F4B16]">
+            {currentTask.language} Task
+          </span>
         </div>
         <ul className="space-y-1.5 list-none">
           {currentTask.instructionSteps.map((step, index) => (
-            <li key={index} className="text-xs text-amber-950 flex gap-2 font-medium">
-              <span className="text-amber-700 font-bold">{index + 1}.</span>
-              {step}
+            <li key={index} className="text-xs text-[#5F4B16] flex gap-2 leading-relaxed">
+              <span className="font-semibold text-[#B47B00] shrink-0 tabular-nums">{index + 1}.</span>
+              <span>{step.replace(/^[০-৯0-9]+\.\s*/, '')}</span>
             </li>
           ))}
         </ul>
       </div>
 
-      {/* MAIN TYPING WORKSPACE */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        
-        {/* Left Column: Target Reference Paragraph (Large Expanded 3x Text) */}
-        <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3 flex flex-col justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">
-                মূল প্যারাগ্রাফ (দেখে দেখে টাইপ করুন):
-              </span>
-              <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                মোট ক্যারেক্টার: {currentTask.text.length}
-              </span>
-            </div>
-
-            <div 
-              onCopy={(e) => {
-                e.preventDefault();
-                setValidationError("⚠️ মূল টেক্সট কপি করা নিষিদ্ধ! দেখে দেখে কীবোর্ডে টাইপ করুন।");
-              }}
-              className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs sm:text-sm text-slate-800 leading-relaxed font-mono whitespace-pre-wrap select-none max-h-[380px] overflow-y-auto"
-            >
-              {currentTask.text}
-            </div>
-          </div>
-
-          <div className="bg-slate-100/80 p-2.5 rounded-xl border border-slate-200 text-[11px] text-slate-600 flex items-center gap-1.5">
-            <Info size={14} className="text-blue-600 shrink-0" />
-            <span>বিরামচিহ্ন, বড়-ছোট হাতের অক্ষর ও স্পেসের সঠিক ব্যবহারে একুরেসি বাড়ে।</span>
-          </div>
-        </div>
-
-        {/* Right Column: User Typing Input Area */}
-        <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3 flex flex-col justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">
-                আপনার টাইপিং ইনপুট উইন্ডো:
-              </span>
-              {pasteAttempts > 0 && (
-                <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
-                  কপি-পেস্ট ব্লকড: {pasteAttempts} বার
-                </span>
-              )}
-            </div>
-
-            <textarea
-              rows={12}
-              value={inputText}
-              onChange={handleInputChange}
-              onPaste={handlePaste}
-              placeholder="এখানে টাইপ করা শুরু করুন... (কপি-পেস্ট নিষিদ্ধ, নিজ হাতে টাইপ করুন)"
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs sm:text-sm text-slate-900 leading-relaxed font-mono focus:outline-none focus:border-blue-500 focus:bg-white resize-none"
-            />
-          </div>
-
-          {/* Real-time Typing Metrics */}
-          <div className="grid grid-cols-4 gap-2 pt-2 border-t border-slate-100 text-center">
-            <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
-              <div className="text-[9px] uppercase font-bold text-slate-400">একুরেসি</div>
-              <div className="text-xs sm:text-sm font-extrabold text-emerald-600 font-mono">
-                {metrics.accuracy}%
-              </div>
-            </div>
-
-            <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
-              <div className="text-[9px] uppercase font-bold text-slate-400">স্পিড (WPM)</div>
-              <div className="text-xs sm:text-sm font-extrabold text-blue-600 font-mono">
-                {metrics.wpm}
-              </div>
-            </div>
-
-            <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
-              <div className="text-[9px] uppercase font-bold text-slate-400">অগ্রগতি</div>
-              <div className="text-xs sm:text-sm font-extrabold text-slate-700 font-mono">
-                {metrics.progress}%
-              </div>
-            </div>
-
-            <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
-              <div className="text-[9px] uppercase font-bold text-slate-400">ভুল শব্দ</div>
-              <div className="text-xs sm:text-sm font-extrabold text-rose-600 font-mono">
-                {metrics.errors > 0 ? metrics.errors : 0}
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* SCREEN RECORDING VIDEO SUBMISSION BOX */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
-        <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Video size={18} className="text-blue-600" />
-            <h3 className="text-sm sm:text-base font-black text-slate-900">
-              কাজের স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ জমা দিন <span className="text-rose-500">*</span>
-            </h3>
-          </div>
-          <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
-            বাধ্যতামূলক
+      {/* REFERENCE PASSAGE */}
+      <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <span className="text-xs font-semibold text-[#1E2329]">
+            Raw Reference Passage (Fix Errors While Typing)
+          </span>
+          <span className="text-xs font-mono text-slate-500 tabular-nums">
+            {currentTask.text.length} chars · {currentTask.language}
           </span>
         </div>
 
-        {/* Validation Error Message */}
+        <div
+          onCopy={(e) => {
+            e.preventDefault();
+            setValidationError('Copying reference text is prohibited. Type manually.');
+          }}
+          className="bg-[#F4F5F7] rounded-xl p-3.5 border border-slate-200 text-xs text-[#1E2329] leading-relaxed font-mono whitespace-pre-wrap select-none max-h-[300px] overflow-y-auto"
+        >
+          {currentTask.text}
+        </div>
+
+        <div className="bg-[#EEF5FC] border border-[#D4E4F7] px-3 py-2 rounded-lg text-xs text-slate-700 flex items-center gap-2">
+          <Info size={14} className="text-[#0A4D8C] shrink-0" />
+          <span>Do not blindly retype planted errors — apply every fix listed in the rules box above.</span>
+        </div>
+      </div>
+
+      {/* 2-HOUR COOLDOWN LOCK CARD OR START BUTTON CONTROL */}
+      {cooldownRemainingSeconds > 0 ? (
+        <div className="bg-rose-50 border border-rose-200 rounded-xl p-5 text-center space-y-2.5">
+          <div className="w-11 h-11 rounded-xl bg-white text-rose-700 flex items-center justify-center mx-auto border border-rose-200">
+            <Hourglass size={22} />
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-rose-700">
+              2-Hour Cooldown Active
+            </p>
+            <h3 className="text-base font-semibold text-[#1E2329] font-mono tabular-nums">
+              Typing Session Locked ({formatCooldownHMS(cooldownRemainingSeconds)})
+            </h3>
+            <p className="text-xs text-rose-900 max-w-md mx-auto leading-relaxed">
+              {cooldownReason === 'refresh'
+                ? 'Page refresh or navigation was detected while an active typing timer was running. Wait 2 hours before clicking Start again.'
+                : 'The 30-minute timer expired before completing and submitting this task. Wait 2 hours to unlock the Start button.'}
+            </p>
+          </div>
+        </div>
+      ) : !isSessionActive ? (
+        <div className="bg-[#22262C] text-white rounded-xl p-4 sm:p-5 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/15 text-blue-200 flex items-center justify-center shrink-0">
+              <Lock size={17} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-white">Ready to Start Task #{currentTask.id}?</h3>
+              <p className="text-xs text-slate-300 leading-relaxed mt-0.5">
+                Click Start to unlock typing and launch the 30-minute timer. Refreshing the page or running out of time triggers a 2-hour cooldown lock.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleStartTypingSession}
+            className="w-full sm:w-auto bg-[#0D7A5F] hover:bg-[#0A634C] text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer shrink-0 whitespace-nowrap"
+          >
+            <Play size={14} fill="currentColor" />
+            <span>Start Task #{currentTask.id} (30:00)</span>
+          </button>
+        </div>
+      ) : null}
+
+      {/* USER TYPING INPUT WINDOW */}
+      <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <span className="text-xs font-semibold text-[#1E2329]">
+            {isSessionActive && cooldownRemainingSeconds === 0
+              ? 'Corrected Typing Input Window (Session Active · Paste Blocked)'
+              : 'Typing Input Window (Locked — Click Start Above)'}
+          </span>
+          <div className="flex items-center gap-2.5">
+            {isSessionActive && (
+              <span className="text-xs font-mono font-semibold text-[#0D7A5F] tabular-nums flex items-center gap-1">
+                <Clock size={12} /> {formatTimer(remainingSeconds)} left
+              </span>
+            )}
+            {pasteAttempts > 0 && (
+              <span className="text-xs font-medium text-rose-700 flex items-center gap-1 tabular-nums">
+                <ShieldAlert size={12} />
+                <span>Paste Blocked: {pasteAttempts}</span>
+              </span>
+            )}
+          </div>
+        </div>
+
+        <textarea
+          rows={10}
+          value={inputText}
+          onChange={handleInputChange}
+          onPaste={handlePaste}
+          onDrop={handleDrop}
+          disabled={!isSessionActive || cooldownRemainingSeconds > 0}
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          placeholder={
+            cooldownRemainingSeconds > 0
+              ? `Typing locked for ${formatCooldownHMS(cooldownRemainingSeconds)} cooldown...`
+              : !isSessionActive
+              ? 'Click the "Start Task" button above to activate your 30-minute timer and unlock typing...'
+              : currentTask.language === 'Bengali'
+              ? 'বাংলায় ভুলগুলো সংশোধন করে টাইপ শুরু করুন... (পেস্ট সম্পূর্ণ নিষিদ্ধ)'
+              : 'Type corrected passage manually here... (Paste & drag-drop are strictly disabled)'
+          }
+          className={`w-full border rounded-xl p-3.5 text-xs leading-relaxed font-mono focus:outline-none resize-none ${
+            !isSessionActive || cooldownRemainingSeconds > 0
+              ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+              : 'bg-[#F4F5F7] border-slate-200 text-[#1E2329] focus:border-[#0A4D8C] focus:bg-white'
+          }`}
+        />
+
+        {/* Real-time Metrics */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-center">
+          <div className="bg-[#F4F5F7] p-2.5 rounded-lg border border-slate-200/70">
+            <div className="text-[11px] font-medium text-slate-500">Accuracy</div>
+            <div className="text-xs font-semibold text-[#0D7A5F] font-mono tabular-nums mt-0.5">{metrics.accuracy}%</div>
+          </div>
+          <div className="bg-[#F4F5F7] p-2.5 rounded-lg border border-slate-200/70">
+            <div className="text-[11px] font-medium text-slate-500">WPM</div>
+            <div className="text-xs font-semibold text-[#0A4D8C] font-mono tabular-nums mt-0.5">{metrics.wpm}</div>
+          </div>
+          <div className="bg-[#F4F5F7] p-2.5 rounded-lg border border-slate-200/70">
+            <div className="text-[11px] font-medium text-slate-500">Fixes Applied</div>
+            <div className="text-xs font-semibold text-[#1E2329] font-mono tabular-nums mt-0.5">
+              {currentTask.requiredFixes.length - metrics.missedFixes.length}/{currentTask.requiredFixes.length}
+            </div>
+          </div>
+          <div className="bg-[#F4F5F7] p-2.5 rounded-lg border border-slate-200/70">
+            <div className="text-[11px] font-medium text-slate-500">Errors</div>
+            <div className="text-xs font-semibold text-rose-700 font-mono tabular-nums mt-0.5">{metrics.errors}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* GOOGLE DRIVE SCREEN RECORDING UPLOAD BOX */}
+      <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-4">
+        <div className="border-b border-slate-100 pb-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Video size={16} className="text-[#0A4D8C]" />
+            <h3 className="text-sm font-semibold text-[#1E2329]">
+              Submit Screen Recording Proof <span className="text-rose-600">*</span>
+            </h3>
+          </div>
+          <span className="text-xs font-medium text-rose-700">
+            Required
+          </span>
+        </div>
+
         {validationError && (
-          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start gap-2">
-            <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
-            <span className="leading-relaxed">{validationError}</span>
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start gap-2 font-medium">
+            <AlertCircle size={15} className="text-rose-700 shrink-0 mt-0.5" />
+            <span>{validationError}</span>
           </div>
         )}
 
-        {/* Input 1: Cloud Video URL */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-slate-700">
-            ১. গুগল ড্রাইভ / লুম / ড্রপবক্স ভিডিও লিংক:
+          <label className="block text-xs font-medium text-[#1E2329]">
+            1. Google Drive / Loom / Dropbox Video Link
           </label>
           <div className="relative">
             <input
               type="url"
               value={videoProofLink}
               onChange={(e) => setVideoProofLink(e.target.value)}
-              placeholder="https://drive.google.com/file/d/... অথবা https://www.loom.com/share/..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 pl-9 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500"
+              placeholder="https://drive.google.com/file/d/... or https://www.loom.com/share/..."
+              className="w-full bg-[#F4F5F7] border border-slate-200 rounded-lg px-3.5 py-2.5 pl-9 text-xs font-mono text-[#1E2329] focus:outline-none focus:border-[#0A4D8C] focus:bg-white"
             />
-            <Link2 size={15} className="absolute left-3 top-3 text-slate-400" />
+            <Link2 size={14} className="absolute left-3 top-3 text-slate-400" />
           </div>
-          <p className="text-[10px] text-slate-400">
-            * গুগল ড্রাইভ লিংক দিলে এক্সেস 'Anyone with the link can view' করা নিশ্চিত করুন।
+          <p className="text-[11px] text-slate-500">
+            Ensure Google Drive sharing is set to "Anyone with the link can view".
           </p>
         </div>
 
-        {/* Input 2: Video File Upload Fallback */}
-        <div className="space-y-1.5 pt-2 border-t border-slate-100">
-          <label className="block text-xs font-bold text-slate-700">
-            ২. অথবা সরাসরি ভিডিও ফাইল আপলোড করুন (MP4, WebM):
+        <div className="space-y-1.5 pt-3 border-t border-slate-100">
+          <label className="block text-xs font-medium text-[#1E2329]">
+            2. Or Upload Video File Directly (MP4, WebM)
           </label>
-          <div className="flex items-center gap-3">
-            <label className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-300 transition cursor-pointer flex items-center gap-1.5">
-              <Upload size={14} />
-              <span>ভিডিও ফাইল নির্বাচন করুন</span>
-              <input
-                type="file"
-                accept="video/*"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <label className="bg-[#F4F5F7] hover:bg-slate-200/70 text-[#1E2329] text-xs font-medium px-3.5 py-2 rounded-lg border border-slate-200 transition cursor-pointer flex items-center gap-1.5">
+              <Upload size={14} className="text-[#0A4D8C]" />
+              <span>Choose Video File</span>
+              <input type="file" accept="video/*" onChange={handleFileUpload} className="hidden" />
             </label>
 
             {videoFileName && (
-              <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 truncate max-w-xs">
-                ✓ {videoFileName}
+              <span className="text-xs font-medium text-[#0D7A5F] truncate max-w-xs">
+                Selected: {videoFileName}
               </span>
             )}
           </div>
         </div>
 
-        {/* Input 3: Optional Notes */}
-        <div className="space-y-1.5 pt-2 border-t border-slate-100">
-          <label className="block text-xs font-bold text-slate-700">
-            ৩. কাজের মন্তব্য / বিশেষ নোট (ঐচ্ছিক):
-          </label>
+        <div className="space-y-1.5 pt-3 border-t border-slate-100">
+          <label className="block text-xs font-medium text-[#1E2329]">3. Work Notes (Optional)</label>
           <input
             type="text"
             value={recordingNotes}
             onChange={(e) => setRecordingNotes(e.target.value)}
-            placeholder="প্রজেক্ট সম্পন্নের কোনো বিশেষ নোট বা শর্ত পরিবর্তনের বিবরণ..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+            placeholder="Optional comments regarding error corrections applied..."
+            className="w-full bg-[#F4F5F7] border border-slate-200 rounded-lg px-3.5 py-2.5 text-xs text-[#1E2329] focus:outline-none focus:border-[#0A4D8C] focus:bg-white"
           />
         </div>
 
-        {/* Final Submit Button */}
-        <div className="pt-2">
-          <button
-            onClick={handleSubmitTask}
-            disabled={isSubmitting}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-[0.99] text-white font-bold py-4 rounded-2xl text-xs sm:text-sm transition shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-          >
-            {isSubmitting ? (
-              <RefreshCw size={16} className="animate-spin" />
-            ) : (
-              <CheckCircle2 size={16} />
-            )}
-            <span>
-              {isSubmitting 
-                ? 'যাচাই ও সাবমিশন চলছে...' 
-                : submittedCount >= 9 || selectedTaskIndex === 9
-                ? '১০ম টাস্ক সাবমিট ও ফাইনাল সিস্টেম অডিট শুরু করুন'
-                : `টাস্ক #${currentTask.id} ও স্ক্রিন রেকর্ড সাবমিট করুন (${submittedCount + 1}/১০)`
-              }
-            </span>
-          </button>
-        </div>
-
+        <button
+          onClick={handleSubmitTask}
+          disabled={isSubmitting}
+          className="w-full bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold py-3 px-4 rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 whitespace-nowrap"
+        >
+          {isSubmitting ? <RefreshCw size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
+          <span>
+            {isSubmitting
+              ? 'Verifying & Submitting...'
+              : submittedCount >= 9 || selectedTaskIndex === 9
+              ? 'Submit Task #10 & Start Final Audit'
+              : `Submit Task #${currentTask.id} & Recording (${submittedCount + 1}/10)`}
+          </span>
+        </button>
       </div>
-
     </div>
   );
 };

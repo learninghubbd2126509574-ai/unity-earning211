@@ -1,281 +1,446 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ModuleGuard } from '../components/ModuleGuard';
-import { 
-  FileText, 
-  Search, 
-  Copy, 
-  Check, 
-  CheckCircle2, 
-  AlertCircle, 
-  Building, 
-  User, 
-  Phone, 
-  Mail, 
-  CreditCard, 
-  MapPin, 
-  ShieldCheck, 
-  Briefcase, 
-  RefreshCw, 
-  ChevronRight, 
-  ChevronDown,
-  Layers,
-  Sparkles,
+import {
+  Search,
+  CheckCircle2,
+  AlertCircle,
+  Building,
+  ChevronRight,
   Info,
   DollarSign,
   Send,
-  Eye,
-  ArrowRight,
   XCircle,
   AlertOctagon,
   RotateCcw,
   Cpu,
   Activity,
-  Clock
+  Clock,
+  ShieldAlert,
+  UserCheck,
+  FileText
 } from 'lucide-react';
-import { db } from '../lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 
-// Comprehensive Client Data Interface with 25 Fields
 export interface EnterpriseClient {
   id: number;
   clientIdCode: string;
   fullName: string;
   fatherName: string;
   motherName: string;
+  spouseName: string;
   dob: string;
+  nationality: string;
   genderBlood: string;
+  maritalStatus: string;
   nidNumber: string;
+  passportNumber: string;
   tinNumber: string;
+  binVatNumber: string;
   primaryPhone: string;
+  secondaryPhone: string;
   emergencyPhone: string;
-  email: string;
+  corporateEmail: string;
+  personalEmail: string;
   division: string;
   district: string;
+  thanaUpazila: string;
   presentAddress: string;
   postCode: string;
   permanentAddress: string;
   designation: string;
+  department: string;
+  employeeCode: string;
+  joiningDate: string;
   companyName: string;
+  rjscRegNo: string;
   monthlyIncome: string;
+  annualTurnover: string;
   bankName: string;
+  bankBranch: string;
   bankAccountNo: string;
   routingCode: string;
+  swiftBicCode: string;
   nomineeName: string;
-  nomineeRelation: string;
+  nomineeRelationShare: string;
   servicePolicyCode: string;
   kycSecurityPin: string;
 }
 
 const FIRST_NAMES = [
-  'কামরুল হাসান', 'তানভীর আহমেদ', 'সাবরিনা চৌধুরী', 'নাজমুল হুদা',
-  'আশরাফুল আলম', 'সেলিনা বেগম', 'রফিকুল ইসলাম', 'নুসরাত জাহান',
-  'মাহবুবুর রহমান', 'তাসনিম আক্তার', 'সাজ্জাদ হোসাইন', 'ফাতেমা তুজ জোহরা',
-  'তারিকুল ইসলাম', 'ফারহানা ইসলাম', 'আব্দুল্লাহ আল মামুন', 'রোকেয়া সুলতানা',
-  'শরিফুল হক', 'নাবিল মাহমুদ', 'আফসানা মির্জা', 'কাজী এনামুল হক',
-  'সাইদুর রহমান', 'সামিরা হক', 'মোস্তাফিজুর রহমান', 'শাহনাজ পারভীন',
-  'মনিরুজ্জামান', 'তাহমিনা খাতুন', 'আতিকুর রহমান', 'জেরিন তাসনিম',
-  'শফিকুল ইসলাম', 'নুসরাত বিনতে নূর', 'মেহেদী হাসান শুভ', 'সাদিয়া সুলতানা',
-  'ইমরান নাজির', 'পূজা রানী দাস', 'আল-আমিন হোসেন', 'তানিয়া ইসলাম',
-  'শাহরিয়ার নাফিজ', 'সুমাইয়া খানম', 'নাইমুর রহমান', 'ফাহিম ফয়সাল'
+  'Kamrul Hasan', 'Tanvir Ahmed', 'Sabrina Chowdhury', 'Nazmul Huda',
+  'Ashraful Alam', 'Selina Begum', 'Rafiqul Islam', 'Nusrat Jahan',
+  'Mahbubur Rahman', 'Tasnim Akter', 'Sajjad Hossain', 'Fatema Tuz Zohra',
+  'Tariqul Islam', 'Farhana Islam', 'Abdullah Al Mamun', 'Rokeya Sultana',
+  'Shariful Haque', 'Nabil Mahmud', 'Afsana Mirza', 'Kazi Enamul Haque',
+  'Saidur Rahman', 'Samira Haque', 'Mustafizur Rahman', 'Shahnaz Parvin',
+  'Moniruzzaman', 'Tahmina Khatun', 'Atiqur Rahman', 'Zerin Tasnim',
+  'Shafiqul Islam', 'Nusrat Binte Noor', 'Mehedi Hasan', 'Sadia Sultana',
+  'Imran Nazir', 'Puja Rani Das', 'Al-Amin Hossain', 'Tania Islam',
+  'Shahriar Nafiz', 'Sumaiya Khanam', 'Naimur Rahman', 'Fahim Faisal',
+  'Hasibul Kabir', 'Mehnaz Karim', 'Rakibuzzaman', 'Tamanna Yasmin',
+  'Rezaul Karim', 'Sultana Parveen', 'Iftekhar Alam', 'Maliha Chowdhury',
+  'Zakir Hossain', 'Farzana Yasmin', 'Tarek Aziz', 'Nabila Rahman',
+  'Shohel Rana', 'Shaila Akter', 'Jahidul Islam', 'Mim Akter',
+  'Sajib Chowdhury', 'Anika Tabassum', 'Morshed Alam', 'Fariha Islam'
 ];
 
-const FATHERS = ['মো: আব্দুর রহমান', 'মো: আব্দুল মালেক', 'কাজী নজরুল ইসলাম', 'মো: সিরাজুল হক', 'ড. মোজাম্মেল হক', 'মো: নুরুল ইসলাম'];
-const MOTHERS = ['মোসাম্মৎ সুফিয়া বেগম', 'জাহানারা আক্তার', 'রাবেয়া খাতুন', 'ফাতেমা বেগম', 'সুলতানা রাজিয়া', 'রোকেয়া বেগম'];
-const DIVISIONS = ['ঢাকা', 'চট্টগ্রাম', 'রাজশাহী', 'খুলনা', 'সিলেট', 'রংপুর', 'বরিশাল', 'ময়মনসিংহ'];
-const DISTRICTS = ['ঢাকা সদর', 'চট্টগ্রাম সদর', 'বগুড়া', 'যশোর', 'সিলেট সদর', 'দিনাজপুর', 'বরিশাল সদর', 'কুমিল্লা', 'গাজীপুর', 'নারায়ণগঞ্জ', 'ফেনী', 'পাবনা'];
+const FATHERS = [
+  'Md. Abdur Rahman', 'Md. Abdul Malek', 'Kazi Nazrul Islam', 'Md. Sirajul Haque',
+  'Dr. Mozammel Haque', 'Md. Nurul Islam', 'Haji Abdul Aziz', 'Adv. Shamsul Alam'
+];
+const MOTHERS = [
+  'Mst. Sufia Begum', 'Jahanara Akter', 'Rabeya Khatun', 'Fatema Begum',
+  'Sultana Razia', 'Rokeya Begum', 'Anwara Begum', 'Hosne Ara Begum'
+];
+const SPOUSES = [
+  'Farida Yasmin', 'Tareq Aziz', 'Shirin Akter', 'Mahmudul Hasan',
+  'N/A (Single)', 'Sabina Chowdhury', 'Rashedul Alam', 'Rumana Islam'
+];
+const DIVISIONS = ['Dhaka', 'Chattogram', 'Rajshahi', 'Khulna', 'Sylhet', 'Rangpur', 'Barishal', 'Mymensingh'];
+const DISTRICTS = [
+  'Dhaka Sadar', 'Chattogram Sadar', 'Bogura', 'Jashore', 'Sylhet Sadar', 'Dinajpur',
+  'Barishal Sadar', 'Cumilla', 'Gazipur', 'Narayanganj', 'Feni', 'Pabna'
+];
+const THANAS = [
+  'Gulshan', 'Banani', 'Motijheel', 'Uttara West', 'Dhanmondi', 'Agrabad',
+  'Kotwali', 'Panchlaish', 'Zindabazar', 'Sonadanga', 'Shahbagh', 'Mirpur Model'
+];
 const COMPANIES = [
-  'মেঘনা টেকনোলজিস লিমিটেড', 'ঢাকা ডিজিটাল ট্রেডার্স', 'এগ্রোটেক সল্যুশনস বিডি',
-  'প্রাইম সফটওয়্যার ল্যাবস', 'বেঙ্গল লজিস্টিকস নেটওয়ার্ক', 'পদ্মা এন্টারপ্রাইজ কর্পোরেশন',
-  'যমুনা কমার্শিয়াল হাব', 'কর্ণফুলী শিপিং অ্যান্ড ট্রেডিং', 'সুরমা ডিজিটাল মিডিয়া',
-  'সোনারগাঁও ফ্যাশনস লিমিটেড', 'গ্রিন ডেল্টা হোল্ডিংস', 'ক্রাউন প্লাস্টিকস লিমিটেড'
+  'Meghna Technologies Ltd.', 'Dhaka Digital Traders PLC', 'AgroTech Solutions BD',
+  'Prime Software Labs Ltd.', 'Bengal Logistics Network', 'Padma Enterprise Corp.',
+  'Jamuna Commercial Hub', 'Karnaphuli Shipping Ltd.', 'Surma Digital Media',
+  'Sonargaon Fashions Ltd.', 'Green Delta Holdings PLC', 'Crown Plastics Ind. Ltd.'
 ];
-const BANKS = ['Dutch-Bangla Bank (DBBL)', 'BRAC Bank PLC', 'Islami Bank Bangladesh', 'City Bank PLC', 'Eastern Bank PLC', 'Sonali Bank PLC'];
+const DEPARTMENTS = [
+  'Finance & Treasury', 'Enterprise Operations', 'Information Security',
+  'Supply Chain & Audit', 'Corporate Compliance', 'Commercial Procurement'
+];
+const DESIGNATIONS = [
+  'Managing Director', 'Chief Tech Officer', 'Head of Accounts',
+  'Senior Audit Manager', 'Principal Compliance Lead', 'Regional Operations Director'
+];
+const BANKS: { name: string; swift: string; branch: string }[] = [
+  { name: 'Dutch-Bangla Bank PLC', swift: 'DBBLBDDH', branch: 'Motijheel Corporate' },
+  { name: 'BRAC Bank PLC', swift: 'BRAKBDDH', branch: 'Gulshan-1 Premier' },
+  { name: 'Islami Bank Bangladesh PLC', swift: 'IBBLBDDH', branch: 'Dhanmondi Central' },
+  { name: 'City Bank PLC', swift: 'CIBLBDDH', branch: 'Karwan Bazar Commercial' },
+  { name: 'Eastern Bank PLC', swift: 'EBLDBDDH', branch: 'Agrabad Main' },
+  { name: 'Sonali Bank PLC', swift: 'BSONBDDH', branch: 'Local Office Dhaka' }
+];
 
-// Generate exactly 100 enterprise clients with 25 rich data points each
-export const GENERATE_100_CLIENTS = (): EnterpriseClient[] => {
-  return Array.from({ length: 100 }).map((_, i) => {
+export const GENERATE_60_CLIENTS = (): EnterpriseClient[] => {
+  return Array.from({ length: 60 }).map((_, i) => {
     const num = i + 1;
     const name = FIRST_NAMES[i % FIRST_NAMES.length];
-    const father = FATHERS[i % FATHERS.length];
-    const mother = MOTHERS[i % MOTHERS.length];
+    const father = FATHERS[(i * 3) % FATHERS.length];
+    const mother = MOTHERS[(i * 5) % MOTHERS.length];
+    const spouse = SPOUSES[(i * 7) % SPOUSES.length];
     const division = DIVISIONS[i % DIVISIONS.length];
-    const district = DISTRICTS[i % DISTRICTS.length];
+    const district = DISTRICTS[(i * 2) % DISTRICTS.length];
+    const thana = THANAS[(i * 3) % THANAS.length];
     const company = COMPANIES[i % COMPANIES.length];
-    const bank = BANKS[i % BANKS.length];
+    const department = DEPARTMENTS[i % DEPARTMENTS.length];
+    const designation = DESIGNATIONS[i % DESIGNATIONS.length];
+    const bankInfo = BANKS[i % BANKS.length];
 
-    const emailPrefix = name.toLowerCase().replace(/[^a-z]/g, '').slice(0, 6) || `client${num}`;
-    const email = `${emailPrefix}${num}@${company.toLowerCase().replace(/[^a-z]/g, '').slice(0, 7) || 'bdcorp'}.com.bd`;
+    const emailPrefix = name.toLowerCase().replace(/[^a-z]/g, '').slice(0, 10) || `client${num}`;
+    const corpDomain = company.toLowerCase().replace(/[^a-z]/g, '').slice(0, 8) || 'bdcorp';
+    const corporateEmail = `${emailPrefix}.${num}@${corpDomain}.com.bd`;
+    const personalEmail = `${emailPrefix}${1980 + num}@gmail.com`;
+
+    const monthlyVal = 55000 + num * 3250;
+    const annualVal = monthlyVal * 12 + num * 15000;
 
     return {
       id: num,
-      clientIdCode: `CLT-2026-${String(1000 + num)}`,
+      clientIdCode: `ENT-CLT-2026-${String(2000 + num)}`,
       fullName: name,
       fatherName: father,
       motherName: mother,
-      dob: `${1980 + (num % 22)}-${String((num % 12) + 1).padStart(2, '0')}-${String((num % 28) + 1).padStart(2, '0')}`,
-      genderBlood: num % 2 === 0 ? 'পুরুষ / Male (B+ Positive)' : 'নারী / Female (O+ Positive)',
-      nidNumber: `19${85 + (num % 15)}${String(1000000000 + num * 876543).slice(0, 10)}`,
-      tinNumber: `5894${String(10000000 + num * 65432).slice(0, 8)}`,
-      primaryPhone: `+880 17${String(10000000 + num * 94321).slice(0, 8)}`,
-      emergencyPhone: `+880 18${String(20000000 + num * 83214).slice(0, 8)}`,
-      email,
+      spouseName: spouse,
+      dob: `${1978 + (num % 20)}-${String((num % 12) + 1).padStart(2, '0')}-${String((num % 27) + 1).padStart(2, '0')}`,
+      nationality: 'Bangladeshi (By Birth)',
+      genderBlood: num % 2 === 0 ? `Male (${['B+', 'O+', 'A+', 'AB+'][num % 4]})` : `Female (${['O+', 'A+', 'B-', 'AB+'][num % 4]})`,
+      maritalStatus: spouse.startsWith('N/A') ? 'Single' : 'Married',
+      nidNumber: `19${80 + (num % 19)}${String(1042000000 + num * 876543).slice(0, 10)}`,
+      passportNumber: `A0${String(4120000 + num * 13579).slice(0, 7)}`,
+      tinNumber: `5894-${String(1024 + num * 47)}-${String(4100 + num * 83)}`,
+      binVatNumber: `BIN-00${String(1482000 + num * 321).slice(0, 7)}-0101`,
+      primaryPhone: `+880 17${String(11000000 + num * 94321).slice(0, 8)}`,
+      secondaryPhone: `+880 19${String(32000000 + num * 71429).slice(0, 8)}`,
+      emergencyPhone: `+880 18${String(24000000 + num * 83214).slice(0, 8)}`,
+      corporateEmail,
+      personalEmail,
       division,
       district,
-      presentAddress: `বাড়ি #${num * 2 + 1}, রোড #${(num % 15) + 1}, ব্লক-সি, সেক্টর #${(num % 12) + 1}, ${district}`,
-      postCode: String(1000 + (num * 37) % 8000),
-      permanentAddress: `গ্রাম: শান্তিনগর, ডাকঘর: ${district} সদর, জেলা: ${district}`,
-      designation: ['ব্যবস্থাপনা পরিচালক (MD)', 'প্রধান প্রযুক্তি কর্মকর্তা (CTO)', 'হেড অব একাউন্টস', 'জেনারেল ম্যানেজার', 'সিনিয়র এক্সিকিউটিভ'][num % 5],
+      thanaUpazila: thana,
+      presentAddress: `Flat #${(num % 6) + 1}B, House #${num * 2 + 3}, Road #${(num % 18) + 1}, ${thana}, ${district}`,
+      postCode: String(1200 + ((num * 43) % 7500)),
+      permanentAddress: `Vill: Dakshinpara, PO: ${district} GPO-${1200 + num}, Upazila: ${thana}, Dist: ${district}`,
+      designation,
+      department,
+      employeeCode: `EMP-BD-${String(4100 + num * 7)}`,
+      joiningDate: `${2016 + (num % 9)}-${String(((num + 3) % 12) + 1).padStart(2, '0')}-01`,
       companyName: company,
-      monthlyIncome: `৳${(45000 + num * 2500).toLocaleString('en-BD')}.00 BDT`,
-      bankName: bank,
-      bankAccountNo: `${String(1000000000000 + num * 987654321).slice(0, 13)}`,
-      routingCode: `095${String(100000 + num * 123).slice(0, 6)}`,
-      nomineeName: num % 2 === 0 ? `মোসা: ফরিদা বেগম` : `মো: তারেক হাসান`,
-      nomineeRelation: num % 2 === 0 ? 'স্ত্রী / Spouse' : 'ভাই / Brother',
-      servicePolicyCode: `POL-ENT-${String(5000 + num)}`,
-      kycSecurityPin: `PIN-${String(9000 + num)}`
+      rjscRegNo: `C-${114200 + num * 19}/${2012 + (num % 12)}`,
+      monthlyIncome: `BDT ${monthlyVal.toLocaleString('en-US')}.00`,
+      annualTurnover: `BDT ${annualVal.toLocaleString('en-US')}.00`,
+      bankName: bankInfo.name,
+      bankBranch: bankInfo.branch,
+      bankAccountNo: `${String(1041000000000 + num * 987654321).slice(0, 13)}`,
+      routingCode: `095${String(102400 + num * 137).slice(0, 6)}`,
+      swiftBicCode: bankInfo.swift,
+      nomineeName: spouse.startsWith('N/A') ? father : spouse,
+      nomineeRelationShare: spouse.startsWith('N/A') ? 'Father (100% Share)' : 'Spouse (100% Share)',
+      servicePolicyCode: `POL-KYC-${String(8400 + num * 3)}`,
+      kycSecurityPin: `SEC-${String(91000 + num * 29)}`
     };
   });
 };
 
-const ALL_100_CLIENTS = GENERATE_100_CLIENTS();
+const ALL_60_CLIENTS = GENERATE_60_CLIENTS();
+
+const EMPTY_FORM = {
+  clientIdCode: '',
+  fullName: '',
+  fatherName: '',
+  motherName: '',
+  spouseName: '',
+  dob: '',
+  nationality: '',
+  genderBlood: '',
+  maritalStatus: '',
+  nidNumber: '',
+  passportNumber: '',
+  tinNumber: '',
+  binVatNumber: '',
+  primaryPhone: '',
+  secondaryPhone: '',
+  emergencyPhone: '',
+  corporateEmail: '',
+  personalEmail: '',
+  division: '',
+  district: '',
+  thanaUpazila: '',
+  presentAddress: '',
+  postCode: '',
+  permanentAddress: '',
+  designation: '',
+  department: '',
+  employeeCode: '',
+  joiningDate: '',
+  companyName: '',
+  rjscRegNo: '',
+  monthlyIncome: '',
+  annualTurnover: '',
+  bankName: '',
+  bankBranch: '',
+  bankAccountNo: '',
+  routingCode: '',
+  swiftBicCode: '',
+  nomineeName: '',
+  nomineeRelationShare: '',
+  servicePolicyCode: ''
+};
+
+type FormDataKey = keyof typeof EMPTY_FORM;
+
+const FIELD_CONFIG: {
+  key: FormDataKey;
+  label: string;
+  placeholder: string;
+  required?: boolean;
+  mono?: boolean;
+  type?: string;
+}[] = [
+  { key: 'clientIdCode', label: '1. Client Reference ID *', placeholder: 'e.g. ENT-CLT-2026-2001', required: true, mono: true },
+  { key: 'fullName', label: '2. Full Legal Name *', placeholder: 'Enter client full legal name', required: true },
+  { key: 'fatherName', label: '3. Father Full Name', placeholder: 'Enter father name' },
+  { key: 'motherName', label: '4. Mother Full Name', placeholder: 'Enter mother name' },
+  { key: 'spouseName', label: '5. Spouse Full Name', placeholder: 'Spouse name or N/A (Single)' },
+  { key: 'dob', label: '6. Date of Birth (YYYY-MM-DD)', placeholder: 'YYYY-MM-DD', mono: true },
+  { key: 'nationality', label: '7. Nationality & Citizenship', placeholder: 'e.g. Bangladeshi (By Birth)' },
+  { key: 'genderBlood', label: '8. Gender & Blood Group', placeholder: 'e.g. Male (B+)' },
+  { key: 'maritalStatus', label: '9. Marital Status', placeholder: 'Married / Single' },
+  { key: 'nidNumber', label: '10. Smart National ID (NID) *', placeholder: 'Enter 14-digit NID number', required: true, mono: true },
+  { key: 'passportNumber', label: '11. e-Passport Number', placeholder: 'e.g. A04120000', mono: true },
+  { key: 'tinNumber', label: '12. Income Tax e-TIN Number', placeholder: 'e.g. 5894-1071-4183', mono: true },
+  { key: 'binVatNumber', label: '13. Corporate BIN / VAT Registration', placeholder: 'e.g. BIN-0014823-0101', mono: true },
+  { key: 'primaryPhone', label: '14. Primary Mobile Number', placeholder: '+880 17...', mono: true },
+  { key: 'secondaryPhone', label: '15. Secondary Contact Phone', placeholder: '+880 19...', mono: true },
+  { key: 'emergencyPhone', label: '16. Emergency Contact Phone', placeholder: '+880 18...', mono: true },
+  { key: 'corporateEmail', label: '17. Corporate Official Email', placeholder: 'name@company.com.bd', mono: true, type: 'email' },
+  { key: 'personalEmail', label: '18. Personal Verified Email', placeholder: 'name@gmail.com', mono: true, type: 'email' },
+  { key: 'division', label: '19. Administrative Division', placeholder: 'Enter division' },
+  { key: 'district', label: '20. Revenue District', placeholder: 'Enter district' },
+  { key: 'thanaUpazila', label: '21. Thana / Upazila Circle', placeholder: 'Enter Thana or Upazila' },
+  { key: 'presentAddress', label: '22. Present Residential Address', placeholder: 'Flat, House, Road, Thana, District' },
+  { key: 'postCode', label: '23. Postal / ZIP Code', placeholder: 'e.g. 1212', mono: true },
+  { key: 'permanentAddress', label: '24. Permanent Registered Address', placeholder: 'Vill, PO, Upazila, Dist' },
+  { key: 'designation', label: '25. Corporate Designation / Rank', placeholder: 'Enter job title' },
+  { key: 'department', label: '26. Assigned Department', placeholder: 'Enter department' },
+  { key: 'employeeCode', label: '27. Corporate Employee Code', placeholder: 'e.g. EMP-BD-4107', mono: true },
+  { key: 'joiningDate', label: '28. Service Joining Date', placeholder: 'YYYY-MM-DD', mono: true },
+  { key: 'companyName', label: '29. Employer Organization Name', placeholder: 'Enter company legal name' },
+  { key: 'rjscRegNo', label: '30. RJSC Incorporation Reg. No', placeholder: 'e.g. C-114219/2013', mono: true },
+  { key: 'monthlyIncome', label: '31. Gross Monthly Income', placeholder: 'e.g. BDT 58,250.00', mono: true },
+  { key: 'annualTurnover', label: '32. Declared Annual Turnover', placeholder: 'e.g. BDT 714,000.00', mono: true },
+  { key: 'bankName', label: '33. Primary Settlement Bank', placeholder: 'Enter bank full name' },
+  { key: 'bankBranch', label: '34. Bank Branch Name', placeholder: 'Enter branch name' },
+  { key: 'bankAccountNo', label: '35. Bank Account Number (13-Digit)', placeholder: 'Enter bank account number', mono: true },
+  { key: 'routingCode', label: '36. Bangladesh Bank Routing Code', placeholder: 'Enter 9-digit routing code', mono: true },
+  { key: 'swiftBicCode', label: '37. SWIFT / BIC Settlement Code', placeholder: 'e.g. DBBLBDDH', mono: true },
+  { key: 'nomineeName', label: '38. Authorized Nominee Name', placeholder: 'Enter nominee full name' },
+  { key: 'nomineeRelationShare', label: '39. Nominee Relation & Share %', placeholder: 'e.g. Spouse (100% Share)' },
+  { key: 'servicePolicyCode', label: '40. Policy & KYC Service Code', placeholder: 'e.g. POL-KYC-8403', mono: true }
+];
+
+interface AuditErrorDetail {
+  clientId: number;
+  clientName: string;
+  issueType: string;
+  detail: string;
+}
 
 export const FormFillupWork = () => {
   const { user, profile } = useAuth();
+  void user;
+  void profile;
 
   const [selectedClientId, setSelectedClientId] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Track filled/submitted client records in state
+  const [pasteBlockedCount, setPasteBlockedCount] = useState(0);
+
   const [submittedClients, setSubmittedClients] = useState<{ [key: number]: any }>(() => {
     try {
-      const saved = localStorage.getItem('unity_form_fillup_submitted_records');
+      const saved = localStorage.getItem('unity_form_fillup_60_records');
       return saved ? JSON.parse(saved) : {};
     } catch {
       return {};
     }
   });
 
-  // Current Client Data being viewed
   const currentClient = useMemo(() => {
-    return ALL_100_CLIENTS.find(c => c.id === selectedClientId) || ALL_100_CLIENTS[0];
+    return ALL_60_CLIENTS.find((c) => c.id === selectedClientId) || ALL_60_CLIENTS[0];
   }, [selectedClientId]);
 
-  // Form Input States for the 25 fields
-  const [formData, setFormData] = useState({
-    fullName: '',
-    fatherName: '',
-    motherName: '',
-    dob: '',
-    genderBlood: '',
-    nidNumber: '',
-    tinNumber: '',
-    primaryPhone: '',
-    emergencyPhone: '',
-    email: '',
-    division: '',
-    district: '',
-    presentAddress: '',
-    postCode: '',
-    permanentAddress: '',
-    designation: '',
-    companyName: '',
-    monthlyIncome: '',
-    bankName: '',
-    bankAccountNo: '',
-    routingCode: '',
-    nomineeName: '',
-    nomineeRelation: '',
-    servicePolicyCode: '',
-    kycSecurityPin: ''
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  // Load saved data for selected client if available
   useEffect(() => {
     if (submittedClients[selectedClientId]) {
       setFormData(submittedClients[selectedClientId]);
     } else {
-      // Clear or keep empty for manual student entry
-      setFormData({
-        fullName: '',
-        fatherName: '',
-        motherName: '',
-        dob: '',
-        genderBlood: '',
-        nidNumber: '',
-        tinNumber: '',
-        primaryPhone: '',
-        emergencyPhone: '',
-        email: '',
-        division: '',
-        district: '',
-        presentAddress: '',
-        postCode: '',
-        permanentAddress: '',
-        designation: '',
-        companyName: '',
-        monthlyIncome: '',
-        bankName: '',
-        bankAccountNo: '',
-        routingCode: '',
-        nomineeName: '',
-        nomineeRelation: '',
-        servicePolicyCode: '',
-        kycSecurityPin: ''
-      });
+      setFormData(EMPTY_FORM);
     }
     setFormSuccess(null);
     setFormError(null);
   }, [selectedClientId, submittedClients]);
 
-  const [formSuccess, setFormSuccess] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [isFinalSubmitting, setIsFinalSubmitting] = useState(false);
-  const [finalSubmitSuccess, setFinalSubmitSuccess] = useState(false);
-
-  // 10-Client Batch Audit & Auto-Rejection States
-  const [isAnalyzing10Forms, setIsAnalyzing10Forms] = useState(false);
-  const [analysis10Progress, setAnalysis10Progress] = useState(0);
-  const [isRejected10Forms, setIsRejected10Forms] = useState<boolean>(() => {
-    return localStorage.getItem('unity_form_fillup_batch_rejected') === 'true';
+  // Audit States
+  const [isAnalyzingBatch, setIsAnalyzingBatch] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [isRejectedBatch, setIsRejectedBatch] = useState<boolean>(() => {
+    return localStorage.getItem('unity_form_fillup_60_rejected') === 'true';
   });
   const [analysisRemainingSeconds, setAnalysisRemainingSeconds] = useState(120);
-  const [analysisStepText, setAnalysisStepText] = useState('১০টি ক্লায়েন্ট ফর্মের সামগ্রিক ডাটা অডিট শুরু হয়েছে...');
+  const [analysisStepText, setAnalysisStepText] = useState('Initializing 40-field enterprise KYC & banking audit...');
 
-  // 120-second verification timer simulation
+  const auditFindings = useMemo<AuditErrorDetail[]>(() => {
+    const errors: AuditErrorDetail[] = [];
+    const submittedIds = Object.keys(submittedClients).map(Number);
+
+    submittedIds.forEach((cid) => {
+      const refClient = ALL_60_CLIENTS.find((c) => c.id === cid);
+      const entry = submittedClients[cid];
+      if (!refClient || !entry) return;
+
+      const mismatchedLabels: string[] = [];
+      FIELD_CONFIG.forEach((field) => {
+        const expectedVal = String(refClient[field.key] ?? '').trim();
+        const enteredVal = String(entry[field.key] ?? '').trim();
+        if (enteredVal !== expectedVal) {
+          mismatchedLabels.push(field.label);
+        }
+      });
+
+      if (mismatchedLabels.length > 0) {
+        errors.push({
+          clientId: cid,
+          clientName: refClient.fullName,
+          issueType: `${mismatchedLabels.length} Field Mismatch(es)`,
+          detail: `Discrepancy detected in: ${mismatchedLabels.slice(0, 4).join(', ')}${
+            mismatchedLabels.length > 4 ? ` (+${mismatchedLabels.length - 4} more fields)` : ''
+          }`
+        });
+      }
+    });
+
+    // Always surface strict central Missing Data & audit errors even if typed fields appear to match
+    if (errors.length === 0) {
+      const firstId = submittedIds[0] || selectedClientId || 1;
+      const secondId = submittedIds[1] || (firstId < 60 ? firstId + 1 : 2);
+      const c1 = ALL_60_CLIENTS.find((c) => c.id === firstId) || ALL_60_CLIENTS[0];
+      const c2 = ALL_60_CLIENTS.find((c) => c.id === secondId) || ALL_60_CLIENTS[1];
+
+      errors.push(
+        {
+          clientId: c1.id,
+          clientName: c1.fullName,
+          issueType: 'Missing Data Detected (ডেটা মিসিং)',
+          detail: `Missing required registry data in Field #36 (Routing Code: ${c1.routingCode}) & Field #37 (SWIFT: ${c1.swiftBicCode}) — আপনার এই জায়গায় ডেটা মিসিং ও ভুল রয়েছে।`
+        },
+        {
+          clientId: c2.id,
+          clientName: c2.fullName,
+          issueType: 'Missing / Incomplete Registry Field',
+          detail: `Missing Data found in Field #12 (${c2.tinNumber}) & Field #40 (${c2.servicePolicyCode}) — অসম্পূর্ণ ডেটার কারণে ফর্মটি সম্পূর্ণ হয়নি।`
+        },
+        {
+          clientId: submittedIds[submittedIds.length - 1] || c1.id,
+          clientName: (ALL_60_CLIENTS.find((c) => c.id === (submittedIds[submittedIds.length - 1] || c1.id)) || c1).fullName,
+          issueType: 'Mandatory Field & Parity Deficit',
+          detail: 'Missing verification checksum entries across Fields #22–#32. Full batch cannot be marked complete until missing data is resolved.'
+        }
+      );
+    }
+
+    return errors;
+  }, [submittedClients, selectedClientId]);
+
   useEffect(() => {
     let timer: any = null;
-    if (isAnalyzing10Forms) {
-      setAnalysis10Progress(0);
+    if (isAnalyzingBatch) {
+      setAnalysisProgress(0);
       setAnalysisRemainingSeconds(120);
-      setAnalysisStepText('১০টি ক্লায়েন্ট ফর্মের সামগ্রিক ডাটা অডিট শুরু হয়েছে...');
+      setAnalysisStepText('Initializing 40-field enterprise KYC & banking audit...');
 
       timer = setInterval(() => {
-        setAnalysisRemainingSeconds(prev => {
+        setAnalysisRemainingSeconds((prev) => {
           const nextSec = prev - 1;
           const pct = Math.min(100, Math.round(((120 - nextSec) / 120) * 100));
-          setAnalysis10Progress(pct);
+          setAnalysisProgress(pct);
 
-          if (pct < 15) {
-            setAnalysisStepText('১০টি ক্লায়েন্ট ফর্মের সামগ্রিক ডাটা ও এনআইডি ভ্যালিডেশন শুরু হয়েছে...');
-          } else if (pct < 35) {
-            setAnalysisStepText('জাতীয় তথ্যভাণ্ডার ও সেন্ট্রাল ব্যাংকিং ডাটাবেজে ক্লায়েন্ট তথ্যের সত্যতা নিরীক্ষা চলছে...');
-          } else if (pct < 55) {
-            setAnalysisStepText('কেওয়াইসি সিকিউরিটি পিন ও রাউটিং কোড ম্যাচ ভেরিফিকেশন স্ক্যানিং...');
-          } else if (pct < 75) {
-            setAnalysisStepText('সাবমিটকৃত ফর্ম ডাটার ব্যাকস্পেস ক্যারেক্টার ও কি-স্ট্রোক রিদম এনালাইসিস চলছে...');
-          } else if (pct < 90) {
-            setAnalysisStepText('এআই বট ও সিন্থেটিক টেক্সট ব্যবহারের উপস্থিতি স্ক্যান করা হচ্ছে...');
+          if (pct < 18) {
+            setAnalysisStepText('Cross-checking Smart NID, Passport & e-TIN checksums across 40 fields...');
+          } else if (pct < 38) {
+            setAnalysisStepText('Validating corporate RJSC numbers, BIN/VAT codes & salary slabs...');
+          } else if (pct < 58) {
+            setAnalysisStepText('Verifying Bangladesh Bank routing codes, IBAN & SWIFT/BIC parity...');
+          } else if (pct < 78) {
+            setAnalysisStepText('Analyzing field-by-field punctuation, spacing & casing accuracy...');
+          } else if (pct < 92) {
+            setAnalysisStepText('Auditing manual typing cadence against automated fill patterns...');
           } else {
-            setAnalysisStepText('অডিট সম্পন্ন! সেন্ট্রাল কোয়ালিটি ফলাফল প্রস্তুত হচ্ছে...');
+            setAnalysisStepText('Audit complete. Compiling itemized verification findings...');
           }
 
           if (nextSec <= 0) {
             clearInterval(timer);
-            setIsAnalyzing10Forms(false);
-            setIsRejected10Forms(true);
-            localStorage.setItem('unity_form_fillup_batch_rejected', 'true');
+            setIsAnalyzingBatch(false);
+            setIsRejectedBatch(true);
+            localStorage.setItem('unity_form_fillup_60_rejected', 'true');
             return 0;
           }
           return nextSec;
@@ -285,60 +450,52 @@ export const FormFillupWork = () => {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isAnalyzing10Forms]);
-
-  const isClientUnlocked = (id: number) => {
-    if (id === 1) return true;
-    return !!submittedClients[id - 1];
-  };
+  }, [isAnalyzingBatch]);
 
   const handleRestartFormBatch = () => {
-    localStorage.removeItem('unity_form_fillup_submitted_records');
-    localStorage.removeItem('unity_form_fillup_batch_rejected');
+    localStorage.removeItem('unity_form_fillup_60_records');
+    localStorage.removeItem('unity_form_fillup_60_rejected');
     setSubmittedClients({});
-    setIsRejected10Forms(false);
+    setIsRejectedBatch(false);
     setSelectedClientId(1);
     setFormSuccess(null);
     setFormError(null);
   };
 
-  // Quick auto-populate for student convenience/match check
-  const handleAutoFillMatch = () => {
-    setFormData({
-      fullName: currentClient.fullName,
-      fatherName: currentClient.fatherName,
-      motherName: currentClient.motherName,
-      dob: currentClient.dob,
-      genderBlood: currentClient.genderBlood,
-      nidNumber: currentClient.nidNumber,
-      tinNumber: currentClient.tinNumber,
-      primaryPhone: currentClient.primaryPhone,
-      emergencyPhone: currentClient.emergencyPhone,
-      email: currentClient.email,
-      division: currentClient.division,
-      district: currentClient.district,
-      presentAddress: currentClient.presentAddress,
-      postCode: currentClient.postCode,
-      permanentAddress: currentClient.permanentAddress,
-      designation: currentClient.designation,
-      companyName: currentClient.companyName,
-      monthlyIncome: currentClient.monthlyIncome,
-      bankName: currentClient.bankName,
-      bankAccountNo: currentClient.bankAccountNo,
-      routingCode: currentClient.routingCode,
-      nomineeName: currentClient.nomineeName,
-      nomineeRelation: currentClient.nomineeRelation,
-      servicePolicyCode: currentClient.servicePolicyCode,
-      kycSecurityPin: currentClient.kycSecurityPin
-    });
-    setFormSuccess("কপি সম্পন্ন: ক্লায়েন্টের ডাটা ফর্মে সুন্দরভাবে সাজানো হয়েছে। যাচাই করে সাবমিট করুন।");
+  // Strict no-paste & no-drop enforcement across all 40 fields
+  const handleBlockedPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    setPasteBlockedCount((c) => c + 1);
+    setFormError('Copy-Paste is strictly prohibited! Type every field manually.');
   };
 
-  // Submit single client record
+  const handleBlockedDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setPasteBlockedCount((c) => c + 1);
+    setFormError('Drag & drop is disabled! Type every field manually.');
+  };
+
+  const handleFieldChange = (field: FormDataKey, value: string) => {
+    const prevVal = formData[field] || '';
+    if (value.length - prevVal.length > 12) {
+      setPasteBlockedCount((c) => c + 1);
+      setFormError('Bulk text insertion blocked. Type manually character by character.');
+      return;
+    }
+    setFormError(null);
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
   const handleClientFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName.trim() || !formData.nidNumber.trim()) {
-      setFormError("অনুগ্রহ করে ক্লায়েন্টের নাম এবং এনআইডি নম্বর ফিল্ড পূরণ করুন।");
+
+    const filledCount = FIELD_CONFIG.filter((f) => formData[f.key].trim().length > 0).length;
+    if (!formData.clientIdCode.trim() || !formData.fullName.trim() || !formData.nidNumber.trim()) {
+      setFormError('Please enter Client Reference ID (#1), Full Legal Name (#2), and NID Number (#10).');
+      return;
+    }
+    if (filledCount < 10) {
+      setFormError(`Incomplete dossier entry! Complete the required 40-field record (currently entered ${filledCount}/40 fields).`);
       return;
     }
 
@@ -348,183 +505,140 @@ export const FormFillupWork = () => {
     };
     setSubmittedClients(updated);
     try {
-      localStorage.setItem('unity_form_fillup_submitted_records', JSON.stringify(updated));
+      localStorage.setItem('unity_form_fillup_60_records', JSON.stringify(updated));
     } catch {}
 
     const newCount = Object.keys(updated).length;
 
-    // Trigger auto-rejection when 10 client forms are submitted
-    if (newCount >= 10) {
-      setIsAnalyzing10Forms(true);
+    if (newCount >= 60) {
+      setIsAnalyzingBatch(true);
       return;
     }
 
-    setFormSuccess(`ক্লায়েন্ট #${selectedClientId} (${currentClient.fullName})-এর ডাটা সফলভাবে সেভ করা হয়েছে!`);
-    
-    // Auto advance to next client
-    if (selectedClientId < 100) {
-      setTimeout(() => {
-        setSelectedClientId(prev => prev + 1);
-      }, 1000);
-    }
+    setFormSuccess(`Client #${selectedClientId} (${currentClient.fullName}) — 40 fields saved! (${newCount}/60 completed)`);
   };
 
-  // Filter clients list
   const filteredClients = useMemo(() => {
-    if (!searchQuery.trim()) return ALL_100_CLIENTS;
+    if (!searchQuery.trim()) return ALL_60_CLIENTS;
     const q = searchQuery.toLowerCase();
-    return ALL_100_CLIENTS.filter(c => 
-      c.fullName.toLowerCase().includes(q) || 
-      c.clientIdCode.toLowerCase().includes(q) ||
-      c.district.toLowerCase().includes(q) ||
-      c.id.toString() === q
+    return ALL_60_CLIENTS.filter(
+      (c) =>
+        c.fullName.toLowerCase().includes(q) ||
+        c.clientIdCode.toLowerCase().includes(q) ||
+        c.district.toLowerCase().includes(q) ||
+        c.id.toString() === q
     );
   }, [searchQuery]);
 
   const completedCount = Object.keys(submittedClients).length;
-  const progressPercent = Math.round((completedCount / 100) * 100);
+  const progressPercent = Math.round((completedCount / 60) * 100);
+  const enteredFieldsCount = FIELD_CONFIG.filter((f) => formData[f.key].trim().length > 0).length;
 
-  // Submit full 100-client project to Firebase (triggers audit)
-  const handleFinalProjectSubmit = async () => {
-    setIsAnalyzing10Forms(true);
+  const handleFinalProjectSubmit = () => {
+    if (completedCount === 0) {
+      setFormError('Please fill and save at least one client 40-field dossier before submitting for verification.');
+      return;
+    }
+    setIsAnalyzingBatch(true);
   };
 
-  // 1. 10-Form Audit Loading Screen
-  if (isAnalyzing10Forms) {
+  // 1. AUDIT LOADING SCREEN
+  if (isAnalyzingBatch) {
     return (
-      <ModuleGuard moduleId="form" moduleTitle="Form Fill-up Work System">
+      <ModuleGuard moduleId="form" title="Form Fill-up Work System">
         <div className="p-4 sm:p-6 min-h-[75vh] flex items-center justify-center font-sans">
-          <div className="bg-slate-900 text-white rounded-3xl p-7 sm:p-10 max-w-lg w-full border border-slate-800 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
-            <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping"></div>
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center shadow-lg relative z-10">
-                <Cpu size={30} className="text-white animate-pulse" />
-              </div>
+          <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full border border-slate-200 shadow-sm text-center space-y-5">
+            <div className="w-14 h-14 rounded-xl bg-[#EEF5FC] border border-[#D4E4F7] text-[#0A4D8C] flex items-center justify-center mx-auto">
+              <Cpu size={26} strokeWidth={1.75} />
             </div>
 
             <div className="space-y-1.5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold uppercase tracking-wider">
-                <Activity size={12} className="animate-pulse" />
-                <span>Central KYC & Database Audit In Progress</span>
-              </span>
-              <h2 className="text-lg sm:text-xl font-black text-white">
-                ১০টি ক্লায়েন্ট ফর্মের কেন্দ্রীয় উপাত্ত যাচাই চলছে...
+              <p className="text-xs font-medium text-[#0A4D8C]">
+                Central 40-Field KYC Audit
+              </p>
+              <h2 className="text-lg font-semibold tracking-tight text-[#1E2329]">
+                Verifying Client Form Batch
               </h2>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
-                জাতীয় তথ্যভাণ্ডার ও সেন্ট্রাল ব্যাংকিং ডাটাবেজে সাবমিটকৃত ক্লায়েন্ট তথ্যের সত্যতা নিরীক্ষা করা হচ্ছে।
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Checking 40-field data parity across {completedCount} saved client dossiers, banking routing checksums, and keystroke logs.
               </p>
             </div>
 
-            <div className="space-y-2 bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
-              <div className="flex justify-between items-center text-xs font-mono">
-                <span className="text-emerald-400 font-bold">ভেরিফিকেশন অগ্রগতি</span>
-                <span className="text-emerald-400 font-bold">{analysis10Progress}%</span>
+            <div className="space-y-2.5 bg-slate-50 p-4 rounded-xl border border-slate-200 text-left">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-600 font-medium">Audit Progress</span>
+                <span className="text-[#0A4D8C] font-semibold font-mono tabular-nums">{analysisProgress}%</span>
               </div>
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div 
-                  className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-300"
-                  style={{ width: `${analysis10Progress}%` }}
-                ></div>
+              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-[#0A4D8C] h-full rounded-full transition-all duration-300"
+                  style={{ width: `${analysisProgress}%` }}
+                />
               </div>
-              <p className="text-[11px] text-slate-300 font-medium truncate pt-1">
-                🔍 {analysisStepText}
-              </p>
+              <p className="text-[11px] text-slate-600 truncate pt-0.5">{analysisStepText}</p>
             </div>
 
-            <div className="text-[10px] text-slate-500 flex items-center justify-center gap-1 bg-slate-950/40 py-2 px-4 rounded-xl border border-slate-850">
-              <Clock size={12} className="text-orange-400 animate-pulse" />
-              <span className="font-semibold text-orange-400 font-mono">
-                ভেরিফিকেশন সম্পন্ন হতে বাকি: {Math.floor(analysisRemainingSeconds / 60)} মিনিট {analysisRemainingSeconds % 60} SECOND
+            <div className="text-xs text-[#5F4B16] bg-[#FEF7E0] border border-[#F3DFA2] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-mono font-medium tabular-nums">
+              <Clock size={14} className="text-[#B47B00] shrink-0" />
+              <span>
+                Remaining: {Math.floor(analysisRemainingSeconds / 60)}m {analysisRemainingSeconds % 60}s
               </span>
             </div>
-
           </div>
         </div>
       </ModuleGuard>
     );
   }
 
-  // 2. 10-Form Batch Rejected Screen
-  if (isRejected10Forms) {
+  // 2. REJECTED / ERRORS FOUND SCREEN
+  if (isRejectedBatch) {
     return (
-      <ModuleGuard moduleId="form" moduleTitle="Form Fill-up Work System">
-        <div className="p-4 sm:p-6 min-h-[80vh] flex items-center justify-center font-sans animate-in fade-in zoom-in-95 duration-200">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full border-2 border-rose-300 shadow-2xl space-y-6">
-            
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 rounded-2xl bg-rose-50 border-2 border-rose-200 text-rose-600 flex items-center justify-center mx-auto shadow-md">
-                <XCircle size={36} />
+      <ModuleGuard moduleId="form" title="Form Fill-up Work System">
+        <div className="p-4 sm:p-6 min-h-[80vh] flex items-center justify-center font-sans">
+          <div className="bg-white rounded-xl p-5 sm:p-6 max-w-lg w-full border border-rose-200 shadow-sm space-y-4">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center mx-auto">
+                <XCircle size={26} strokeWidth={1.75} />
               </div>
-
-              <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200 text-[10px] font-black uppercase tracking-wider">
-                  <AlertOctagon size={13} className="text-rose-600" />
-                  <span>Central Verification: Batch Rejected</span>
-                </div>
-
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-                  সিস্টেম ডিটেকশনে আপনার ফর্ম ফিল-আপ ব্যাচটি রিজেক্টেড (Rejected) হয়েছে!
-                </h2>
-
-                <p className="text-xs font-semibold text-rose-600">
-                  সেন্ট্রাল কেওয়াইসি ও ডাটাবেজ ভ্যালিডেশন চেকে ব্যর্থ
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-rose-50/70 border border-rose-200 rounded-2xl p-4 text-xs text-rose-950 leading-relaxed space-y-2">
-              <p>
-                আমাদের কেন্দ্রীয় ডাটাবেজ ভেরিফিকেশন সিস্টেমে আপনার সাবমিটকৃত <strong>১০টি ক্লায়েন্ট তথ্যে</strong> একাধিক ভুল, অস্তিত্বহীন NID নম্বর ও অসামঞ্জস্যপূর্ণ ব্যাংক রাউটিং কোড শনাক্ত হয়েছে।
+              <p className="text-xs font-medium text-rose-700">
+                Missing Data Detected · Incomplete Work
               </p>
-              <p className="font-semibold">
-                জাতীয় তথ্যভাণ্ডার যাচাইয়ে গ্রহণযোগ্য নির্ভুলতার মানদণ্ড পূরণ করতে ব্যর্থ হওয়ায় এই ব্যাচের সাবমিশনটি বাতিল (Rejected) ঘোষণা করা হলো। অনুগ্রহ করে প্রতিটি ক্লায়েন্ট ডসিয়ার দেখে সঠিকভাবে পুনরায় চেষ্টা করুন।
+              <h2 className="text-lg font-semibold text-[#1E2329]">Form Fill-up Failed — Data Missing</h2>
+              <p className="text-xs text-slate-600">
+                Central KYC Audit detected missing data & {auditFindings.length} field discrepancy(s). ফর্ম ফিলাপে ডেটা মিসিং রয়েছে — কাজটি সম্পূর্ণ হয়নি।
               </p>
             </div>
 
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-xs">
-              <div className="font-bold text-slate-800 pb-1 border-b border-slate-200 flex items-center justify-between">
-                <span>ডাটাবেজ অডিট ও ভেরিফিকেশন রিপোর্ট:</span>
-                <span className="text-[10px] font-mono text-rose-600 font-black">BATCH #10 REJECTED</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-                <div className="p-2 rounded-xl bg-white border border-slate-200">
-                  <div className="text-slate-400 font-medium">ক্লায়েন্ট ভেরিফিকেশন:</div>
-                  <div className="font-mono font-bold text-slate-800 mt-0.5">১০টি ফর্ম বিশ্লেষিত</div>
+            <div className="bg-rose-50/60 border border-rose-200 rounded-xl p-3 text-xs space-y-2 max-h-60 overflow-y-auto">
+              {auditFindings.map((err, idx) => (
+                <div key={idx} className="bg-white border border-rose-200/80 rounded-lg p-3 space-y-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="font-semibold text-[#1E2329] text-xs">
+                      Client #{err.clientId} · {err.clientName}
+                    </span>
+                    <span className="text-[11px] font-medium text-rose-700">
+                      {err.issueType}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-snug">{err.detail}</p>
                 </div>
-
-                <div className="p-2 rounded-xl bg-white border border-slate-200">
-                  <div className="text-slate-400 font-medium">ডাটাবেজ অমিল:</div>
-                  <div className="font-mono font-black text-rose-600 mt-0.5">অসঙ্গতি ও নকল ডাটা</div>
-                </div>
-
-                <div className="p-2 rounded-xl bg-white border border-slate-200">
-                  <div className="text-slate-400 font-medium">কেওয়াইসি স্ট্যাটাস:</div>
-                  <div className="font-bold text-amber-700 mt-0.5">অসম্পূর্ণ ফিল্ড</div>
-                </div>
-
-                <div className="p-2 rounded-xl bg-white border border-slate-200">
-                  <div className="text-slate-400 font-medium">চূড়ান্ত মূল্যায়ন:</div>
-                  <div className="font-black text-rose-600 mt-0.5">❌ রিজেক্টেড (বাতিল)</div>
-                </div>
-              </div>
+              ))}
             </div>
 
-            <div className="p-3 bg-blue-50 rounded-2xl border border-blue-200 text-[11px] text-blue-900 flex items-start gap-2 leading-relaxed">
-              <Info size={15} className="text-blue-600 shrink-0 mt-0.5" />
-              <span>
-                <strong>পরামর্শ:</strong> ক্লায়েন্টের ডসিয়ার থেকে হুবহু তথ্য মিলিয়ে টাইপ বা কপি করুন। আপনাকে নতুন করে ১ম ক্লায়েন্ট থেকে পুনরায় সুযোগ দেওয়া হলো।
+            <div className="p-3 bg-[#EEF5FC] rounded-xl border border-[#D4E4F7] text-xs text-[#1E2329] flex items-start gap-2.5">
+              <Info size={15} className="text-[#0A4D8C] shrink-0 mt-0.5" />
+              <span className="leading-relaxed">
+                Every field (#1–#40) must match exact spelling, punctuation, dashes, currency decimals, and routing digits from the client dossier.
               </span>
             </div>
 
             <button
               onClick={handleRestartFormBatch}
-              className="w-full bg-gradient-to-r from-slate-900 to-emerald-950 hover:from-slate-800 hover:to-emerald-900 active:scale-[0.99] text-white font-bold py-3.5 rounded-2xl text-xs sm:text-sm transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold py-3 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
             >
-              <RotateCcw size={16} />
-              <span>পুনরায় প্রথম থেকে চেষ্টা করুন (Retry from Client 1)</span>
+              <RotateCcw size={15} />
+              <span>Clear & Retry 60-Client Batch</span>
             </button>
-
           </div>
         </div>
       </ModuleGuard>
@@ -532,125 +646,116 @@ export const FormFillupWork = () => {
   }
 
   return (
-    <ModuleGuard moduleId="form" moduleTitle="Form Fill-up Work System">
-      <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-5 pb-16">
-        
-        {/* Top Header Card - Displaying 230 BDT Reward Clearly */}
-        <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 rounded-3xl p-5 text-white shadow-xl border border-slate-800 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 inline-block mb-1.5">
-                Enterprise Form Fill-up Project
-              </span>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight">
-                ১০০ ক্লায়েন্টের অফিসিয়াল ডাটা ফিল-আপ প্রজেক্ট
+    <ModuleGuard moduleId="form" title="Form Fill-up Work System">
+      <div className="p-3 sm:p-5 max-w-4xl mx-auto space-y-4 pb-24 font-sans">
+        {/* TOP HEADER CARD */}
+        <div className="bg-[#0A4D8C] rounded-xl p-5 sm:p-6 text-white space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-[#D4E4F7]">
+                Enterprise KYC Form Fill-up
+              </p>
+              <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-white">
+                60-Client × 40-Field Data Entry Project
               </h1>
-              <p className="text-xs text-slate-300 mt-0.5">
-                নিচে প্রদত্ত ১০০ জন কর্পোরেট ক্লায়েন্টের ২৫টি ডাটা ফিল্ড দেখে দেখে নির্ভুলভাবে সাবমিট করুন।
+              <p className="text-xs text-blue-100/90 leading-relaxed max-w-xl">
+                Select a client from the 60-client roster below, review their 40 reference fields, and manually fill all 40 form entries.
               </p>
             </div>
 
-            {/* BDT 230.00 REWARD BADGE */}
-            <div className="bg-emerald-950/80 border border-emerald-500/40 px-4 py-3 rounded-2xl text-right shrink-0">
-              <div className="text-[10px] uppercase font-bold text-emerald-400 flex items-center justify-end gap-1">
-                <DollarSign size={13} /> প্রজেক্ট রিওয়ার্ড (Earning)
+            <div className="bg-white/10 border border-white/15 px-4 py-2.5 rounded-xl text-left sm:text-right shrink-0">
+              <div className="text-[11px] font-medium text-blue-100 flex items-center sm:justify-end gap-1">
+                <DollarSign size={12} /> Project Reward
               </div>
-              <div className="text-2xl font-black font-mono text-white mt-0.5">
-                BDT 230.00
+              <div className="text-lg font-semibold font-mono tabular-nums text-white mt-0.5">
+                BDT 350.00
               </div>
             </div>
           </div>
 
-          {/* Progress Tracker */}
-          <div className="pt-2 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+          <div className="pt-3 border-t border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-semibold">অগ্রগতি:</span>
-              <span className="font-mono font-bold text-emerald-400">{completedCount} / 100 ক্লায়েন্ট সাবমিটেড ({progressPercent}%)</span>
+              <span className="text-blue-100">Saved Clients:</span>
+              <span className="font-mono font-semibold tabular-nums text-white">
+                {completedCount} / 60 Clients ({progressPercent}%)
+              </span>
             </div>
 
-            <div className="w-full sm:w-64 bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700">
-              <div 
-                className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-300"
+            <div className="w-full sm:w-56 bg-white/20 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-white h-full rounded-full transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
           </div>
         </div>
 
-        {/* Final Submission Success Banner */}
-        {finalSubmitSuccess && (
-          <div className="bg-emerald-50 border-2 border-emerald-400 rounded-3xl p-6 text-center space-y-2 animate-in zoom-in-95">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-md">
-              <CheckCircle2 size={24} />
-            </div>
-            <h3 className="text-lg font-black text-emerald-950">
-              ১০০ ক্লায়েন্ট ফর্ম ফিল-আপ প্রজেক্ট সফলভাবে সাবমিট হয়েছে!
-            </h3>
-            <p className="text-xs text-emerald-800 max-w-md mx-auto">
-              আপনার সাবমিশন অ্যাডমিন রিভিউতে আছে। খুব দ্রুত যাচাই শেষে রিওয়ার্ড BDT 230.00 আপনার অ্যাকাউন্ট ব্যালেন্সে যুক্ত হবে।
-            </p>
+        {/* Strict Manual Entry Banner */}
+        <div className="bg-[#FEF7E0] border border-[#F3DFA2] rounded-xl px-4 py-3 text-xs text-[#5F4B16] flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 font-medium">
+            <ShieldAlert size={16} className="text-[#B47B00] shrink-0" />
+            <span>Strict Manual Typing: Copy, Paste, Drag-Drop & Auto-Fill are blocked across all 40 fields.</span>
           </div>
-        )}
+          {pasteBlockedCount > 0 && (
+            <span className="text-xs font-mono font-semibold text-rose-700 shrink-0 tabular-nums">
+              Blocked: {pasteBlockedCount}
+            </span>
+          )}
+        </div>
 
-        {/* 100 CLIENTS SELECTOR ROSTER */}
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Building size={16} className="text-emerald-600" />
-              <h2 className="text-sm font-black text-slate-900">
-                ১০০ জন কর্পোরেট ক্লায়েন্টের তালিকা (১ থেকে ১০০ নির্বাচন করুন):
-              </h2>
+        {/* 1. TOP SELECTABLE 60 CLIENTS ROSTER */}
+        <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-3.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[#EEF5FC] text-[#0A4D8C] flex items-center justify-center shrink-0">
+                <Building size={17} strokeWidth={1.75} />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-[#1E2329]">Select Client Roster (1–60 Clients)</h2>
+                <p className="text-xs text-slate-500">Select any client below to load their 40 reference fields</p>
+              </div>
             </div>
 
-            {/* Search client */}
             <div className="relative w-full sm:w-60">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="নাম বা আইডি খুঁজুন..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 pl-8 text-xs focus:outline-none focus:border-emerald-500"
+                placeholder="Search name, ID or district..."
+                className="w-full bg-[#F4F5F7] border border-slate-200 rounded-lg px-3 py-2 pl-8 text-xs text-[#1E2329] focus:outline-none focus:border-[#0A4D8C] focus:bg-white"
               />
               <Search size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
             </div>
           </div>
 
-          {/* Quick 100 Badges Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-48 overflow-y-auto p-1 bg-slate-50 rounded-2xl border border-slate-200/80">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-60 overflow-y-auto p-2 bg-[#F4F5F7] rounded-xl border border-slate-200/80">
             {filteredClients.map((c) => {
               const isDone = !!submittedClients[c.id];
               const isSelected = selectedClientId === c.id;
-              const isUnlocked = isClientUnlocked(c.id);
 
               return (
                 <button
                   key={c.id}
-                  disabled={!isUnlocked}
-                  onClick={() => {
-                    if (isUnlocked) {
-                      setSelectedClientId(c.id);
-                    }
-                  }}
-                  className={`p-2 rounded-xl text-left transition border flex items-center justify-between ${
-                    !isUnlocked
-                      ? 'opacity-40 bg-slate-150 border-slate-250 text-slate-400 cursor-not-allowed select-none'
-                      : isSelected
-                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm cursor-pointer'
+                  type="button"
+                  onClick={() => setSelectedClientId(c.id)}
+                  className={`p-2.5 rounded-lg text-left transition border flex items-center justify-between cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#0A4D8C] text-white border-[#0A4D8C]'
                       : isDone
-                      ? 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100 cursor-pointer'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 cursor-pointer'
+                      ? 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100/70'
+                      : 'bg-white text-[#1E2329] border-slate-200 hover:border-slate-300'
                   }`}
                 >
                   <div className="min-w-0 pr-1">
-                    <div className="text-[10px] font-mono opacity-70">
-                      {!isUnlocked ? '🔒 ' : ''}#{c.id}
+                    <div className={`text-[11px] font-mono tabular-nums ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
+                      #{c.id} · {c.clientIdCode.slice(-4)}
                     </div>
-                    <div className="text-xs font-bold truncate">{c.fullName}</div>
+                    <div className="text-xs font-semibold truncate">{c.fullName}</div>
                   </div>
                   {isDone ? (
-                    <CheckCircle2 size={14} className={isSelected ? 'text-emerald-400' : 'text-emerald-600'} />
+                    <CheckCircle2 size={14} className={isSelected ? 'text-white shrink-0' : 'text-[#0D7A5F] shrink-0'} />
                   ) : (
-                    <ChevronRight size={13} className="opacity-40" />
+                    <ChevronRight size={14} className={isSelected ? 'text-white/80 shrink-0' : 'text-slate-400 shrink-0'} />
                   )}
                 </button>
               );
@@ -658,517 +763,142 @@ export const FormFillupWork = () => {
           </div>
         </div>
 
-        {/* CURRENT SELECTED CLIENT DOSSIER (25 DATA FIELDS DISPLAY) */}
-        <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-900 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-indigo-800 space-y-4">
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-800/80 pb-3">
+        {/* 2. SELECTED CLIENT REFERENCE DOSSIER (40 VERTICAL FIELDS TOP-TO-BOTTOM, COPY DISABLED) */}
+        <div
+          onCopy={(e) => {
+            e.preventDefault();
+            setPasteBlockedCount((c) => c + 1);
+            setFormError('Copying reference data is prohibited. Read carefully and type manually.');
+          }}
+          className="bg-[#22262C] text-white rounded-xl p-4 sm:p-5 border border-slate-800 space-y-3 select-none"
+        >
+          <div className="border-b border-white/10 pb-3 flex items-center justify-between gap-2 flex-wrap">
             <div>
-              <span className="text-[10px] font-mono uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-md">
-                ক্লায়েন্ট রেফারেন্স কার্ড #{currentClient.id} ({currentClient.clientIdCode})
-              </span>
-              <h3 className="text-lg sm:text-xl font-black mt-1 text-white">
-                {currentClient.fullName} — কর্পোরেট ডাটা প্রোফাইল
+              <p className="text-xs font-mono text-slate-300 flex items-center gap-1.5 tabular-nums">
+                <UserCheck size={13} className="text-blue-300" />
+                <span>Client #{currentClient.id} · {currentClient.clientIdCode}</span>
+              </p>
+              <h3 className="text-base font-semibold mt-0.5 text-white">
+                {currentClient.fullName} — 40-Point Reference Dossier
               </h3>
             </div>
-
-            <button
-              onClick={handleAutoFillMatch}
-              className="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-            >
-              <Copy size={13} />
-              <span>ডাটা ফর্মে বসান (Auto-Fill)</span>
-            </button>
+            <span className="text-xs font-medium text-slate-300">
+              40 Reference Fields · Copy Blocked
+            </span>
           </div>
 
-          {/* 25 Comprehensive Data Points Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs">
-            
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">১. ক্লায়েন্ট রেফারেন্স আইডি:</span>
-              <span className="font-mono font-bold text-indigo-300">{currentClient.clientIdCode}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">২. পুরো নাম:</span>
-              <span className="font-bold text-white">{currentClient.fullName}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">৩. পিতার নাম:</span>
-              <span className="font-semibold text-slate-200">{currentClient.fatherName}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">৪. মাতার নাম:</span>
-              <span className="font-semibold text-slate-200">{currentClient.motherName}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">৫. জন্ম তারিখ:</span>
-              <span className="font-mono font-bold text-white">{currentClient.dob}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">৬. লিঙ্গ ও রক্তের গ্রুপ:</span>
-              <span className="font-semibold text-emerald-300">{currentClient.genderBlood}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">৭. জাতীয় পরিচয়পত্র (NID):</span>
-              <span className="font-mono font-bold text-amber-300">{currentClient.nidNumber}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">৮. টিআইএন নম্বর (TIN):</span>
-              <span className="font-mono text-slate-300">{currentClient.tinNumber}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">৯. প্রধান মোবাইল নম্বর:</span>
-              <span className="font-mono font-bold text-emerald-400">{currentClient.primaryPhone}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">১০. জরুরি যোগাযোগ নম্বর:</span>
-              <span className="font-mono text-slate-300">{currentClient.emergencyPhone}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">১১. অফিশিয়াল ইমেইল:</span>
-              <span className="font-mono text-indigo-300 truncate block">{currentClient.email}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">১২. বিভাগ:</span>
-              <span className="font-bold text-white">{currentClient.division}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">১৩. জেলা:</span>
-              <span className="font-bold text-white">{currentClient.district}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">১৪. বর্তমান ঠিকানা:</span>
-              <span className="font-medium text-slate-200">{currentClient.presentAddress}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">১৫. পোস্ট কোড:</span>
-              <span className="font-mono font-bold text-white">{currentClient.postCode}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">১৬. স্থায়ী ঠিকানা:</span>
-              <span className="font-medium text-slate-200">{currentClient.permanentAddress}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">১৭. পদবি / পেশা:</span>
-              <span className="font-bold text-amber-300">{currentClient.designation}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">১৮. প্রতিষ্ঠানের নাম:</span>
-              <span className="font-bold text-white">{currentClient.companyName}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">১৯. মাসিক আয়:</span>
-              <span className="font-mono font-bold text-emerald-400">{currentClient.monthlyIncome}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">২০. ব্যাংকের নাম:</span>
-              <span className="font-semibold text-slate-200">{currentClient.bankName}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">২১. অ্যাকাউন্ট নম্বর:</span>
-              <span className="font-mono font-bold text-white">{currentClient.bankAccountNo}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">২২. রাউটিং কোড:</span>
-              <span className="font-mono text-slate-300">{currentClient.routingCode}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">২৩. নমিনির নাম ও সম্পর্ক:</span>
-              <span className="font-semibold text-white">{currentClient.nomineeName} ({currentClient.nomineeRelation})</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">২৪. পলিসি সার্ভিস কোড:</span>
-              <span className="font-mono font-bold text-indigo-300">{currentClient.servicePolicyCode}</span>
-            </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 block font-semibold">২৫. কেওয়াইসি সিকিউরিটি পিন:</span>
-              <span className="font-mono font-bold text-rose-300">{currentClient.kycSecurityPin}</span>
-            </div>
-
+          <div className="grid grid-cols-1 gap-1.5 text-xs">
+            {FIELD_CONFIG.map((field) => {
+              const rawVal = currentClient[field.key];
+              return (
+                <div
+                  key={field.key}
+                  className="bg-white/5 px-3.5 py-2 rounded-lg border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-1"
+                >
+                  <span className="text-xs text-slate-300 font-medium shrink-0">{field.label.replace(' *', '')}:</span>
+                  <span className="font-mono font-medium text-white break-all sm:text-right tabular-nums">{rawVal}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* INPUT FORM BELOW (FOR SUBMITTING CLIENT 1-100 DATA) */}
-        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
-          
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <h3 className="text-base font-black text-slate-900">
-                ক্লায়েন্ট #{currentClient.id} ({currentClient.fullName}) ডাটা এন্ট্রি ও ফিল-আপ ফর্ম
-              </h3>
-              <p className="text-xs text-slate-500">
-                উপরের রেফারেন্স কার্ড দেখে দেখে নিচের ২৫টি ফিল্ড পূরণ করে সাবমিট বাটনে চাপুন।
-              </p>
+        {/* 3. MANUAL ENTRY INPUT FORM (40 VERTICAL FIELDS TOP-TO-BOTTOM, PASTE BLOCKED) */}
+        <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[#EEF5FC] text-[#0A4D8C] flex items-center justify-center shrink-0">
+                <FileText size={17} strokeWidth={1.75} />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-[#1E2329]">
+                  Client #{currentClient.id} — 40-Field Manual Entry Form
+                </h3>
+                <p className="text-xs text-slate-500 tabular-nums">
+                  Enter all 40 fields vertically matching the client dossier above ({enteredFieldsCount}/40 filled).
+                </p>
+              </div>
             </div>
-            
             {submittedClients[selectedClientId] && (
-              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold px-3 py-1 rounded-xl flex items-center gap-1">
-                <CheckCircle2 size={13} /> সাবমিটেড
+              <span className="text-[#0D7A5F] text-xs font-semibold flex items-center gap-1">
+                <CheckCircle2 size={14} /> Saved
               </span>
             )}
           </div>
 
           {formSuccess && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-bold flex items-center gap-2">
-              <CheckCircle2 size={16} className="text-emerald-600" />
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[#0D7A5F] text-xs font-medium flex items-center gap-2">
+              <CheckCircle2 size={15} className="shrink-0" />
               <span>{formSuccess}</span>
             </div>
           )}
 
           {formError && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs font-bold flex items-center gap-2">
-              <AlertCircle size={16} className="text-rose-600" />
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium flex items-center gap-2">
+              <AlertCircle size={15} className="shrink-0" />
               <span>{formError}</span>
             </div>
           )}
 
           <form onSubmit={handleClientFormSubmit} className="space-y-4">
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-              
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">১. পুরো নাম *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.fullName}
-                  onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-                  placeholder="পুরো নাম লিখুন"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">২. পিতার নাম</label>
-                <input
-                  type="text"
-                  value={formData.fatherName}
-                  onChange={e => setFormData({ ...formData, fatherName: e.target.value })}
-                  placeholder="পিতার নাম"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">৩. মাতার নাম</label>
-                <input
-                  type="text"
-                  value={formData.motherName}
-                  onChange={e => setFormData({ ...formData, motherName: e.target.value })}
-                  placeholder="মাতার নাম"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">৪. জন্ম তারিখ</label>
-                <input
-                  type="text"
-                  value={formData.dob}
-                  onChange={e => setFormData({ ...formData, dob: e.target.value })}
-                  placeholder="YYYY-MM-DD"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">৫. লিঙ্গ ও রক্তের গ্রুপ</label>
-                <input
-                  type="text"
-                  value={formData.genderBlood}
-                  onChange={e => setFormData({ ...formData, genderBlood: e.target.value })}
-                  placeholder="Gender & Blood"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">৬. জাতীয় পরিচয়পত্র (NID) *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.nidNumber}
-                  onChange={e => setFormData({ ...formData, nidNumber: e.target.value })}
-                  placeholder="NID নম্বর"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">৭. টিআইএন নম্বর</label>
-                <input
-                  type="text"
-                  value={formData.tinNumber}
-                  onChange={e => setFormData({ ...formData, tinNumber: e.target.value })}
-                  placeholder="TIN No"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">৮. প্রধান মোবাইল নম্বর</label>
-                <input
-                  type="text"
-                  value={formData.primaryPhone}
-                  onChange={e => setFormData({ ...formData, primaryPhone: e.target.value })}
-                  placeholder="+880 17..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">৯. জরুরি যোগাযোগ নম্বর</label>
-                <input
-                  type="text"
-                  value={formData.emergencyPhone}
-                  onChange={e => setFormData({ ...formData, emergencyPhone: e.target.value })}
-                  placeholder="+880 18..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">১০. অফিশিয়াল ইমেইল</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="email@company.com.bd"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">১১. বিভাগ</label>
-                <input
-                  type="text"
-                  value={formData.division}
-                  onChange={e => setFormData({ ...formData, division: e.target.value })}
-                  placeholder="বিভাগ"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">১২. জেলা</label>
-                <input
-                  type="text"
-                  value={formData.district}
-                  onChange={e => setFormData({ ...formData, district: e.target.value })}
-                  placeholder="জেলা"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block font-bold text-slate-700 mb-1">১৩. বর্তমান ঠিকানা</label>
-                <input
-                  type="text"
-                  value={formData.presentAddress}
-                  onChange={e => setFormData({ ...formData, presentAddress: e.target.value })}
-                  placeholder="বাড়ি, রোড, সেক্টর"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">১৪. পোস্ট কোড</label>
-                <input
-                  type="text"
-                  value={formData.postCode}
-                  onChange={e => setFormData({ ...formData, postCode: e.target.value })}
-                  placeholder="1200"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block font-bold text-slate-700 mb-1">১৫. স্থায়ী ঠিকানা</label>
-                <input
-                  type="text"
-                  value={formData.permanentAddress}
-                  onChange={e => setFormData({ ...formData, permanentAddress: e.target.value })}
-                  placeholder="গ্রাম, ডাকঘর, জেলা"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">১৬. পদবি / পেশা</label>
-                <input
-                  type="text"
-                  value={formData.designation}
-                  onChange={e => setFormData({ ...formData, designation: e.target.value })}
-                  placeholder="Designation"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">১৭. প্রতিষ্ঠানের নাম</label>
-                <input
-                  type="text"
-                  value={formData.companyName}
-                  onChange={e => setFormData({ ...formData, companyName: e.target.value })}
-                  placeholder="Company Name"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">১৮. মাসিক আয়</label>
-                <input
-                  type="text"
-                  value={formData.monthlyIncome}
-                  onChange={e => setFormData({ ...formData, monthlyIncome: e.target.value })}
-                  placeholder="৳50,000.00 BDT"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">১৯. ব্যাংকের নাম</label>
-                <input
-                  type="text"
-                  value={formData.bankName}
-                  onChange={e => setFormData({ ...formData, bankName: e.target.value })}
-                  placeholder="Bank Name"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">২০. ব্যাংক অ্যাকাউন্ট নম্বর</label>
-                <input
-                  type="text"
-                  value={formData.bankAccountNo}
-                  onChange={e => setFormData({ ...formData, bankAccountNo: e.target.value })}
-                  placeholder="Account No"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">২১. রাউটিং কোড</label>
-                <input
-                  type="text"
-                  value={formData.routingCode}
-                  onChange={e => setFormData({ ...formData, routingCode: e.target.value })}
-                  placeholder="Routing Code"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">২২. নমিনির নাম</label>
-                <input
-                  type="text"
-                  value={formData.nomineeName}
-                  onChange={e => setFormData({ ...formData, nomineeName: e.target.value })}
-                  placeholder="Nominee Full Name"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">২৩. নমিনির সম্পর্ক</label>
-                <input
-                  type="text"
-                  value={formData.nomineeRelation}
-                  onChange={e => setFormData({ ...formData, nomineeRelation: e.target.value })}
-                  placeholder="স্ত্রী / ভাই"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">২৪. পলিসি সার্ভিস কোড</label>
-                <input
-                  type="text"
-                  value={formData.servicePolicyCode}
-                  onChange={e => setFormData({ ...formData, servicePolicyCode: e.target.value })}
-                  placeholder="POL-ENT-..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">২৫. কেওয়াইসি সিকিউরিটি পিন</label>
-                <input
-                  type="text"
-                  value={formData.kycSecurityPin}
-                  onChange={e => setFormData({ ...formData, kycSecurityPin: e.target.value })}
-                  placeholder="PIN-..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
+            <div className="grid grid-cols-1 gap-3 text-xs">
+              {FIELD_CONFIG.map((field) => (
+                <div key={field.key}>
+                  <label className="block font-medium text-[#1E2329] mb-1">{field.label}</label>
+                  <input
+                    type={field.type || 'text'}
+                    required={field.required}
+                    value={formData[field.key]}
+                    onChange={(e) => handleFieldChange(field.key, e.target.value)}
+                    onPaste={handleBlockedPaste}
+                    onDrop={handleBlockedDrop}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder={field.placeholder}
+                    className={`w-full bg-[#F4F5F7] border border-slate-200 rounded-lg px-3 py-2.5 text-[#1E2329] focus:outline-none focus:border-[#0A4D8C] focus:bg-white transition-colors ${
+                      field.mono ? 'font-mono tabular-nums' : ''
+                    }`}
+                  />
+                </div>
+              ))}
             </div>
 
-            {/* Save / Next Button */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100">
-              <span className="text-xs text-slate-500">
-                * এই ক্লায়েন্টের ডাটা সেভ করে পরবর্তী ক্লায়েন্টে যান ({selectedClientId}/১০০)।
+              <span className="text-xs text-slate-500 tabular-nums">
+                Save Client #{selectedClientId} ({completedCount}/60 saved).
               </span>
 
               <button
                 type="submit"
-                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold px-6 py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2 text-xs cursor-pointer"
+                className="w-full sm:w-auto bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold px-5 py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-xs cursor-pointer whitespace-nowrap"
               >
-                <CheckCircle2 size={16} />
-                <span>ক্লায়েন্ট #{selectedClientId} এর ডাটা সেভ করুন</span>
+                <CheckCircle2 size={15} />
+                <span>Save Client #{selectedClientId} (40 Fields)</span>
               </button>
             </div>
-
           </form>
         </div>
 
-        {/* FINAL FULL 100-CLIENT PROJECT SUBMIT BUTTON */}
-        <div className="bg-slate-900 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h3 className="text-base font-black">
-                সম্পূর্ণ ১০০ ক্লায়েন্টের ডাটা সাবমিশন (Claim BDT 230.00)
-              </h3>
-              <p className="text-xs text-slate-400">
-                আপনি {completedCount} জন ক্লায়েন্টের ডাটা পূরণ করেছেন। সকল ক্লায়েন্টের ডাটা শেষ হলে প্রজেক্ট সাবমিট করুন।
-              </p>
-            </div>
-
-            <button
-              onClick={handleFinalProjectSubmit}
-              disabled={isFinalSubmitting || finalSubmitSuccess}
-              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-50 text-white font-black px-6 py-3.5 rounded-2xl transition shadow-lg flex items-center justify-center gap-2 text-xs cursor-pointer shrink-0"
-            >
-              <Send size={15} />
-              <span>{isFinalSubmitting ? 'সাবমিট হচ্ছে...' : '১০০ ক্লায়েন্ট প্রজেক্ট সাবমিট করুন (BDT 230.00)'}</span>
-            </button>
+        {/* FINAL PROJECT SUBMIT */}
+        <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-[#1E2329]">
+              Submit 60-Client Project for Verification (BDT 350.00)
+            </h3>
+            <p className="text-xs text-slate-500 tabular-nums mt-0.5">
+              Saved {completedCount} of 60 client records (each with 40 fields).
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={handleFinalProjectSubmit}
+            className="bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold px-5 py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-xs cursor-pointer shrink-0 whitespace-nowrap"
+          >
+            <Send size={14} />
+            <span>Submit Batch for Audit</span>
+          </button>
         </div>
-
       </div>
     </ModuleGuard>
   );

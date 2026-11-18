@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, ArrowRight, X, Flame, AlertTriangle } from 'lucide-react';
+import { ArrowRight, X, AlertTriangle, Megaphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface PromoModalProps {
@@ -13,65 +13,51 @@ export const PromoModal: React.FC<PromoModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="w-full max-w-[350px] bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transform animate-in zoom-in-95 duration-200 relative">
+    <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-[2px]">
+      <div className="w-full max-w-[360px] bg-white rounded-xl border border-slate-200 overflow-hidden relative">
         
         {/* Close Icon Top Right */}
         <button
           onClick={onClose}
-          className="absolute top-3.5 right-3.5 z-20 w-8 h-8 rounded-full bg-slate-900/30 hover:bg-slate-900/60 text-white flex items-center justify-center transition cursor-pointer"
-          title="বন্ধ করুন (Close)"
+          className="absolute top-3.5 right-3.5 z-20 w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition-colors cursor-pointer"
+          aria-label="Close"
         >
           <X size={16} />
         </button>
 
         {/* Top Header */}
-        <div className="bg-gradient-to-r from-blue-950 via-indigo-900 to-slate-900 text-white p-4 pt-5 text-center relative">
-          <div className="flex items-center justify-center gap-1.5 mb-0.5">
-            <Sparkles size={13} className="text-amber-400" />
-            <h3 className="font-extrabold text-xs tracking-wider uppercase text-orange-400">Unity Earning</h3>
-            <Sparkles size={13} className="text-amber-400" />
+        <div className="bg-[#0A4D8C] text-white px-5 py-4 border-b border-[#083D70]">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+              <Megaphone size={16} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm tracking-tight">Unity Earning</h3>
+              <p className="text-[11px] text-white/75">Official Announcement</p>
+            </div>
           </div>
-          <p className="text-[10px] text-blue-200 uppercase tracking-widest font-medium">
-            Official Announcement
-          </p>
         </div>
 
         {/* Body Content */}
-        <div className="p-4 sm:p-5 space-y-3.5">
-          
-          {/* Flame Pill */}
-          <div className="text-center">
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white text-[11px] font-black uppercase tracking-wide shadow-xs">
-              <Flame size={13} className="animate-pulse" />
-              <span>Special Offer Running!</span>
-            </span>
-          </div>
-
-          {/* Offer Highlight Box - 20% Extra Commission */}
-          <div className="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 rounded-2xl p-4 text-center text-white border border-emerald-500/40 shadow-sm space-y-1.5">
-            <div className="text-xs font-bold text-emerald-300 uppercase tracking-wide">
+        <div className="p-5 space-y-3.5">
+          {/* Offer Highlight Box */}
+          <div className="bg-[#22262C] rounded-xl p-4 text-center text-white space-y-1">
+            <div className="text-[11px] font-medium text-white/75">
               Typing, Form Fill-up & Data Entry Projects
             </div>
-            <div className="text-[11px] text-slate-200">
-              Get extra on every project completion
+            <div className="text-2xl font-semibold font-mono tabular-nums text-white tracking-tight py-0.5">
+              20% Extra Commission
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-amber-300 tracking-tight flex items-center justify-center gap-1.5 py-0.5 font-mono">
-              <span>20% Extra</span>
-              <span className="text-[11px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-lg shadow-xs">
-                Commission 💰
-              </span>
-            </div>
-            <div className="text-[10px] text-emerald-300/90 font-medium pt-0.5">
-              Offer available for a limited time
+            <div className="text-[11px] text-emerald-300 font-medium">
+              Active bonus applied on project completion
             </div>
           </div>
 
           {/* Warning Box */}
-          <div className="p-3 bg-amber-50 border border-amber-200/90 rounded-2xl text-amber-950 text-[11px] flex items-start gap-2 shadow-2xs">
-            <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+          <div className="p-3 bg-[#FEF7E0] border border-[#F3DFA2] rounded-lg text-[#5F4B16] text-xs flex items-start gap-2">
+            <AlertTriangle size={15} className="text-[#B47B00] shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              <strong>⚠️ Important Note:</strong> When transferring funds to Main Account, ensure you use your correct 7-digit profile ID Code.
+              <strong>Important Note:</strong> When transferring funds to Main Account, verify your 7-digit Account ID Code.
             </p>
           </div>
 
@@ -82,17 +68,17 @@ export const PromoModal: React.FC<PromoModalProps> = ({ isOpen, onClose }) => {
                 onClose();
                 navigate('/my-work');
               }}
-              className="w-full bg-gradient-to-r from-orange-500 via-amber-500 to-rose-600 hover:from-orange-600 hover:to-rose-700 text-white font-black py-3 px-4 rounded-xl transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2 text-xs cursor-pointer border border-orange-400/30"
+              className="w-full bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-xs cursor-pointer"
             >
-              <span>🚀 Start working now!</span>
+              <span>Start Working Now</span>
               <ArrowRight size={14} />
             </button>
 
             <button
               onClick={onClose}
-              className="w-full bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl transition text-xs cursor-pointer border border-slate-200"
+              className="w-full bg-white hover:bg-slate-50 text-slate-700 font-medium py-2.5 rounded-lg transition-colors text-xs cursor-pointer border border-slate-200"
             >
-              Skip / Okay
+              Dismiss
             </button>
           </div>
         </div>
@@ -101,3 +87,4 @@ export const PromoModal: React.FC<PromoModalProps> = ({ isOpen, onClose }) => {
     </div>
   );
 };
+

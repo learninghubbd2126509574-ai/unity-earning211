@@ -4,20 +4,14 @@ import {
   Image as ImageIcon, 
   Upload, 
   Video, 
-  Sparkles, 
   CheckCircle2, 
   AlertCircle, 
   Copy, 
   Check, 
-  ExternalLink, 
-  Layers, 
   Palette, 
-  Eye, 
-  Clock, 
-  HelpCircle,
-  Camera,
   RefreshCw,
-  Send
+  Send,
+  Info
 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
@@ -291,14 +285,14 @@ const PhotoSubmitApp = () => {
 
     // 1. Photo check
     if (!photoPreview) {
-      setErrorMsg('⚠️ সম্পাদিত ফাইনাল ফটো ফাইলটি আপলোড করা বাধ্যতামূলক!');
+      setErrorMsg('সম্পাদিত ফাইনাল ফটো ফাইলটি আপলোড করা বাধ্যতামূলক।');
       return;
     }
 
     // 2. Video Screen Recording check
     const hasVideo = videoProofType === 'upload' ? Boolean(videoFile) : Boolean(videoLink.trim());
     if (!hasVideo) {
-      setErrorMsg('⚠️ ফটো এডিটিংয়ের স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ সংযুক্ত করা বাধ্যতামূলক! আপনি যে নিজে সফটওয়্যারে এডিট করেছেন, তার ভিডিও ফাইল বা ক্লাউড লিংক দিন।');
+      setErrorMsg('ফটো এডিটিংয়ের স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ সংযুক্ত করা বাধ্যতামূলক। আপনি যে নিজে সফটওয়্যারে এডিট করেছেন, তার ভিডিও ফাইল বা ক্লাউড লিংক দিন।');
       return;
     }
 
@@ -342,40 +336,40 @@ const PhotoSubmitApp = () => {
   // SUCCESS SCREEN
   if (isSubmitted) {
     return (
-      <div className="p-4 sm:p-6 min-h-[80vh] flex items-center justify-center">
-        <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-rose-200 shadow-2xl text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
-            <CheckCircle2 size={36} />
+      <div className="min-h-full bg-[#F4F5F7] p-4 sm:p-6 flex items-center justify-center">
+        <div className="bg-white rounded-xl p-6 max-w-lg w-full border border-slate-200/90 text-center space-y-4">
+          <div className="w-14 h-14 rounded-xl bg-[#ECFDF5] border border-[#A7F3D0] text-[#0D7A5F] flex items-center justify-center mx-auto">
+            <CheckCircle2 size={30} />
           </div>
 
           <div className="space-y-1">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-[#0D7A5F]">
               Submitted to Admin Portal
-            </span>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              ফটো এডিটিং ও স্ক্রিন রেকর্ড সাবমিট সফল!
+            </div>
+            <h2 className="text-lg font-semibold text-[#111827] tracking-tight">
+              ফটো এডিটিং ও স্ক্রিন রেকর্ড সাবমিট সফল
             </h2>
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            <p className="text-xs text-slate-600 leading-relaxed">
               আপনার সম্পাদিত ফটো এবং কাজের স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ অ্যাডমিন প্যানেলে পেন্ডিং সাবমিশনে পাঠানো হয়েছে।
             </p>
           </div>
 
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-left space-y-2 text-xs">
-            <div className="flex justify-between items-center text-slate-700">
-              <span className="font-semibold">টাস্ক টাইটেল:</span>
-              <span className="font-bold text-slate-900 truncate max-w-[200px]">{currentTask.title}</span>
+          <div className="bg-[#F8FAFC] p-4 rounded-xl border border-slate-200 text-left space-y-2 text-xs">
+            <div className="flex justify-between items-center gap-3 text-slate-700">
+              <span className="font-medium text-slate-500">টাস্ক টাইটেল</span>
+              <span className="font-semibold text-[#111827] truncate max-w-[220px]">{currentTask.title}</span>
             </div>
-            <div className="flex justify-between items-center text-slate-700">
-              <span className="font-semibold">ব্যবহৃত সফটওয়্যার:</span>
-              <span className="font-bold text-slate-900">{softwareUsed}</span>
+            <div className="flex justify-between items-center gap-3 text-slate-700">
+              <span className="font-medium text-slate-500">ব্যবহৃত সফটওয়্যার</span>
+              <span className="font-semibold text-[#111827]">{softwareUsed}</span>
             </div>
-            <div className="flex justify-between items-center text-slate-700">
-              <span className="font-semibold">ধার্যকৃত রিওয়ার্ড:</span>
-              <span className="font-bold text-emerald-600 font-mono">{currentTask.reward}</span>
+            <div className="flex justify-between items-center gap-3 text-slate-700">
+              <span className="font-medium text-slate-500">ধার্যকৃত রিওয়ার্ড</span>
+              <span className="font-semibold text-[#0D7A5F] font-mono tabular-nums">{currentTask.reward}</span>
             </div>
-            <div className="flex justify-between items-center text-slate-700">
-              <span className="font-semibold">স্ট্যাটাস:</span>
-              <span className="font-bold text-amber-600">Pending Admin Verification</span>
+            <div className="flex justify-between items-center gap-3 text-slate-700">
+              <span className="font-medium text-slate-500">স্ট্যাটাস</span>
+              <span className="font-semibold text-[#B47B00]">Pending Admin Verification</span>
             </div>
           </div>
 
@@ -390,7 +384,7 @@ const PhotoSubmitApp = () => {
               setEditingNotes('');
               setSelectedTaskIndex((prev) => (prev + 1) % PHOTO_EDIT_10_TASKS.length);
             }}
-            className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl text-xs transition shadow-md cursor-pointer"
+            className="w-full bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold py-2.5 rounded-lg text-xs transition-colors cursor-pointer"
           >
             পরবর্তী ফটো এডিটিং টাস্ক শুরু করুন
           </button>
@@ -400,282 +394,278 @@ const PhotoSubmitApp = () => {
   }
 
   return (
-    <div className="p-3 sm:p-5 max-w-4xl mx-auto pb-28 space-y-4">
-      
-      {/* Top Header Banner */}
-      <div className="bg-gradient-to-br from-rose-900 via-pink-950 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-md border border-rose-800/80 space-y-3">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 inline-flex items-center gap-1 mb-1.5">
-              <Palette size={12} />
-              <span>10 E-Commerce & Product Photo Editing Prompts</span>
+    <div className="min-h-full bg-[#F4F5F7] p-3 sm:p-5 pb-28">
+      <div className="max-w-3xl mx-auto space-y-4">
+        {/* Top Header Banner */}
+        <div className="bg-[#0A4D8C] rounded-xl p-5 text-white border border-[#083D70] space-y-3.5">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-white/80 mb-1">
+                <Palette size={13} />
+                <span>10 E-Commerce & Product Photo Editing Prompts</span>
+              </div>
+              <h1 className="text-lg sm:text-xl font-semibold tracking-tight">
+                Photo Submit Work (ফটো এডিটিং ও ফটো সাবমিট)
+              </h1>
+              <p className="text-xs text-white/80 mt-1 max-w-xl leading-relaxed">
+                ১০টি উচ্চমানের প্রোডাক্ট ফটো এডিটিং প্রম্পট। এডিট সম্পন্ন করে এডিটিংয়ের সম্পূর্ণ স্ক্রিন রেকর্ডিং ভিডিও প্রমাণসহ সাবমিট করুন।
+              </p>
+            </div>
+
+            <div className="bg-white/10 border border-white/15 px-4 py-2.5 rounded-lg text-left sm:text-right shrink-0 w-full sm:w-auto">
+              <div className="text-[11px] font-medium text-white/75">টাস্ক রিওয়ার্ড</div>
+              <div className="text-lg font-semibold font-mono tabular-nums text-white mt-0.5">
+                {currentTask.reward}
+              </div>
+            </div>
+          </div>
+
+          {/* Task Selector Dropdown */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-white/15">
+            <span className="text-xs font-medium text-white/85">
+              টাস্ক নির্বাচন ({selectedTaskIndex + 1}/১০)
             </span>
-            <h1 className="text-lg sm:text-2xl font-black tracking-tight">
-              Photo Submit Work (ফটো এডিটিং ও ফটো সাবমিট)
-            </h1>
-            <p className="text-xs text-rose-200 mt-0.5 max-w-xl leading-relaxed">
-              Professional E-Commerce Product Retouching & Screen Recording Demonstration Proof.
-            </p>
-            <p className="text-[11px] text-rose-300/90 mt-0.5 leading-snug">
-              ১০টি উচ্চমানের প্রোডাক্ট ফটো এডিটিং প্রম্পট। এডিট সম্পন্ন করে এডিটিংয়ের সম্পূর্ণ স্ক্রিন রেকর্ডিং ভিডিও প্রমাণসহ সাবমিট করুন।
-            </p>
-          </div>
 
-          <div className="bg-rose-950/80 border border-rose-800/80 px-4 py-2.5 rounded-2xl text-center shrink-0 w-full sm:w-auto">
-            <div className="text-[10px] uppercase font-bold text-rose-300">টাস্ক রিওয়ার্ড</div>
-            <div className="text-xl font-bold font-mono text-emerald-400 mt-0.5">
-              {currentTask.reward}
-            </div>
-          </div>
-        </div>
-
-        {/* Task Selector Dropdown */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-rose-800/60">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="font-semibold text-rose-300">টাস্ক নির্বাচন ({selectedTaskIndex + 1}/১০):</span>
-          </div>
-
-          <select
-            value={selectedTaskIndex}
-            onChange={(e) => {
-              setSelectedTaskIndex(Number(e.target.value));
-              setErrorMsg(null);
-            }}
-            className="bg-slate-900 border border-rose-700/80 text-white text-xs font-semibold rounded-xl px-3 py-1.5 focus:outline-none focus:border-rose-400 cursor-pointer"
-          >
-            {PHOTO_EDIT_10_TASKS.map((t, idx) => (
-              <option key={t.id} value={idx}>
-                #{t.id}: {t.title.slice(0, 30)}... ({t.reward})
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* MANDATORY SCREEN RECORDING REQUIREMENT BOX */}
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl p-4 text-amber-950 space-y-2">
-        <div className="flex items-center gap-2 font-black text-xs sm:text-sm text-amber-900">
-          <Video size={17} className="text-amber-600 shrink-0" />
-          <span>বাধ্যতামূলক নিয়ম: ফটো এডিটিংয়ের স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ</span>
-        </div>
-        <p className="text-xs text-amber-900 leading-relaxed font-medium">
-          প্রদত্ত প্রম্পট অনুযায়ী ফটোটি আপনি নিজে ফটোশপ (Photoshop), ইলাস্ট্রেটর, লাইটরুম, ক্যানভা বা অন্য কোনো সফটওয়্যারে এডিট করেছেন তা নিশ্চিত করতে <strong>কাজের সম্পূর্ণ স্ক্রিন রেকর্ড করা ভিডিও ফাইল বা গুগল ড্রাইভ/ইউটিউব লিংক সাবমিট করা বাধ্যতামূলক</strong>। ভিডিও প্রমাণ ছাড়া কোনো কাজ অনুমোদিত হবে না।
-        </p>
-      </div>
-
-      {/* SELECTED PROMPT SPECIFICATION CARD */}
-      <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
-                {currentTask.category}
-              </span>
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-                {currentTask.difficulty}
-              </span>
-            </div>
-            <h2 className="text-base sm:text-lg font-black text-slate-900">
-              {currentTask.title}
-            </h2>
-          </div>
-
-          <button
-            onClick={handleCopyPrompt}
-            className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 flex items-center gap-1.5 transition cursor-pointer"
-          >
-            {copiedPrompt ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
-            <span>{copiedPrompt ? 'প্রম্পট কপি হয়েছে!' : 'এডিটিং প্রম্পট কপি করুন'}</span>
-          </button>
-        </div>
-
-        {/* Creative Brief Prompt */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-            এডিটিং ক্রিয়েটিভ প্রম্পট নির্দেশনা:
-          </label>
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
-            {currentTask.creativePrompt}
+            <select
+              value={selectedTaskIndex}
+              onChange={(e) => {
+                setSelectedTaskIndex(Number(e.target.value));
+                setErrorMsg(null);
+              }}
+              className="bg-white text-[#111827] border border-white/20 text-xs font-medium rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer max-w-full"
+            >
+              {PHOTO_EDIT_10_TASKS.map((t, idx) => (
+                <option key={t.id} value={idx}>
+                  #{t.id}: {t.title.slice(0, 34)}... ({t.reward})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Step-by-Step Editing Workflow */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-            ধাপসমূহ (Editing Steps):
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
-            {currentTask.editingSteps.map((step, idx) => (
-              <div key={idx} className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-start gap-2">
-                <span className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
-                  {idx + 1}
-                </span>
-                <span className="leading-snug">{step}</span>
+        {/* MANDATORY SCREEN RECORDING REQUIREMENT BOX */}
+        <div className="bg-[#FEF7E0] border border-[#F3DFA2] rounded-xl p-4 text-[#5F4B16] space-y-1.5">
+          <div className="flex items-center gap-2 font-semibold text-xs text-[#47380F]">
+            <Video size={16} className="text-[#B47B00] shrink-0" />
+            <span>Mandatory Rule: Screen Recording Video Proof</span>
+          </div>
+          <p className="text-xs leading-relaxed">
+            To verify manual photo editing in Photoshop, Illustrator, Lightroom, or Canva, submitting a <strong>complete screen recording file or Google Drive/YouTube link</strong> is mandatory.
+          </p>
+        </div>
+
+        {/* SELECTED PROMPT SPECIFICATION CARD */}
+        <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3.5">
+            <div>
+              <div className="text-[11px] font-medium text-[#0A4D8C] mb-1">
+                {currentTask.category} · {currentTask.difficulty}
               </div>
-            ))}
+              <h2 className="text-base font-semibold text-[#111827]">
+                {currentTask.title}
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCopyPrompt}
+              className="bg-[#F8FAFC] hover:bg-slate-100 text-slate-700 text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              {copiedPrompt ? <Check size={13} className="text-[#0D7A5F]" /> : <Copy size={13} />}
+              <span>{copiedPrompt ? 'প্রম্পট কপি হয়েছে' : 'এডিটিং প্রম্পট কপি করুন'}</span>
+            </button>
           </div>
-        </div>
 
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 font-medium flex items-center gap-2">
-          <Sparkles size={14} className="text-blue-600 shrink-0" />
-          <span><strong>টেকনিক্যাল স্পেকস:</strong> {currentTask.mandatorySpecs}</span>
-        </div>
-      </div>
-
-      {/* SUBMISSION FORM */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-5">
-        <h2 className="text-base font-extrabold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-          <Upload size={17} className="text-rose-600" />
-          <span>সম্পাদিত ফটো ও স্ক্রিন রেকর্ডিং ভিডিও সাবমিশন</span>
-        </h2>
-
-        {/* 1. Photo Upload */}
-        <div className="space-y-2">
-          <label className="block text-xs font-bold text-slate-800">
-            ১. এডিটিং করা ফাইনাল ফটো আপলোড করুন (Final Edited Image) *
-          </label>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-            <label className="p-4 bg-slate-50 border-2 border-dashed border-slate-300 hover:border-rose-500 rounded-2xl flex flex-col items-center justify-center gap-1.5 cursor-pointer transition text-xs font-semibold text-slate-600 hover:text-rose-600 min-h-32">
-              <ImageIcon size={24} className="text-slate-400" />
-              <span>{photoFile ? 'অন্য ছবি পরিবর্তন করুন' : 'সম্পাদিত ইমেজ ফাইল বেছে নিন (.jpg, .png)'}</span>
-              <span className="text-[10px] text-slate-400">সর্বোচ্চ সাইজ: 15MB</span>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                className="hidden"
-              />
+          {/* Creative Brief Prompt */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-[#111827] block">
+              এডিটিং ক্রিয়েটিভ প্রম্পট নির্দেশনা
             </label>
-
-            {photoPreview ? (
-              <div className="relative aspect-video rounded-2xl border border-slate-200 overflow-hidden bg-slate-950 flex items-center justify-center shadow-inner">
-                <img src={photoPreview} alt="Edited preview" className="max-h-36 object-contain" />
-                <span className="absolute bottom-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                  ✓ ফটো আপলোডেড
-                </span>
-              </div>
-            ) : (
-              <div className="aspect-video bg-slate-100 rounded-2xl border border-slate-200 flex items-center justify-center text-center p-3 text-slate-400 text-xs">
-                ছবি নির্বাচন করলে এখানে প্রিভিউ প্রদর্শিত হবে।
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* 2. Video Screen Recording Proof */}
-        <div className="space-y-3 pt-3 border-t border-slate-100">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <label className="block text-xs font-bold text-slate-800">
-              ২. ফটো এডিটিংয়ের স্ক্রিন রেকর্ডিং ভিডিও প্রমাণ (Screen Recording Proof) *
-            </label>
-
-            <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl text-xs">
-              <button
-                type="button"
-                onClick={() => setVideoProofType('link')}
-                className={`px-3 py-1 rounded-lg font-bold transition cursor-pointer ${videoProofType === 'link' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600'}`}
-              >
-                ভিডিও লিংক (Drive/YouTube)
-              </button>
-              <button
-                type="button"
-                onClick={() => setVideoProofType('upload')}
-                className={`px-3 py-1 rounded-lg font-bold transition cursor-pointer ${videoProofType === 'upload' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600'}`}
-              >
-                ভিডিও ফাইল আপলোড
-              </button>
+            <div className="bg-[#F8FAFC] p-3.5 rounded-lg border border-slate-200 text-xs sm:text-sm text-slate-700 leading-relaxed">
+              {currentTask.creativePrompt}
             </div>
           </div>
 
-          {videoProofType === 'link' ? (
-            <input
-              type="url"
-              placeholder="https://drive.google.com/file/d/... অথবা ইউটিউব/ক্লাউড ভিডিও লিংক"
-              value={videoLink}
-              onChange={(e) => setVideoLink(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-rose-500 font-mono"
-            />
-          ) : (
-            <div className="space-y-2">
-              <label className="p-4 bg-slate-50 border-2 border-dashed border-slate-300 hover:border-rose-500 rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition text-xs font-semibold text-slate-700">
-                <Video size={16} />
-                <span>{videoFile ? `নির্বাচিত ফাইল: ${videoFile.name}` : 'স্ক্রিন রেকর্ড ভিডিও ফাইল বেছে নিন (Max 50MB)'}</span>
+          {/* Step-by-Step Editing Workflow */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-[#111827] block">
+              ধাপসমূহ (Editing Steps)
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
+              {currentTask.editingSteps.map((step, idx) => (
+                <div key={idx} className="bg-[#F8FAFC] p-2.5 rounded-lg border border-slate-200 flex items-start gap-2.5">
+                  <span className="w-5 h-5 rounded-md bg-[#EEF5FC] text-[#0A4D8C] border border-[#D4E4F7] font-semibold font-mono text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                    {idx + 1}
+                  </span>
+                  <span className="leading-snug">{step}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-3 bg-[#EEF5FC] border border-[#D4E4F7] rounded-lg text-xs text-slate-700 flex items-start gap-2">
+            <Info size={14} className="text-[#0A4D8C] shrink-0 mt-0.5" />
+            <span><strong className="text-[#111827]">টেকনিক্যাল স্পেকস:</strong> {currentTask.mandatorySpecs}</span>
+          </div>
+        </div>
+
+        {/* SUBMISSION FORM */}
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-4">
+          <h2 className="text-sm font-semibold text-[#111827] border-b border-slate-100 pb-3 flex items-center gap-2">
+            <Upload size={16} className="text-[#0A4D8C]" />
+            <span>Edited Photo & Screen Recording Submission</span>
+          </h2>
+
+          {/* 1. Photo Upload */}
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-[#111827]">
+              1. Upload Final Edited Image *
+            </label>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+              <label className="p-4 bg-[#F8FAFC] border border-dashed border-slate-300 hover:border-[#0A4D8C] rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors text-xs font-medium text-slate-600 hover:text-[#0A4D8C] min-h-32">
+                <ImageIcon size={22} className="text-slate-400" />
+                <span>{photoFile ? 'Change Selected Image' : 'Choose Edited Image (.jpg, .png)'}</span>
+                <span className="text-[11px] text-slate-400">Max Size: 15MB</span>
                 <input
                   type="file"
-                  accept="video/*"
-                  onChange={handleVideoUpload}
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
                   className="hidden"
                 />
               </label>
-              {videoFilePreview && (
-                <video src={videoFilePreview} controls className="max-h-40 rounded-xl bg-black w-full" />
+
+              {photoPreview ? (
+                <div className="relative aspect-video rounded-xl border border-slate-200 overflow-hidden bg-[#22262C] flex items-center justify-center">
+                  <img src={photoPreview} alt="Edited preview" className="max-h-36 object-contain" />
+                  <span className="absolute bottom-2 right-2 bg-[#0D7A5F] text-white text-[10px] font-medium px-2 py-0.5 rounded flex items-center gap-1">
+                    <Check size={11} /> Attached
+                  </span>
+                </div>
+              ) : (
+                <div className="aspect-video bg-[#F8FAFC] rounded-xl border border-slate-200 flex items-center justify-center text-center p-3 text-slate-400 text-xs">
+                  Image preview will appear here once selected.
+                </div>
               )}
             </div>
+          </div>
+
+          {/* 2. Video Screen Recording Proof */}
+          <div className="space-y-3 pt-3 border-t border-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="block text-xs font-medium text-[#111827]">
+                2. Screen Recording Video Proof *
+              </label>
+
+              <div className="flex gap-1 bg-[#F4F5F7] p-1 rounded-lg text-xs border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setVideoProofType('link')}
+                  className={`px-3 py-1 rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                    videoProofType === 'link' ? 'bg-[#0A4D8C] text-white' : 'text-slate-600'
+                  }`}
+                >
+                  Drive / Cloud Link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVideoProofType('upload')}
+                  className={`px-3 py-1 rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                    videoProofType === 'upload' ? 'bg-[#0A4D8C] text-white' : 'text-slate-600'
+                  }`}
+                >
+                  Upload Video File
+                </button>
+              </div>
+            </div>
+
+            {videoProofType === 'link' ? (
+              <input
+                type="url"
+                placeholder="https://drive.google.com/file/d/... or YouTube/Cloud video link"
+                value={videoLink}
+                onChange={(e) => setVideoLink(e.target.value)}
+                className="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#0A4D8C] font-mono"
+              />
+            ) : (
+              <div className="space-y-2">
+                <label className="p-4 bg-[#F8FAFC] border border-dashed border-slate-300 hover:border-[#0A4D8C] rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors text-xs font-medium text-slate-700">
+                  <Video size={16} className="text-[#0A4D8C]" />
+                  <span>{videoFile ? `Selected File: ${videoFile.name}` : 'Choose Screen Recording File (Max 50MB)'}</span>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                  />
+                </label>
+                {videoFilePreview && (
+                  <video src={videoFilePreview} controls className="max-h-40 rounded-lg bg-black w-full" />
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 3. Software Used & Notes */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                Software / Tool Used *
+              </label>
+              <select
+                value={softwareUsed}
+                onChange={(e) => setSoftwareUsed(e.target.value)}
+                className="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#0A4D8C]"
+              >
+                <option value="Adobe Photoshop">Adobe Photoshop</option>
+                <option value="Adobe Illustrator">Adobe Illustrator</option>
+                <option value="Adobe Lightroom">Adobe Lightroom</option>
+                <option value="Canva Pro">Canva Pro</option>
+                <option value="Photopea">Photopea Online Editor</option>
+                <option value="CapCut / Mobile App">CapCut / Mobile App</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                Editing / Layer Notes (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Masking, drop shadow & color correction applied"
+                value={editingNotes}
+                onChange={(e) => setEditingNotes(e.target.value)}
+                className="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#0A4D8C]"
+              />
+            </div>
+          </div>
+
+          {errorMsg && (
+            <div className="p-3 bg-[#FEF2F2] border border-[#FECACA] text-[#B91C1C] rounded-lg text-xs flex items-start gap-2 font-medium">
+              <AlertCircle size={15} className="shrink-0 mt-0.5" />
+              <span>{errorMsg}</span>
+            </div>
           )}
-        </div>
 
-        {/* 3. Software Used & Notes */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-100">
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">
-              ব্যবহৃত সফটওয়্যার / টুল *
-            </label>
-            <select
-              value={softwareUsed}
-              onChange={(e) => setSoftwareUsed(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-rose-500"
-            >
-              <option value="Adobe Photoshop">Adobe Photoshop</option>
-              <option value="Adobe Illustrator">Adobe Illustrator</option>
-              <option value="Adobe Lightroom">Adobe Lightroom</option>
-              <option value="Canva Pro">Canva Pro</option>
-              <option value="Photopea">Photopea Online Editor</option>
-              <option value="CapCut / Mobile App">CapCut / Mobile App</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">
-              এডিটিং বিবরণ / লেয়ার নোট (ঐচ্ছিক)
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. মাস্কিং, ড্রপ শ্যাডো ও কালার কারেকশন সম্পন্ন"
-              value={editingNotes}
-              onChange={(e) => setEditingNotes(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-rose-500"
-            />
-          </div>
-        </div>
-
-        {errorMsg && (
-          <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs flex items-start gap-2 font-semibold">
-            <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition shadow-md active:scale-95 text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
-        >
-          {isSubmitting ? (
-            <>
-              <RefreshCw size={16} className="animate-spin" />
-              <span>সাবমিট হচ্ছে...</span>
-            </>
-          ) : (
-            <>
-              <Send size={15} />
-              <span>ফটো ও স্ক্রিন রেকর্ড সাবমিট করুন (অ্যাডমিন ভেরিফিকেশন)</span>
-            </>
-          )}
-        </button>
-
-      </form>
-
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-[#0A4D8C] hover:bg-[#083D70] disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition-colors text-xs flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {isSubmitting ? (
+              <>
+                <RefreshCw size={15} className="animate-spin" />
+                <span>Submitting...</span>
+              </>
+            ) : (
+              <>
+                <Send size={15} />
+                <span>Submit Photo & Screen Recording Proof</span>
+              </>
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

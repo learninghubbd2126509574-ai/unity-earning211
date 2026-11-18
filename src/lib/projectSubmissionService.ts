@@ -23,7 +23,7 @@ export interface ProjectSubmissionDoc {
   studentIdCode?: string;
   status: 'Not Started' | 'In Progress' | 'Submitted' | 'Under Review' | 'Accepted' | 'Rejected';
   submissionTime?: string;
-  reviewDeadline?: string; // ISO string 60 minutes from submission
+  reviewDeadline?: string; // ISO string 120 minutes from submission
   videoSubmitted: boolean;
   videoUrl?: string;
   videoFileName?: string;
@@ -31,6 +31,7 @@ export interface ProjectSubmissionDoc {
   notes?: string;
   acceptanceTime?: string;
   rejectionTime?: string;
+  rejectionReason?: string;
   reviewerId?: string;
   autoRejected?: boolean;
   createdAt?: string;
@@ -40,7 +41,7 @@ export interface ProjectSubmissionDoc {
 export const REVIEW_TIMEOUT_MINUTES = 120; // 2 Hours Review Window
 
 /**
- * Checks if a submission has passed its 60-minute deadline and automatically rejects it if needed.
+ * Checks if a submission has passed its review deadline and automatically flags missing data / rejects it.
  */
 export async function checkAndApplyAutoRejection(submission: ProjectSubmissionDoc): Promise<ProjectSubmissionDoc> {
   if (submission.status === 'Under Review' && submission.reviewDeadline && submission.id) {
@@ -53,7 +54,7 @@ export async function checkAndApplyAutoRejection(submission: ProjectSubmissionDo
         status: 'Rejected' as const,
         rejectionTime,
         autoRejected: true,
-        rejectionReason: 'Your project was not approved within the review period and has been automatically rejected.',
+        rejectionReason: `Missing Data & Formula Error in Project #${submission.projectNumber}: আপনার এই জায়গায় মিসিং ডেটা রয়েছে (Row #14–#38 Net Payable / BDT 50 Deduction Cell Missing)।`,
         updatedAt: rejectionTime
       };
 

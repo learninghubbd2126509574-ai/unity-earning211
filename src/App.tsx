@@ -6,6 +6,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import React, { useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { MobileLayout } from './components/MobileLayout';
 import { Home } from './pages/Home';
 import { TypingWork } from './pages/TypingWork';
@@ -59,45 +60,49 @@ const MyWorkRedirect: React.FC = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          
-          <Route element={<MobileLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/my-work" element={<MyWorkRedirect />} />
-            <Route path="/live-payments" element={<LivePayments />} />
-            <Route path="/payouts" element={<LivePayments />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/reviews" element={<Reviews />} />
-            <Route path="/mentors" element={<Mentors />} />
-            <Route path="/guidelines" element={<Mentors />} />
-            <Route path="/live-chat" element={<LiveChat />} />
-            <Route path="/chat" element={<LiveChat />} />
-            <Route path="/microjob" element={<Microjob />} />
-            <Route path="/profile" element={<Profile />} />
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             
-            {/* Work Module Tasks */}
-            <Route path="/module/typing" element={<TypingWork />} />
-            <Route path="/module/form" element={<FormFillupWork />} />
-            <Route path="/module/data" element={<DataEntryWork />} />
-            <Route path="/module/video" element={<VideoSubmitWork />} />
-            <Route path="/module/photo" element={<PhotoSubmitWork />} />
-            <Route path="/module/shop_register" element={<Shop />} />
-            <Route path="/module/ad-viewing" element={<AdViewingWork />} />
-            <Route path="/module/moderation" element={<ContentModerationWork />} />
-            <Route path="/module/social-marketing" element={<SocialMarketingWork />} />
-            <Route path="/module/content-writing" element={<ContentWritingWork />} />
-            <Route path="/module/dropshipping" element={<DropshippingWork />} />
-            <Route path="/module/gaming-tournament" element={<GamingTournamentWork />} />
-            <Route path="/module/website-visit" element={<WebsiteVisitWork />} />
-          </Route>
+            <Route element={<MobileLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/my-work" element={<MyWorkRedirect />} />
+              <Route path="/live-payments" element={<LivePayments />} />
+              <Route path="/payouts" element={<LivePayments />} />
+              <Route path="/shop" element={<Shop />} />
+              <Route path="/reviews" element={<Reviews />} />
+              <Route path="/mentors" element={<Mentors />} />
+              <Route path="/guidelines" element={<Mentors />} />
+              <Route path="/live-chat" element={<LiveChat />} />
+              <Route path="/chat" element={<LiveChat />} />
+              <Route path="/microjob" element={<Microjob />} />
+              <Route path="/profile" element={<Profile />} />
+              
+              {/* Work Module Tasks */}
+              <Route path="/module/typing" element={<TypingWork />} />
+              <Route path="/module/form" element={<FormFillupWork />} />
+              <Route path="/module/data" element={<DataEntryWork />} />
+              <Route path="/module/video" element={<VideoSubmitWork />} />
+              <Route path="/module/photo" element={<PhotoSubmitWork />} />
+              <Route path="/module/shop_register" element={<Shop />} />
+              <Route path="/affiliate" element={<Shop />} />
+              <Route path="/module/ad-viewing" element={<AdViewingWork />} />
+              <Route path="/module/moderation" element={<ContentModerationWork />} />
+              <Route path="/module/moderator-career" element={<ContentModerationWork />} />
+              <Route path="/module/social-marketing" element={<SocialMarketingWork />} />
+              <Route path="/module/content-writing" element={<ContentWritingWork />} />
+              <Route path="/module/dropshipping" element={<DropshippingWork />} />
+              <Route path="/module/gaming-tournament" element={<GamingTournamentWork />} />
+              <Route path="/module/website-visit" element={<WebsiteVisitWork />} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
