@@ -10,9 +10,67 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+    <style>
+      @keyframes uInitSpinCw { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes uInitSpinCcw { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+      @keyframes uInitBreathe { 0%, 100% { transform: scale(0.92); opacity: 0.55; } 50% { transform: scale(1.08); opacity: 0.95; } }
+      #u-init-loader {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        background: #F4F5F7;
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      }
+      .u-init-stage { position: relative; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; }
+      .u-init-glow { position: absolute; inset: 0; border-radius: 9999px; background: radial-gradient(circle, rgba(10,77,140,0.16) 0%, rgba(29,112,184,0.06) 55%, transparent 74%); animation: uInitBreathe 2.2s ease-in-out infinite; }
+      .u-init-ring-cw { position: absolute; inset: 0; width: 100%; height: 100%; animation: uInitSpinCw 1.15s linear infinite; }
+      .u-init-ring-ccw { position: absolute; inset: 0; width: 100%; height: 100%; animation: uInitSpinCcw 2.6s linear infinite; }
+      .u-init-medallion { position: relative; z-index: 2; width: 56px; height: 56px; border-radius: 9999px; background: #ffffff; border: 1px solid rgba(10,77,140,0.15); box-shadow: 0 6px 20px rgba(10,77,140,0.16); display: flex; align-items: center; justify-content: center; }
+    </style>
   </head>
   <body class="bg-[#F4F5F7] text-[#1E2329] antialiased selection:bg-[#0A4D8C] selection:text-white">
-    <div id="root"></div>
+    <div id="root">
+      <div id="u-init-loader" role="status" aria-label="Loading Unity Earning">
+        <div class="u-init-stage">
+          <div class="u-init-glow"></div>
+          <svg viewBox="0 0 100 100" class="u-init-ring-cw" aria-hidden="true">
+            <defs>
+              <linearGradient id="uInitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0A4D8C" />
+                <stop offset="55%" stop-color="#1D70B8" />
+                <stop offset="100%" stop-color="#60A5FA" stop-opacity="0.15" />
+              </linearGradient>
+            </defs>
+            <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(10,77,140,0.11)" stroke-width="2.5" />
+            <circle cx="50" cy="50" r="44" fill="none" stroke="url(#uInitGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="175 280" />
+            <circle cx="50" cy="6" r="3.2" fill="#0A4D8C" />
+          </svg>
+          <svg viewBox="0 0 100 100" class="u-init-ring-ccw" aria-hidden="true">
+            <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(10,77,140,0.24)" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="14 14 4 14" />
+          </svg>
+          <div class="u-init-medallion">
+            <svg viewBox="0 0 40 40" width="30" height="30" fill="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="uInitGlyph" x1="8" y1="6" x2="32" y2="34" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#083B6B" />
+                  <stop offset="55%" stop-color="#0A4D8C" />
+                  <stop offset="100%" stop-color="#1D70B8" />
+                </linearGradient>
+              </defs>
+              <path d="M10.5 9.5V22.5C10.5 27.7467 14.7533 32 20 32C25.2467 32 29.5 27.7467 29.5 22.5V9.5" stroke="url(#uInitGlyph)" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M10.5 9.5V22.5C10.5 27.7467 14.7533 32 20 32C25.2467 32 29.5 27.7467 29.5 22.5V9.5" stroke="#93C5FD" stroke-opacity="0.45" stroke-width="1.2" stroke-linecap="round" />
+              <circle cx="29.5" cy="9.5" r="1.4" fill="#38BDF8" />
+            </svg>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <p style="margin:0;font-size:12px;font-weight:600;color:#1E2329;">Unity Earning</p>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

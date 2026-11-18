@@ -53,6 +53,50 @@
   scrollbar-width: none;
 }
 
+@keyframes unity-spin-cw {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes unity-spin-ccw {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes unity-breathe {
+  0%, 100% {
+    transform: scale(0.92);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.95;
+  }
+}
+
+.unity-loader-spin-cw {
+  animation: unity-spin-cw 1.15s linear infinite;
+  will-change: transform;
+}
+
+.unity-loader-spin-ccw {
+  animation: unity-spin-ccw 2.6s linear infinite;
+  will-change: transform;
+}
+
+.unity-loader-breathe {
+  animation: unity-breathe 2.2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

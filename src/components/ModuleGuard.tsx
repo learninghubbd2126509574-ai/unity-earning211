@@ -4,6 +4,7 @@ import { WORK_MODULES } from '../lib/modules';
 import { useNavigate } from 'react-router-dom';
 import { Lock, ArrowRight, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { UnifiedAuth } from './UnifiedAuth';
+import { BrandedLoader } from './BrandedLoader';
 
 interface ModuleGuardProps {
   moduleId: string;
@@ -25,10 +26,7 @@ export const ModuleGuard: React.FC<ModuleGuardProps> = ({
   if (loading) {
     return (
       <div className="min-h-[60vh] bg-[#F4F5F7] flex items-center justify-center p-6">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-7 w-7 border-2 border-slate-300 border-t-[#0A4D8C]"></div>
-          <span className="text-xs text-slate-500 font-medium">Verifying access permissions...</span>
-        </div>
+        <BrandedLoader size="md" label="Verifying access permissions..." />
       </div>
     );
   }

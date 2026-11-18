@@ -8,6 +8,7 @@ import React, { useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { MobileLayout } from './components/MobileLayout';
+import { BrandedLoader } from './components/BrandedLoader';
 import { Home } from './pages/Home';
 import { TypingWork } from './pages/TypingWork';
 import { FormFillupWork } from './pages/FormFillupWork';
@@ -52,8 +53,8 @@ const MyWorkRedirect: React.FC = () => {
   }, [profile, navigate]);
 
   return (
-    <div className="p-8 flex justify-center items-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+    <div className="min-h-[60vh] flex justify-center items-center p-8">
+      <BrandedLoader size="md" label="Opening workspace..." />
     </div>
   );
 };

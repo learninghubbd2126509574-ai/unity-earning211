@@ -39,6 +39,7 @@ import { HelpSupportModal } from './HelpSupportModal';
 import { GiftCampaignModal } from './GiftCampaignModal';
 import { NotificationModal } from './NotificationModal';
 import { CustomAdminPopupModal } from './CustomAdminPopupModal';
+import { BrandedLoader } from './BrandedLoader';
 
 export const MobileLayout = () => {
   const { user, profile, loading, isPinUnlocked, setIsPinUnlocked, logout } = useAuth();
@@ -200,11 +201,7 @@ export const MobileLayout = () => {
   }, [user, profile]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center w-full">
-        <div className="animate-spin rounded-full h-9 w-9 border-2 border-slate-200 border-t-[#0A4D8C]"></div>
-      </div>
-    );
+    return <BrandedLoader fullScreen size="lg" label="Unity Earning" />;
   }
 
   // 1. PIN Keypad Lock Screen
