@@ -63,6 +63,17 @@ export interface EnterpriseClient {
   nomineeName: string;
   nomineeRelationShare: string;
   servicePolicyCode: string;
+  vatChallanNo: string;
+  tradeLicenseNo: string;
+  ircErcCode: string;
+  ibanNumber: string;
+  creditLimitBdt: string;
+  riskGrade: string;
+  sourceOfFund: string;
+  guardianNid: string;
+  utilityBillAcct: string;
+  chamberMembership: string;
+  beneficiaryMobileWallet: string;
   kycSecurityPin: string;
 }
 
@@ -193,6 +204,17 @@ export const GENERATE_60_CLIENTS = (): EnterpriseClient[] => {
       nomineeName: spouse.startsWith('N/A') ? father : spouse,
       nomineeRelationShare: spouse.startsWith('N/A') ? 'Father (100% Share)' : 'Spouse (100% Share)',
       servicePolicyCode: `POL-KYC-${String(8400 + num * 3)}`,
+      vatChallanNo: `MUSHAK-63-2026-${String(4100 + num * 17)}`,
+      tradeLicenseNo: `TRAD/DSCC/${String(14820 + num * 23).padStart(6, '0')}/2026`,
+      ircErcCode: `IRC-BD-2600${String(num).padStart(2, '0')}-${410 + num}`,
+      ibanNumber: `BD92${bankInfo.swift.slice(0, 4)}000${String(1041000000000 + num * 987654321).slice(0, 13)}`,
+      creditLimitBdt: `BDT ${(350000 + num * 25000).toLocaleString('en-US')}.00`,
+      riskGrade: num % 3 === 0 ? 'Medium-Review Tier-2' : 'Low-Risk Tier-1 (Verified)',
+      sourceOfFund: num % 2 === 0 ? 'Corporate Payroll & Equity Dividend' : 'Commercial Export & Trade Revenue',
+      guardianNid: `19${74 + (num % 15)}${String(2084000000 + num * 654321).slice(0, 10)}`,
+      utilityBillAcct: `DESCO-${String(99410000 + num * 319)}`,
+      chamberMembership: `DCCI-MEM-2026-${String(100 + num * 7)}`,
+      beneficiaryMobileWallet: `017${String(51000000 + num * 47321).slice(0, 8)} (bKash Verified)`,
       kycSecurityPin: `SEC-${String(91000 + num * 29)}`
     };
   });
@@ -240,7 +262,19 @@ const EMPTY_FORM = {
   swiftBicCode: '',
   nomineeName: '',
   nomineeRelationShare: '',
-  servicePolicyCode: ''
+  servicePolicyCode: '',
+  vatChallanNo: '',
+  tradeLicenseNo: '',
+  ircErcCode: '',
+  ibanNumber: '',
+  creditLimitBdt: '',
+  riskGrade: '',
+  sourceOfFund: '',
+  guardianNid: '',
+  utilityBillAcct: '',
+  chamberMembership: '',
+  beneficiaryMobileWallet: '',
+  kycSecurityPin: ''
 };
 
 type FormDataKey = keyof typeof EMPTY_FORM;
@@ -292,7 +326,19 @@ const FIELD_CONFIG: {
   { key: 'swiftBicCode', label: '37. SWIFT / BIC Settlement Code', placeholder: 'e.g. DBBLBDDH', mono: true },
   { key: 'nomineeName', label: '38. Authorized Nominee Name', placeholder: 'Enter nominee full name' },
   { key: 'nomineeRelationShare', label: '39. Nominee Relation & Share %', placeholder: 'e.g. Spouse (100% Share)' },
-  { key: 'servicePolicyCode', label: '40. Policy & KYC Service Code', placeholder: 'e.g. POL-KYC-8403', mono: true }
+  { key: 'servicePolicyCode', label: '40. Policy & KYC Service Code', placeholder: 'e.g. POL-KYC-8403', mono: true },
+  { key: 'vatChallanNo', label: '41. Mushak-6.3 VAT Challan Ref', placeholder: 'e.g. MUSHAK-63-2026-4117', mono: true },
+  { key: 'tradeLicenseNo', label: '42. Municipal Trade License No', placeholder: 'e.g. TRAD/DSCC/014843/2026', mono: true },
+  { key: 'ircErcCode', label: '43. Import/Export Reg. (IRC/ERC)', placeholder: 'e.g. IRC-BD-260001-411', mono: true },
+  { key: 'ibanNumber', label: '44. International IBAN Number', placeholder: 'e.g. BD92DBBL0001041987654321', mono: true },
+  { key: 'creditLimitBdt', label: '45. Sanctioned Credit Limit', placeholder: 'e.g. BDT 375,000.00', mono: true },
+  { key: 'riskGrade', label: '46. AML / KYC Risk Classification', placeholder: 'e.g. Low-Risk Tier-1 (Verified)' },
+  { key: 'sourceOfFund', label: '47. Declared Source of Income', placeholder: 'e.g. Corporate Payroll & Equity Dividend' },
+  { key: 'guardianNid', label: '48. Nominee / Guardian NID Number', placeholder: 'Enter 14-digit Guardian NID', mono: true },
+  { key: 'utilityBillAcct', label: '49. Verified Utility Meter / Account', placeholder: 'e.g. DESCO-99410319', mono: true },
+  { key: 'chamberMembership', label: '50. Trade / Chamber Affiliation', placeholder: 'e.g. DCCI-MEM-2026-107', mono: true },
+  { key: 'beneficiaryMobileWallet', label: '51. Linked MFS Wallet (bKash/Nagad)', placeholder: 'e.g. 01751047321 (bKash Verified)', mono: true },
+  { key: 'kycSecurityPin', label: '52. Central KYC Verification PIN *', placeholder: 'e.g. SEC-91029', required: true, mono: true }
 ];
 
 interface AuditErrorDetail {
@@ -330,7 +376,7 @@ export const FormFillupWork = () => {
 
   useEffect(() => {
     if (submittedClients[selectedClientId]) {
-      setFormData(submittedClients[selectedClientId]);
+      setFormData({ ...EMPTY_FORM, ...submittedClients[selectedClientId] });
     } else {
       setFormData(EMPTY_FORM);
     }
@@ -345,7 +391,7 @@ export const FormFillupWork = () => {
     return localStorage.getItem('unity_form_fillup_60_rejected') === 'true';
   });
   const [analysisRemainingSeconds, setAnalysisRemainingSeconds] = useState(120);
-  const [analysisStepText, setAnalysisStepText] = useState('Initializing 40-field enterprise KYC & banking audit...');
+  const [analysisStepText, setAnalysisStepText] = useState('Initializing 52-field enterprise KYC & banking audit...');
 
   const auditFindings = useMemo<AuditErrorDetail[]>(() => {
     const errors: AuditErrorDetail[] = [];
@@ -414,7 +460,7 @@ export const FormFillupWork = () => {
     if (isAnalyzingBatch) {
       setAnalysisProgress(0);
       setAnalysisRemainingSeconds(120);
-      setAnalysisStepText('Initializing 40-field enterprise KYC & banking audit...');
+      setAnalysisStepText('Initializing 52-field enterprise KYC & banking audit...');
 
       timer = setInterval(() => {
         setAnalysisRemainingSeconds((prev) => {
@@ -423,7 +469,7 @@ export const FormFillupWork = () => {
           setAnalysisProgress(pct);
 
           if (pct < 18) {
-            setAnalysisStepText('Cross-checking Smart NID, Passport & e-TIN checksums across 40 fields...');
+            setAnalysisStepText('Cross-checking Smart NID, Passport & e-TIN checksums across 52 fields...');
           } else if (pct < 38) {
             setAnalysisStepText('Validating corporate RJSC numbers, BIN/VAT codes & salary slabs...');
           } else if (pct < 58) {
@@ -462,7 +508,7 @@ export const FormFillupWork = () => {
     setFormError(null);
   };
 
-  // Strict no-paste & no-drop enforcement across all 40 fields
+  // Strict no-paste & no-drop enforcement across all 52 fields
   const handleBlockedPaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     setPasteBlockedCount((c) => c + 1);
@@ -489,13 +535,13 @@ export const FormFillupWork = () => {
   const handleClientFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const filledCount = FIELD_CONFIG.filter((f) => formData[f.key].trim().length > 0).length;
-    if (!formData.clientIdCode.trim() || !formData.fullName.trim() || !formData.nidNumber.trim()) {
-      setFormError('Please enter Client Reference ID (#1), Full Legal Name (#2), and NID Number (#10).');
+    const filledCount = FIELD_CONFIG.filter((f) => String(formData[f.key] ?? '').trim().length > 0).length;
+    if (!formData.clientIdCode.trim() || !formData.fullName.trim() || !formData.nidNumber.trim() || !formData.kycSecurityPin.trim()) {
+      setFormError('Please enter Client Reference ID (#1), Full Legal Name (#2), NID Number (#10), and KYC Verification PIN (#52).');
       return;
     }
-    if (filledCount < 10) {
-      setFormError(`Incomplete dossier entry! Complete the required 40-field record (currently entered ${filledCount}/40 fields).`);
+    if (filledCount < 12) {
+      setFormError(`Incomplete dossier entry! Complete the required 52-field record (currently entered ${filledCount}/52 fields).`);
       return;
     }
 
@@ -515,7 +561,7 @@ export const FormFillupWork = () => {
       return;
     }
 
-    setFormSuccess(`Client #${selectedClientId} (${currentClient.fullName}) — 40 fields saved! (${newCount}/60 completed)`);
+    setFormSuccess(`Client #${selectedClientId} (${currentClient.fullName}) — 52 fields saved! (${newCount}/60 completed)`);
   };
 
   const filteredClients = useMemo(() => {
@@ -532,11 +578,11 @@ export const FormFillupWork = () => {
 
   const completedCount = Object.keys(submittedClients).length;
   const progressPercent = Math.round((completedCount / 60) * 100);
-  const enteredFieldsCount = FIELD_CONFIG.filter((f) => formData[f.key].trim().length > 0).length;
+  const enteredFieldsCount = FIELD_CONFIG.filter((f) => String(formData[f.key] ?? '').trim().length > 0).length;
 
   const handleFinalProjectSubmit = () => {
     if (completedCount === 0) {
-      setFormError('Please fill and save at least one client 40-field dossier before submitting for verification.');
+      setFormError('Please fill and save at least one client 52-field dossier before submitting for verification.');
       return;
     }
     setIsAnalyzingBatch(true);
@@ -554,13 +600,13 @@ export const FormFillupWork = () => {
 
             <div className="space-y-1.5">
               <p className="text-xs font-medium text-[#0A4D8C]">
-                Central 40-Field KYC Audit
+                Central 52-Field KYC Audit
               </p>
               <h2 className="text-lg font-semibold tracking-tight text-[#1E2329]">
                 Verifying Client Form Batch
               </h2>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Checking 40-field data parity across {completedCount} saved client dossiers, banking routing checksums, and keystroke logs.
+                Checking 52-field data parity across {completedCount} saved client dossiers, IBAN/banking routing checksums, and keystroke logs.
               </p>
             </div>
 
@@ -628,7 +674,7 @@ export const FormFillupWork = () => {
             <div className="p-3 bg-[#EEF5FC] rounded-xl border border-[#D4E4F7] text-xs text-[#1E2329] flex items-start gap-2.5">
               <Info size={15} className="text-[#0A4D8C] shrink-0 mt-0.5" />
               <span className="leading-relaxed">
-                Every field (#1–#40) must match exact spelling, punctuation, dashes, currency decimals, and routing digits from the client dossier.
+                Every field (#1–#52) must match exact spelling, punctuation, dashes, currency decimals, IBAN, and routing digits from the client dossier.
               </span>
             </div>
 
@@ -656,10 +702,10 @@ export const FormFillupWork = () => {
                 Enterprise KYC Form Fill-up
               </p>
               <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-white">
-                60-Client × 40-Field Data Entry Project
+                60-Client × 52-Field Data Entry Project
               </h1>
               <p className="text-xs text-blue-100/90 leading-relaxed max-w-xl">
-                Select a client from the 60-client roster below, review their 40 reference fields, and manually fill all 40 form entries.
+                Select a client from the 60-client roster below, review their 52 reference fields, and manually fill all 52 form entries.
               </p>
             </div>
 
@@ -694,7 +740,7 @@ export const FormFillupWork = () => {
         <div className="bg-[#FEF7E0] border border-[#F3DFA2] rounded-xl px-4 py-3 text-xs text-[#5F4B16] flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 font-medium">
             <ShieldAlert size={16} className="text-[#B47B00] shrink-0" />
-            <span>Strict Manual Typing: Copy, Paste, Drag-Drop & Auto-Fill are blocked across all 40 fields.</span>
+            <span>Strict Manual Typing: Copy, Paste, Drag-Drop & Auto-Fill are blocked across all 52 fields.</span>
           </div>
           {pasteBlockedCount > 0 && (
             <span className="text-xs font-mono font-semibold text-rose-700 shrink-0 tabular-nums">
@@ -712,7 +758,7 @@ export const FormFillupWork = () => {
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-[#1E2329]">Select Client Roster (1–60 Clients)</h2>
-                <p className="text-xs text-slate-500">Select any client below to load their 40 reference fields</p>
+                <p className="text-xs text-slate-500">Select any client below to load their 52 reference fields</p>
               </div>
             </div>
 
@@ -779,11 +825,11 @@ export const FormFillupWork = () => {
                 <span>Client #{currentClient.id} · {currentClient.clientIdCode}</span>
               </p>
               <h3 className="text-base font-semibold mt-0.5 text-white">
-                {currentClient.fullName} — 40-Point Reference Dossier
+                {currentClient.fullName} — 52-Point Reference Dossier
               </h3>
             </div>
             <span className="text-xs font-medium text-slate-300">
-              40 Reference Fields · Copy Blocked
+              52 Reference Fields · Copy Blocked
             </span>
           </div>
 
@@ -803,7 +849,7 @@ export const FormFillupWork = () => {
           </div>
         </div>
 
-        {/* 3. MANUAL ENTRY INPUT FORM (40 VERTICAL FIELDS TOP-TO-BOTTOM, PASTE BLOCKED) */}
+        {/* 3. MANUAL ENTRY INPUT FORM (52 VERTICAL FIELDS TOP-TO-BOTTOM, PASTE BLOCKED) */}
         <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/90 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
             <div className="flex items-center gap-2.5">
@@ -812,10 +858,10 @@ export const FormFillupWork = () => {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-[#1E2329]">
-                  Client #{currentClient.id} — 40-Field Manual Entry Form
+                  Client #{currentClient.id} — 52-Field Manual Entry Form
                 </h3>
                 <p className="text-xs text-slate-500 tabular-nums">
-                  Enter all 40 fields vertically matching the client dossier above ({enteredFieldsCount}/40 filled).
+                  Enter all 52 fields vertically matching the client dossier above ({enteredFieldsCount}/52 filled).
                 </p>
               </div>
             </div>
@@ -848,7 +894,7 @@ export const FormFillupWork = () => {
                   <input
                     type={field.type || 'text'}
                     required={field.required}
-                    value={formData[field.key]}
+                    value={formData[field.key] ?? ''}
                     onChange={(e) => handleFieldChange(field.key, e.target.value)}
                     onPaste={handleBlockedPaste}
                     onDrop={handleBlockedDrop}
@@ -874,7 +920,7 @@ export const FormFillupWork = () => {
                 className="w-full sm:w-auto bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold px-5 py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-xs cursor-pointer whitespace-nowrap"
               >
                 <CheckCircle2 size={15} />
-                <span>Save Client #{selectedClientId} (40 Fields)</span>
+                <span>Save Client #{selectedClientId} (52 Fields)</span>
               </button>
             </div>
           </form>
@@ -887,7 +933,7 @@ export const FormFillupWork = () => {
               Submit 60-Client Project for Verification (BDT 350.00)
             </h3>
             <p className="text-xs text-slate-500 tabular-nums mt-0.5">
-              Saved {completedCount} of 60 client records (each with 40 fields).
+              Saved {completedCount} of 60 client records (each with 52 fields).
             </p>
           </div>
           <button
