@@ -31,9 +31,10 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { getModuleTitle } from '../lib/modules';
+import { updateDirectUserProfile } from '../lib/directAuth';
 
 export const Profile = () => {
-  const { user, profile, logout, lockPortal } = useAuth();
+  const { user, profile, logout, lockPortal, updateCurrentProfile } = useAuth();
   const navigate = useNavigate();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -190,13 +191,17 @@ export const Profile = () => {
     setProfileError('');
     setSaving(true);
     try {
-      await updateDoc(doc(db, 'users', user.uid), {
+      const updatedFields = {
         fullName: editName.trim(),
         whatsappNumber: editPhone.trim(),
         photoUrl: editPhoto || ''
-      });
+      };
+      await updateDirectUserProfile(user.uid, updatedFields);
+      updateCurrentProfile(updatedFields);
+
+      updateDoc(doc(db, 'users', user.uid), updatedFields).catch(() => {});
       if (profile.studentIdCode && /^\d{7}$/.test(String(profile.studentIdCode))) {
-        await setDoc(
+        setDoc(
           doc(db, 'memberDirectory', String(profile.studentIdCode)),
           {
             uid: user.uid,
@@ -205,7 +210,7 @@ export const Profile = () => {
             updatedAt: new Date().toISOString()
           },
           { merge: true }
-        );
+        ).catch(() => {});
       }
       setIsEditing(false);
     } catch (err) {

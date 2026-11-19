@@ -17,7 +17,10 @@ import {
   Clock,
   ShieldAlert,
   UserCheck,
-  FileText
+  FileText,
+  Play,
+  Lock,
+  Timer
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -348,6 +351,31 @@ interface AuditErrorDetail {
   detail: string;
 }
 
+const FORM_PROJECT_DEADLINE_KEY = 'unity_form_project_deadline';
+const FORM_ACTIVE_SESSION_KEY = 'unity_form_active_session';
+const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
+const EIGHT_MINUTES_MS = 8 * 60 * 1000;
+
+interface ActiveFormSession {
+  clientId: number;
+  expiresAt: number;
+}
+
+const formatHMS = (totalSeconds: number) => {
+  const s = Math.max(0, totalSeconds);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+};
+
+const formatMS = (totalSeconds: number) => {
+  const s = Math.max(0, totalSeconds);
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+};
+
 export const FormFillupWork = () => {
   const { user, profile } = useAuth();
   void user;
@@ -356,6 +384,60 @@ export const FormFillupWork = () => {
   const [selectedClientId, setSelectedClientId] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [pasteBlockedCount, setPasteBlockedCount] = useState(0);
+
+  const [autoResetNotice, setAutoResetNotice] = useState<'48h' | '8m' | null>(() => {
+    try {
+      const savedDeadline = Number(localStorage.getItem(FORM_PROJECT_DEADLINE_KEY) || 0);
+      if (savedDeadline > 0 && Date.now() >= savedDeadline) {
+        localStorage.removeItem('unity_form_fillup_60_records');
+        localStorage.removeItem('unity_form_fillup_60_rejected');
+        localStorage.removeItem(FORM_PROJECT_DEADLINE_KEY);
+        localStorage.removeItem(FORM_ACTIVE_SESSION_KEY);
+        return '48h';
+      }
+      const rawSession = localStorage.getItem(FORM_ACTIVE_SESSION_KEY);
+      if (rawSession) {
+        const parsed: ActiveFormSession = JSON.parse(rawSession);
+        if (parsed?.expiresAt && Date.now() >= parsed.expiresAt) {
+          localStorage.removeItem('unity_form_fillup_60_records');
+          localStorage.removeItem('unity_form_fillup_60_rejected');
+          localStorage.removeItem(FORM_ACTIVE_SESSION_KEY);
+          return '8m';
+        }
+      }
+    } catch {}
+    return null;
+  });
+
+  const [projectDeadline, setProjectDeadline] = useState<number | null>(() => {
+    try {
+      const saved = Number(localStorage.getItem(FORM_PROJECT_DEADLINE_KEY) || 0);
+      return saved > Date.now() ? saved : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [activeFormSession, setActiveFormSession] = useState<ActiveFormSession | null>(() => {
+    try {
+      const raw = localStorage.getItem(FORM_ACTIVE_SESSION_KEY);
+      if (!raw) return null;
+      const parsed: ActiveFormSession = JSON.parse(raw);
+      return parsed?.expiresAt > Date.now() ? parsed : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [projectRemainingSeconds, setProjectRemainingSeconds] = useState<number>(() => {
+    if (!projectDeadline) return 48 * 3600;
+    return Math.max(0, Math.floor((projectDeadline - Date.now()) / 1000));
+  });
+
+  const [formRemainingSeconds, setFormRemainingSeconds] = useState<number>(() => {
+    if (!activeFormSession) return 8 * 60;
+    return Math.max(0, Math.ceil((activeFormSession.expiresAt - Date.now()) / 1000));
+  });
 
   const [submittedClients, setSubmittedClients] = useState<{ [key: number]: any }>(() => {
     try {
@@ -498,15 +580,131 @@ export const FormFillupWork = () => {
     };
   }, [isAnalyzingBatch]);
 
+  const triggerEightMinuteReset = () => {
+    localStorage.removeItem('unity_form_fillup_60_records');
+    localStorage.removeItem('unity_form_fillup_60_rejected');
+    localStorage.removeItem(FORM_ACTIVE_SESSION_KEY);
+    setSubmittedClients({});
+    setActiveFormSession(null);
+    setFormRemainingSeconds(8 * 60);
+    setSelectedClientId(1);
+    setFormData(EMPTY_FORM);
+    setFormSuccess(null);
+    setAutoResetNotice('8m');
+    setFormError(
+      '৮ মিনিটের সময়সীমা শেষ! নির্ধারিত ৮ মিনিটের মধ্যে ফর্মটি পূরণ করতে না পারায় প্রজেক্ট রিসেট হয়েছে — আপনাকে আবার প্রথম থেকে (Client #1) শুরু করতে হবে।'
+    );
+  };
+
+  const triggerFortyEightHourReset = () => {
+    localStorage.removeItem('unity_form_fillup_60_records');
+    localStorage.removeItem('unity_form_fillup_60_rejected');
+    localStorage.removeItem(FORM_PROJECT_DEADLINE_KEY);
+    localStorage.removeItem(FORM_ACTIVE_SESSION_KEY);
+    setSubmittedClients({});
+    setIsRejectedBatch(false);
+    setIsAnalyzingBatch(false);
+    setProjectDeadline(null);
+    setProjectRemainingSeconds(48 * 3600);
+    setActiveFormSession(null);
+    setFormRemainingSeconds(8 * 60);
+    setSelectedClientId(1);
+    setFormData(EMPTY_FORM);
+    setFormSuccess(null);
+    setAutoResetNotice('48h');
+    setFormError(
+      '৪৮ ঘণ্টার নির্ধারিত সময়সীমা শেষ হয়ে যাওয়ায় আপনার সম্পূর্ণ প্রজেক্ট অটোমেটিক রিসেট হয়ে গেছে। এখন আবার শুরু থেকে কাজ করতে হবে।'
+    );
+  };
+
+  // Live 48-hour project & 8-minute per-form countdown enforcement
+  useEffect(() => {
+    if (!projectDeadline && !activeFormSession) return;
+
+    const tick = setInterval(() => {
+      const now = Date.now();
+
+      if (projectDeadline && !isAnalyzingBatch && !isRejectedBatch) {
+        const left48 = Math.floor((projectDeadline - now) / 1000);
+        if (left48 <= 0) {
+          triggerFortyEightHourReset();
+          return;
+        }
+        setProjectRemainingSeconds(left48);
+      }
+
+      if (activeFormSession && !isAnalyzingBatch && !isRejectedBatch) {
+        const left8 = Math.ceil((activeFormSession.expiresAt - now) / 1000);
+        if (left8 <= 0) {
+          triggerEightMinuteReset();
+          return;
+        }
+        setFormRemainingSeconds(left8);
+      }
+    }, 1000);
+
+    return () => clearInterval(tick);
+  }, [projectDeadline, activeFormSession, isAnalyzingBatch, isRejectedBatch]);
+
+  const handleStartProject = () => {
+    const now = Date.now();
+    const deadline = now + FORTY_EIGHT_HOURS_MS;
+    const firstFormSession: ActiveFormSession = {
+      clientId: selectedClientId,
+      expiresAt: now + EIGHT_MINUTES_MS,
+    };
+    try {
+      localStorage.setItem(FORM_PROJECT_DEADLINE_KEY, String(deadline));
+      localStorage.setItem(FORM_ACTIVE_SESSION_KEY, JSON.stringify(firstFormSession));
+    } catch {}
+    setProjectDeadline(deadline);
+    setProjectRemainingSeconds(48 * 3600);
+    setActiveFormSession(firstFormSession);
+    setFormRemainingSeconds(8 * 60);
+    setAutoResetNotice(null);
+    setFormError(null);
+  };
+
+  const handleStartCurrentForm = () => {
+    if (!projectDeadline) {
+      handleStartProject();
+      return;
+    }
+    const nextSession: ActiveFormSession = {
+      clientId: selectedClientId,
+      expiresAt: Date.now() + EIGHT_MINUTES_MS,
+    };
+    try {
+      localStorage.setItem(FORM_ACTIVE_SESSION_KEY, JSON.stringify(nextSession));
+    } catch {}
+    setActiveFormSession(nextSession);
+    setFormRemainingSeconds(8 * 60);
+    setAutoResetNotice(null);
+    setFormError(null);
+  };
+
   const handleRestartFormBatch = () => {
     localStorage.removeItem('unity_form_fillup_60_records');
     localStorage.removeItem('unity_form_fillup_60_rejected');
+    localStorage.removeItem(FORM_PROJECT_DEADLINE_KEY);
+    localStorage.removeItem(FORM_ACTIVE_SESSION_KEY);
     setSubmittedClients({});
     setIsRejectedBatch(false);
+    setProjectDeadline(null);
+    setProjectRemainingSeconds(48 * 3600);
+    setActiveFormSession(null);
+    setFormRemainingSeconds(8 * 60);
     setSelectedClientId(1);
+    setFormData(EMPTY_FORM);
+    setAutoResetNotice(null);
     setFormSuccess(null);
     setFormError(null);
   };
+
+  const isCurrentClientAlreadySaved = Boolean(submittedClients[selectedClientId]);
+  const isCurrentFormUnlocked =
+    Boolean(projectDeadline) &&
+    (isCurrentClientAlreadySaved || activeFormSession?.clientId === selectedClientId);
 
   // Strict no-paste & no-drop enforcement across all 52 fields
   const handleBlockedPaste = (e: React.ClipboardEvent) => {
@@ -522,6 +720,7 @@ export const FormFillupWork = () => {
   };
 
   const handleFieldChange = (field: FormDataKey, value: string) => {
+    if (!isCurrentFormUnlocked) return;
     const prevVal = formData[field] || '';
     if (value.length - prevVal.length > 12) {
       setPasteBlockedCount((c) => c + 1);
@@ -534,6 +733,16 @@ export const FormFillupWork = () => {
 
   const handleClientFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!projectDeadline) {
+      setFormError('প্রথমে Start বাটনে ক্লিক করে প্রজেক্ট শুরু করুন।');
+      return;
+    }
+
+    if (!isCurrentFormUnlocked) {
+      setFormError(`Client #${selectedClientId} ফর্মটি শুরু করতে Start বাটনে ক্লিক করুন (সময়সীমা ৮ মিনিট)।`);
+      return;
+    }
 
     const filledCount = FIELD_CONFIG.filter((f) => String(formData[f.key] ?? '').trim().length > 0).length;
     if (!formData.clientIdCode.trim() || !formData.fullName.trim() || !formData.nidNumber.trim() || !formData.kycSecurityPin.trim()) {
@@ -552,7 +761,10 @@ export const FormFillupWork = () => {
     setSubmittedClients(updated);
     try {
       localStorage.setItem('unity_form_fillup_60_records', JSON.stringify(updated));
+      localStorage.removeItem(FORM_ACTIVE_SESSION_KEY);
     } catch {}
+    setActiveFormSession(null);
+    setFormRemainingSeconds(8 * 60);
 
     const newCount = Object.keys(updated).length;
 
@@ -709,12 +921,42 @@ export const FormFillupWork = () => {
               </p>
             </div>
 
-            <div className="bg-white/10 border border-white/15 px-4 py-2.5 rounded-xl text-left sm:text-right shrink-0">
-              <div className="text-[11px] font-medium text-blue-100 flex items-center sm:justify-end gap-1">
-                <DollarSign size={12} /> Project Reward
+            <div className="flex flex-wrap sm:flex-nowrap items-stretch gap-2.5 shrink-0">
+              <div className="bg-white/10 border border-white/15 px-3.5 py-2.5 rounded-xl text-left sm:text-right">
+                <div className="text-[11px] font-medium text-blue-100 flex items-center sm:justify-end gap-1">
+                  <Timer size={12} /> 48h Project Limit
+                </div>
+                <div
+                  className={`text-base font-semibold font-mono tabular-nums mt-0.5 ${
+                    projectDeadline && projectRemainingSeconds < 3600 ? 'text-amber-200' : 'text-white'
+                  }`}
+                >
+                  {projectDeadline ? formatHMS(projectRemainingSeconds) : '48:00:00'}
+                </div>
               </div>
-              <div className="text-lg font-semibold font-mono tabular-nums text-white mt-0.5">
-                BDT 350.00
+
+              <div className="bg-white/10 border border-white/15 px-3.5 py-2.5 rounded-xl text-left sm:text-right">
+                <div className="text-[11px] font-medium text-blue-100 flex items-center sm:justify-end gap-1">
+                  <Clock size={12} /> Form #{selectedClientId} (8m)
+                </div>
+                <div
+                  className={`text-base font-semibold font-mono tabular-nums mt-0.5 ${
+                    activeFormSession?.clientId === selectedClientId && formRemainingSeconds < 120
+                      ? 'text-rose-200'
+                      : 'text-white'
+                  }`}
+                >
+                  {activeFormSession?.clientId === selectedClientId ? formatMS(formRemainingSeconds) : '08:00'}
+                </div>
+              </div>
+
+              <div className="bg-white/10 border border-white/15 px-3.5 py-2.5 rounded-xl text-left sm:text-right">
+                <div className="text-[11px] font-medium text-blue-100 flex items-center sm:justify-end gap-1">
+                  <DollarSign size={12} /> Reward
+                </div>
+                <div className="text-base font-semibold font-mono tabular-nums text-white mt-0.5">
+                  BDT 350.00
+                </div>
               </div>
             </div>
           </div>
@@ -735,6 +977,69 @@ export const FormFillupWork = () => {
             </div>
           </div>
         </div>
+
+        {/* MANDATORY 48-HOUR & 8-MINUTE RULES NOTICE (BENGALI) */}
+        <div className="bg-[#EEF5FC] border border-[#D4E4F7] rounded-xl p-4 text-[#1E2329] space-y-2">
+          <div className="flex items-center gap-2 font-semibold text-xs text-[#0A4D8C]">
+            <Clock size={15} className="shrink-0" />
+            <span>জরুরি সময়সীমা ও অটো-রিসেট নির্দেশিকা (৮ মিনিট প্রতি ফর্ম ও ৪৮ ঘণ্টা প্রজেক্ট)</span>
+          </div>
+          <ul className="space-y-1 text-xs text-slate-700 leading-relaxed list-disc pl-4">
+            <li>
+              <strong>প্রতি ফর্ম ৮ মিনিট:</strong> কাজ শুরু করার আগে অবশ্যই <strong>Start</strong> বাটনে ক্লিক করতে হবে। Start করার পর প্রতিটি ফর্ম পূরণ করার জন্য <strong>৮ মিনিট (08:00)</strong> সময় পাবেন—৮ মিনিটের বেশি হয়ে গেলে সম্পূর্ণ কাজ রিসেট হয়ে যাবে এবং আপনাকে <strong>আবার প্রথম থেকে (Client #1)</strong> শুরু করতে হবে।
+            </li>
+            <li>
+              <strong>৪৮ ঘণ্টা অটো-রিসেট সিস্টেম:</strong> একবার Start বাটনে ক্লিক করার পর <strong>৪৮ ঘণ্টার (48 Hours)</strong> ভেতর সম্পূর্ণ প্রজেক্টের সব কাজ (৬০টি ফর্ম) শেষ করতে হবে। নির্ধারিত ৪৮ ঘণ্টার মধ্যে সব কাজ শেষ করতে না পারলে পুরো প্রজেক্ট <strong>অটোমেটিক রিসেট</strong> হয়ে যাবে এবং শুরু থেকে করতে হবে।
+            </li>
+          </ul>
+        </div>
+
+        {/* AUTO-RESET ALERT BANNER (WHEN 8m OR 48h EXPIRED) */}
+        {autoResetNotice && (
+          <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 text-xs text-rose-800 flex items-start gap-2.5 font-medium">
+            <AlertCircle size={16} className="text-rose-700 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="font-semibold text-rose-900">
+                {autoResetNotice === '8m'
+                  ? '৮ মিনিট সময় শেষ — প্রজেক্ট প্রথম থেকে রিসেট হয়েছে!'
+                  : '৪৮ ঘণ্টা সময় শেষ — সম্পূর্ণ প্রজেক্ট অটো-রিসেট হয়েছে!'}
+              </p>
+              <p className="leading-relaxed">
+                {autoResetNotice === '8m'
+                  ? 'একটি ফর্ম পূরণে ৮ মিনিটের বেশি সময় লাগায় প্রজেক্ট প্রথম থেকে (Client #1) রিসেট করা হয়েছে। পুনরায় Start বাটনে ক্লিক করে নতুনভাবে শুরু করুন।'
+                  : '৪৮ ঘণ্টার মধ্যে সম্পূর্ণ প্রজেক্ট শেষ না হওয়ায় সিস্টেম অটোমেটিক রিসেট করে দিয়েছে। আবার প্রথম থেকে Start বাটনে ক্লিক করে কাজ শুরু করুন।'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* PROJECT START GATE CARD (MUST CLICK START FIRST) */}
+        {!projectDeadline && (
+          <div className="bg-[#22262C] text-white rounded-xl p-5 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/15 text-blue-200 flex items-center justify-center shrink-0">
+                <Lock size={18} />
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold text-white">
+                  প্রজেক্ট শুরু করতে Start বাটনে ক্লিক করুন
+                </h2>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Start বাটনে ক্লিক করার সাথে সাথে ৪৮ ঘণ্টার প্রজেক্ট কাউন্টডাউন এবং Client #{selectedClientId}-এর ৮ মিনিটের (08:00) ফর্ম টাইমার চালু হবে।
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleStartProject}
+              className="w-full sm:w-auto bg-[#0D7A5F] hover:bg-[#0A634C] text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer shrink-0 whitespace-nowrap"
+            >
+              <Play size={14} fill="currentColor" />
+              <span>Start Project (48h / 08:00)</span>
+            </button>
+          </div>
+        )}
 
         {/* Strict Manual Entry Banner */}
         <div className="bg-[#FEF7E0] border border-[#F3DFA2] rounded-xl px-4 py-3 text-xs text-[#5F4B16] flex items-center justify-between gap-2">
@@ -886,6 +1191,45 @@ export const FormFillupWork = () => {
             </div>
           )}
 
+          {projectDeadline && !isCurrentFormUnlocked && (
+            <div className="bg-[#22262C] text-white rounded-xl p-4 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-2.5">
+                <Lock size={16} className="text-blue-300 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-semibold text-white">
+                    Client #{currentClient.id} ফর্মটি লক করা আছে — Start বাটনে ক্লিক করুন
+                  </p>
+                  <p className="text-[11px] text-slate-300 mt-0.5">
+                    Start করলে ৮ মিনিট (08:00) সময় শুরু হবে। ৮ মিনিটের বেশি হলে প্রজেক্ট আবার প্রথম থেকে শুরু করতে হবে।
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleStartCurrentForm}
+                className="w-full sm:w-auto bg-[#0D7A5F] hover:bg-[#0A634C] text-white font-semibold px-4 py-2 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
+              >
+                <Play size={13} fill="currentColor" />
+                <span>Start Form #{currentClient.id} (08:00)</span>
+              </button>
+            </div>
+          )}
+
+          {projectDeadline && activeFormSession?.clientId === selectedClientId && (
+            <div className="bg-[#FEF7E0] border border-[#F3DFA2] rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs">
+              <span className="font-medium text-[#5F4B16]">
+                Client #{selectedClientId} Active 8-Minute Countdown (৮ মিনিটের মধ্যে Save করুন):
+              </span>
+              <span
+                className={`font-mono font-bold tabular-nums ${
+                  formRemainingSeconds < 120 ? 'text-rose-700' : 'text-[#0A4D8C]'
+                }`}
+              >
+                {formatMS(formRemainingSeconds)} remaining
+              </span>
+            </div>
+          )}
+
           <form onSubmit={handleClientFormSubmit} className="space-y-4">
             <div className="grid grid-cols-1 gap-3 text-xs">
               {FIELD_CONFIG.map((field) => (
@@ -894,6 +1238,7 @@ export const FormFillupWork = () => {
                   <input
                     type={field.type || 'text'}
                     required={field.required}
+                    disabled={!isCurrentFormUnlocked}
                     value={formData[field.key] ?? ''}
                     onChange={(e) => handleFieldChange(field.key, e.target.value)}
                     onPaste={handleBlockedPaste}
@@ -901,10 +1246,16 @@ export const FormFillupWork = () => {
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck={false}
-                    placeholder={field.placeholder}
-                    className={`w-full bg-[#F4F5F7] border border-slate-200 rounded-lg px-3 py-2.5 text-[#1E2329] focus:outline-none focus:border-[#0A4D8C] focus:bg-white transition-colors ${
-                      field.mono ? 'font-mono tabular-nums' : ''
-                    }`}
+                    placeholder={
+                      isCurrentFormUnlocked
+                        ? field.placeholder
+                        : 'Click Start above to unlock typing (08:00 timer)...'
+                    }
+                    className={`w-full border rounded-lg px-3 py-2.5 focus:outline-none transition-colors ${
+                      !isCurrentFormUnlocked
+                        ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                        : 'bg-[#F4F5F7] border-slate-200 text-[#1E2329] focus:border-[#0A4D8C] focus:bg-white'
+                    } ${field.mono ? 'font-mono tabular-nums' : ''}`}
                   />
                 </div>
               ))}
@@ -917,7 +1268,8 @@ export const FormFillupWork = () => {
 
               <button
                 type="submit"
-                className="w-full sm:w-auto bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold px-5 py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-xs cursor-pointer whitespace-nowrap"
+                disabled={!isCurrentFormUnlocked}
+                className="w-full sm:w-auto bg-[#0A4D8C] hover:bg-[#083D70] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-5 py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-xs cursor-pointer whitespace-nowrap"
               >
                 <CheckCircle2 size={15} />
                 <span>Save Client #{selectedClientId} (52 Fields)</span>

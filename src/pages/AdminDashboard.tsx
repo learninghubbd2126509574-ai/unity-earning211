@@ -12,6 +12,12 @@ import { collection, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc } fro
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { WORK_MODULES, getModuleTitle } from '../lib/modules';
+import {
+  adminDeleteAllDirectUsers,
+  adminDeleteDirectUser,
+  adminUpdateDirectUser,
+  fetchAllDirectAdminUsers,
+} from '../lib/directAuth';
 import { 
   Users, 
   FileText, 
@@ -87,7 +93,23 @@ export const AdminDashboard = () => {
   const [userStatusFilter, setUserStatusFilter] = useState<'all' | 'active' | 'pending' | 'blocked'>('all');
   
   // Data states
-  const [users, setUsers] = useState<any[]>([]);
+  const [firestoreUsers, setFirestoreUsers] = useState<any[]>([]);
+  const [directUsers, setDirectUsers] = useState<any[]>([]);
+  const users = useMemo(() => {
+    const map = new Map<string, any>();
+    firestoreUsers.forEach((u) => {
+      if (u?.id || u?.uid) map.set(u.id || u.uid, u);
+    });
+    directUsers.forEach((u) => {
+      if (u?.id || u?.uid) map.set(u.id || u.uid, u);
+    });
+    return Array.from(map.values()).sort((a: any, b: any) => {
+      const ta = new Date(a.createdAt || 0).getTime();
+      const tb = new Date(b.createdAt || 0).getTime();
+      return tb - ta;
+    });
+  }, [firestoreUsers, directUsers]);
+
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [moderatorApplications, setModeratorApplications] = useState<any[]>([]);
   const [affiliateSubmissions, setAffiliateSubmissions] = useState<any[]>([]);
@@ -183,6 +205,33 @@ export const AdminDashboard = () => {
       console.error(`Firestore Admin Listener (${OperationType.LIST} ${path}):`, error);
     };
 
+    // Load zero-limit direct registered users from backend and keep refreshed
+    const syncDirectUsers = async () => {
+      const list = await fetchAllDirectAdminUsers();
+      setDirectUsers(list);
+      setSelectedJobsMap((prev) => {
+        const next = { ...prev };
+        list.forEach((u: any) => {
+          const uidKey = u.id || u.uid;
+          if (!next[uidKey]) {
+            if (u.assignedJobs && Array.isArray(u.assignedJobs) && u.assignedJobs.length > 0) {
+              next[uidKey] = u.assignedJobs;
+            } else if (u.assignedJob) {
+              next[uidKey] = [u.assignedJob];
+            } else if (u.preferredModules && u.preferredModules.length > 0) {
+              next[uidKey] = u.preferredModules;
+            } else {
+              next[uidKey] = ['typing'];
+            }
+          }
+        });
+        return next;
+      });
+    };
+
+    syncDirectUsers();
+    const directPoll = setInterval(syncDirectUsers, 6000);
+
     const unsubUsers = onSnapshot(
       collection(db, 'users'),
       (snap) => {
@@ -193,7 +242,7 @@ export const AdminDashboard = () => {
             const tb = new Date(b.createdAt || 0).getTime();
             return tb - ta;
           });
-        setUsers(fetchedUsers);
+        setFirestoreUsers(fetchedUsers);
 
         setSelectedJobsMap((prev) => {
           const next = { ...prev };
@@ -319,6 +368,7 @@ export const AdminDashboard = () => {
     );
 
     return () => {
+      clearInterval(directPoll);
       unsubUsers();
       unsubSubs();
       unsubPin();
@@ -386,17 +436,25 @@ export const AdminDashboard = () => {
       return;
     }
 
-    try {
-      await updateDoc(doc(db, 'users', userId), {
-        assignedJobs: selected,
-        assignedJob: selected[0] || '',
-        updatedAt: new Date().toISOString()
-      });
-      showNotification(`Tasks updated successfully (${selected.length} tasks assigned).`);
-    } catch (err: any) {
-      console.error(err);
-      alert('Error updating assigned jobs: ' + err.message);
-    }
+    const nowIso = new Date().toISOString();
+    await adminUpdateDirectUser(userId, {
+      assignedJobs: selected,
+      assignedJob: selected[0] || '',
+      updatedAt: nowIso,
+    });
+    setDirectUsers((prev) =>
+      prev.map((u) =>
+        u.id === userId || u.uid === userId
+          ? { ...u, assignedJobs: selected, assignedJob: selected[0] || '', updatedAt: nowIso }
+          : u
+      )
+    );
+    updateDoc(doc(db, 'users', userId), {
+      assignedJobs: selected,
+      assignedJob: selected[0] || '',
+      updatedAt: nowIso,
+    }).catch(() => {});
+    showNotification(`Tasks updated successfully (${selected.length} tasks assigned).`);
   };
 
   // Approve a pending user
@@ -407,86 +465,92 @@ export const AdminDashboard = () => {
       return;
     }
 
-    try {
-      const targetUser = users.find(u => u.id === userId);
-      const studentIdCode = targetUser?.studentIdCode || '';
+    const nowIso = new Date().toISOString();
+    const targetUser = users.find((u) => u.id === userId);
+    const studentIdCode = targetUser?.studentIdCode || '';
 
-      await updateDoc(doc(db, 'users', userId), {
-        status: 'active',
-        assignedJobs: selected,
-        assignedJob: selected[0] || '',
-        updatedAt: new Date().toISOString()
-      });
+    await adminUpdateDirectUser(userId, {
+      status: 'active',
+      assignedJobs: selected,
+      assignedJob: selected[0] || '',
+      updatedAt: nowIso,
+    });
+    setDirectUsers((prev) =>
+      prev.map((u) =>
+        u.id === userId || u.uid === userId
+          ? { ...u, status: 'active', assignedJobs: selected, assignedJob: selected[0] || '', updatedAt: nowIso }
+          : u
+      )
+    );
 
-      if (studentIdCode && /^\d{7}$/.test(studentIdCode)) {
-        await setDoc(
-          doc(db, 'memberDirectory', studentIdCode),
-          {
-            studentIdCode,
-            fullName: targetUser?.fullName || 'Verified Member',
-            whatsappNumber: targetUser?.whatsappNumber || '',
-            status: 'active',
-            updatedAt: new Date().toISOString()
-          },
-          { merge: true }
-        );
-      }
+    updateDoc(doc(db, 'users', userId), {
+      status: 'active',
+      assignedJobs: selected,
+      assignedJob: selected[0] || '',
+      updatedAt: nowIso,
+    }).catch(() => {});
 
-      showNotification(`User approved successfully! Access granted to ${selected.length} tasks.`);
-    } catch (err: any) {
-      console.error(err);
-      alert('Error approving user: ' + err.message);
+    if (studentIdCode && /^\d{7}$/.test(studentIdCode)) {
+      setDoc(
+        doc(db, 'memberDirectory', studentIdCode),
+        {
+          studentIdCode,
+          fullName: targetUser?.fullName || 'Verified Member',
+          whatsappNumber: targetUser?.whatsappNumber || '',
+          status: 'active',
+          updatedAt: nowIso,
+        },
+        { merge: true }
+      ).catch(() => {});
     }
+
+    showNotification(`User approved successfully! Access granted to ${selected.length} tasks.`);
   };
 
   // Reject / Deactivate user
   const handleRejectUser = async (userId: string) => {
-    try {
-      await updateDoc(doc(db, 'users', userId), {
-        status: 'blocked',
-        updatedAt: new Date().toISOString()
-      });
-      showNotification('অ্যাকাউন্ট ডিঅ্যাক্টিভেট (Deactivated) করা হয়েছে।');
-    } catch (err: any) {
-      console.error(err);
-      alert('Error updating user status: ' + err.message);
-    }
+    const nowIso = new Date().toISOString();
+    await adminUpdateDirectUser(userId, { status: 'blocked', updatedAt: nowIso });
+    setDirectUsers((prev) =>
+      prev.map((u) => (u.id === userId || u.uid === userId ? { ...u, status: 'blocked', updatedAt: nowIso } : u))
+    );
+    updateDoc(doc(db, 'users', userId), { status: 'blocked', updatedAt: nowIso }).catch(() => {});
+    showNotification('অ্যাকাউন্ট ডিঅ্যাক্টিভেট (Deactivated) করা হয়েছে।');
   };
 
   const handleReactivateUser = async (userId: string) => {
-    try {
-      await updateDoc(doc(db, 'users', userId), {
-        status: 'active',
-        updatedAt: new Date().toISOString()
-      });
-      showNotification('অ্যাকাউন্ট পুনরায় অ্যাক্টিভ (Reactivated) করা হয়েছে।');
-    } catch (err: any) {
-      console.error(err);
-      alert('Error reactivating user: ' + err.message);
-    }
+    const nowIso = new Date().toISOString();
+    await adminUpdateDirectUser(userId, { status: 'active', updatedAt: nowIso });
+    setDirectUsers((prev) =>
+      prev.map((u) => (u.id === userId || u.uid === userId ? { ...u, status: 'active', updatedAt: nowIso } : u))
+    );
+    updateDoc(doc(db, 'users', userId), { status: 'active', updatedAt: nowIso }).catch(() => {});
+    showNotification('অ্যাকাউন্ট পুনরায় অ্যাক্টিভ (Reactivated) করা হয়েছে।');
   };
 
   const updateBalance = async (id: string, current: number, delta: number) => {
-    try {
-      const newBal = Number((current + delta).toFixed(2));
-      if (newBal >= 0) {
-        await updateDoc(doc(db, 'users', id), { balance: newBal, updatedAt: new Date().toISOString() });
-        showNotification(`ব্যালেন্স আপডেট করা হয়েছে: BDT ${newBal.toFixed(2)}`);
-      }
-    } catch (err: any) {
-      alert('Failed to update balance: ' + err.message);
+    const newBal = Number((current + delta).toFixed(2));
+    if (newBal >= 0) {
+      const nowIso = new Date().toISOString();
+      await adminUpdateDirectUser(id, { balance: newBal, updatedAt: nowIso });
+      setDirectUsers((prev) =>
+        prev.map((u) => (u.id === id || u.uid === id ? { ...u, balance: newBal, updatedAt: nowIso } : u))
+      );
+      updateDoc(doc(db, 'users', id), { balance: newBal, updatedAt: nowIso }).catch(() => {});
+      showNotification(`ব্যালেন্স আপডেট করা হয়েছে: BDT ${newBal.toFixed(2)}`);
     }
   };
 
   const updatePoints = async (id: string, current: number, delta: number) => {
-    try {
-      const newPoints = current + delta;
-      if (newPoints >= 0) {
-        await updateDoc(doc(db, 'users', id), { microjobPoints: newPoints, updatedAt: new Date().toISOString() });
-        showNotification(`পয়েন্ট আপডেট করা হয়েছে: ${newPoints} pts`);
-      }
-    } catch (err: any) {
-      alert('Failed to update points: ' + err.message);
+    const newPoints = current + delta;
+    if (newPoints >= 0) {
+      const nowIso = new Date().toISOString();
+      await adminUpdateDirectUser(id, { microjobPoints: newPoints, updatedAt: nowIso });
+      setDirectUsers((prev) =>
+        prev.map((u) => (u.id === id || u.uid === id ? { ...u, microjobPoints: newPoints, updatedAt: nowIso } : u))
+      );
+      updateDoc(doc(db, 'users', id), { microjobPoints: newPoints, updatedAt: nowIso }).catch(() => {});
+      showNotification(`পয়েন্ট আপডেট করা হয়েছে: ${newPoints} pts`);
     }
   };
 
@@ -496,18 +560,16 @@ export const AdminDashboard = () => {
       alert('Password must be at least 6 characters long.');
       return;
     }
-    try {
-      await updateDoc(doc(db, 'users', id), {
-        passwordText: newPassword.trim(),
-        updatedAt: new Date().toISOString()
-      });
-      setEditingPasswordId(null);
-      setNewPassword('');
-      showNotification('User password updated and saved successfully!');
-    } catch (err: any) {
-      console.error(err);
-      alert('Failed to update password: ' + err.message);
-    }
+    const trimmedPass = newPassword.trim();
+    const nowIso = new Date().toISOString();
+    await adminUpdateDirectUser(id, { passwordText: trimmedPass, updatedAt: nowIso });
+    setDirectUsers((prev) =>
+      prev.map((u) => (u.id === id || u.uid === id ? { ...u, passwordText: trimmedPass, updatedAt: nowIso } : u))
+    );
+    updateDoc(doc(db, 'users', id), { passwordText: trimmedPass, updatedAt: nowIso }).catch(() => {});
+    setEditingPasswordId(null);
+    setNewPassword('');
+    showNotification('User password updated and saved successfully!');
   };
 
   const handleSendPasswordResetEmail = async (userEmail?: string) => {
@@ -525,29 +587,28 @@ export const AdminDashboard = () => {
 
   const deleteUser = async (id: string) => {
     if (deleteConfirmId === id) {
-      try {
-        const target = users.find((u) => u.id === id);
-        await deleteDoc(doc(db, 'users', id));
-        if (target?.studentIdCode && /^\d{7}$/.test(String(target.studentIdCode))) {
-          await deleteDoc(doc(db, 'memberDirectory', String(target.studentIdCode))).catch(() => {});
-        }
-        if (target?.whatsappNumber) {
-          try {
-            const phoneHash = await hashAuthLookupKey(normalizePhoneDigits(target.whatsappNumber) || target.whatsappNumber);
-            await deleteDoc(doc(db, 'authLookups', phoneHash)).catch(() => {});
-          } catch {}
-        }
-        if (target?.studentIdCode) {
-          try {
-            const idHash = await hashAuthLookupKey(String(target.studentIdCode).trim());
-            await deleteDoc(doc(db, 'authLookups', idHash)).catch(() => {});
-          } catch {}
-        }
-        setDeleteConfirmId(null);
-        showNotification('User account deleted permanently.');
-      } catch (err: any) {
-        alert('Failed to delete account: ' + err.message);
+      const target = users.find((u) => u.id === id);
+      await adminDeleteDirectUser(id);
+      setDirectUsers((prev) => prev.filter((u) => u.id !== id && u.uid !== id));
+      setFirestoreUsers((prev) => prev.filter((u) => u.id !== id && u.uid !== id));
+      deleteDoc(doc(db, 'users', id)).catch(() => {});
+      if (target?.studentIdCode && /^\d{7}$/.test(String(target.studentIdCode))) {
+        deleteDoc(doc(db, 'memberDirectory', String(target.studentIdCode))).catch(() => {});
       }
+      if (target?.whatsappNumber) {
+        try {
+          const phoneHash = await hashAuthLookupKey(normalizePhoneDigits(target.whatsappNumber) || target.whatsappNumber);
+          deleteDoc(doc(db, 'authLookups', phoneHash)).catch(() => {});
+        } catch {}
+      }
+      if (target?.studentIdCode) {
+        try {
+          const idHash = await hashAuthLookupKey(String(target.studentIdCode).trim());
+          deleteDoc(doc(db, 'authLookups', idHash)).catch(() => {});
+        } catch {}
+      }
+      setDeleteConfirmId(null);
+      showNotification('User account deleted permanently.');
     } else {
       setDeleteConfirmId(id);
       setTimeout(() => setDeleteConfirmId(null), 3500);
@@ -558,12 +619,13 @@ export const AdminDashboard = () => {
   const handleDeleteAllUsers = async () => {
     setIsDeletingAll(true);
     try {
-      let count = 0;
-      for (const u of users) {
-        if (!u.id) continue;
-        await deleteDoc(doc(db, 'users', u.id));
-        count++;
+      const count = users.length;
+      await adminDeleteAllDirectUsers();
+      setDirectUsers([]);
 
+      for (const u of firestoreUsers) {
+        if (!u.id) continue;
+        await deleteDoc(doc(db, 'users', u.id)).catch(() => {});
         if (u.studentIdCode && /^\d{7}$/.test(String(u.studentIdCode))) {
           await deleteDoc(doc(db, 'memberDirectory', String(u.studentIdCode))).catch(() => {});
         }
@@ -580,7 +642,7 @@ export const AdminDashboard = () => {
           } catch {}
         }
       }
-
+      setFirestoreUsers([]);
       setShowDeleteAllModal(false);
       showNotification(`All ${count} user accounts have been deleted. New registrations can now be created.`);
     } catch (err: any) {

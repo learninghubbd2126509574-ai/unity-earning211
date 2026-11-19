@@ -653,13 +653,46 @@ export const TypingWork = () => {
 const ACTIVE_SESSION_KEY = 'unity_typing_active_session';
 const COOLDOWN_UNTIL_KEY = 'unity_typing_cooldown_until';
 const COOLDOWN_REASON_KEY = 'unity_typing_cooldown_reason';
+const TYPING_PROJECT_DEADLINE_KEY = 'unity_typing_project_deadline';
 const COOLDOWN_DURATION_MS = 2 * 60 * 60 * 1000; // 2 Hours
+const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000; // 48 Hours
 
 const TypingApp = () => {
   const { user, profile } = useAuth();
 
   const [selectedTaskIndex, setSelectedTaskIndex] = useState(0);
   const currentTask = ADVANCED_10_TASKS[selectedTaskIndex];
+
+  const [projectAutoResetNotice, setProjectAutoResetNotice] = useState<boolean>(() => {
+    try {
+      const savedDeadline = Number(localStorage.getItem(TYPING_PROJECT_DEADLINE_KEY) || 0);
+      if (savedDeadline > 0 && Date.now() >= savedDeadline) {
+        localStorage.removeItem('unity_typing_submitted_count');
+        localStorage.removeItem('unity_typing_submitted_ids');
+        localStorage.removeItem('unity_typing_audit_logs');
+        localStorage.removeItem(ACTIVE_SESSION_KEY);
+        localStorage.removeItem(COOLDOWN_UNTIL_KEY);
+        localStorage.removeItem(COOLDOWN_REASON_KEY);
+        localStorage.removeItem(TYPING_PROJECT_DEADLINE_KEY);
+        return true;
+      }
+    } catch {}
+    return false;
+  });
+
+  const [projectDeadline, setProjectDeadline] = useState<number | null>(() => {
+    try {
+      const saved = Number(localStorage.getItem(TYPING_PROJECT_DEADLINE_KEY) || 0);
+      return saved > Date.now() ? saved : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [projectRemainingSeconds, setProjectRemainingSeconds] = useState<number>(() => {
+    if (!projectDeadline) return 48 * 3600;
+    return Math.max(0, Math.floor((projectDeadline - Date.now()) / 1000));
+  });
 
   const [submittedCount, setSubmittedCount] = useState<number>(() => {
     return Number(localStorage.getItem('unity_typing_submitted_count') || 0);
@@ -803,16 +836,69 @@ const TypingApp = () => {
     return () => clearInterval(cdTimer);
   }, [cooldownRemainingSeconds]);
 
+  // 48-Hour Master Project Countdown & Auto-Reset
+  useEffect(() => {
+    if (!projectDeadline) return;
+
+    const projectTimer = setInterval(() => {
+      const left = Math.floor((projectDeadline - Date.now()) / 1000);
+      if (left <= 0) {
+        clearInterval(projectTimer);
+        localStorage.removeItem('unity_typing_submitted_count');
+        localStorage.removeItem('unity_typing_submitted_ids');
+        localStorage.removeItem('unity_typing_audit_logs');
+        localStorage.removeItem(ACTIVE_SESSION_KEY);
+        localStorage.removeItem(COOLDOWN_UNTIL_KEY);
+        localStorage.removeItem(COOLDOWN_REASON_KEY);
+        localStorage.removeItem(TYPING_PROJECT_DEADLINE_KEY);
+        setSubmittedCount(0);
+        setSubmittedTaskIds([]);
+        setTaskAuditLogs({});
+        setBatchEvaluationResult('none');
+        setIsAnalyzingBatch(false);
+        setIsSubmittedSuccess(false);
+        setIsSessionActive(false);
+        setCooldownRemainingSeconds(0);
+        setCooldownReason(null);
+        setSelectedTaskIndex(0);
+        setInputText('');
+        setStartTime(null);
+        setRemainingSeconds(30 * 60);
+        setVideoProofLink('');
+        setVideoFile(null);
+        setVideoFileName('');
+        setProjectDeadline(null);
+        setProjectRemainingSeconds(48 * 3600);
+        setProjectAutoResetNotice(true);
+        setValidationError(
+          '৪৮ ঘণ্টার নির্ধারিত সময়সীমা শেষ হয়ে যাওয়ায় আপনার সম্পূর্ণ টাইপিং প্রজেক্ট অটোমেটিক রিসেট হয়ে গেছে। এখন আবার শুরু থেকে (Task #1) কাজ করতে হবে।'
+        );
+        return;
+      }
+      setProjectRemainingSeconds(left);
+    }, 1000);
+
+    return () => clearInterval(projectTimer);
+  }, [projectDeadline]);
+
   const handleStartTypingSession = () => {
     if (cooldownRemainingSeconds > 0) return;
+    const now = Date.now();
     try {
       localStorage.setItem(
         ACTIVE_SESSION_KEY,
-        JSON.stringify({ taskId: currentTask.id, startedAt: Date.now() })
+        JSON.stringify({ taskId: currentTask.id, startedAt: now })
       );
+      if (!projectDeadline) {
+        const deadline = now + FORTY_EIGHT_HOURS_MS;
+        localStorage.setItem(TYPING_PROJECT_DEADLINE_KEY, String(deadline));
+        setProjectDeadline(deadline);
+        setProjectRemainingSeconds(48 * 3600);
+      }
     } catch {}
+    setProjectAutoResetNotice(false);
     setRemainingSeconds(30 * 60);
-    setStartTime(Date.now());
+    setStartTime(now);
     setIsSessionActive(true);
     setValidationError(null);
   };
@@ -1004,12 +1090,16 @@ const TypingApp = () => {
     localStorage.removeItem('unity_typing_submitted_ids');
     localStorage.removeItem('unity_typing_audit_logs');
     localStorage.removeItem(ACTIVE_SESSION_KEY);
+    localStorage.removeItem(TYPING_PROJECT_DEADLINE_KEY);
     setSubmittedCount(0);
     setSubmittedTaskIds([]);
     setTaskAuditLogs({});
     setBatchEvaluationResult('none');
     setIsSubmittedSuccess(false);
     setIsSessionActive(false);
+    setProjectDeadline(null);
+    setProjectRemainingSeconds(48 * 3600);
+    setProjectAutoResetNotice(false);
     setSelectedTaskIndex(0);
     setInputText('');
     setStartTime(null);
@@ -1301,30 +1391,46 @@ const TypingApp = () => {
             </p>
           </div>
 
-          {/* 30-Minute Timer / Status Card */}
-          <div className="bg-white/10 border border-white/15 px-4 py-2.5 rounded-xl text-left sm:text-right shrink-0 w-full sm:w-auto">
-            <div className="text-[11px] font-medium text-blue-100 flex items-center sm:justify-end gap-1.5">
-              <Timer size={13} />
-              <span>
-                {cooldownRemainingSeconds > 0
-                  ? 'Cooldown Lock'
-                  : isSessionActive
-                  ? 'Active Timer (30m)'
-                  : 'Time Allowance'}
-              </span>
+          {/* Timers: 48-Hour Project Limit + 30-Minute Task Timer */}
+          <div className="flex flex-wrap sm:flex-nowrap items-stretch gap-2.5 shrink-0 w-full sm:w-auto">
+            <div className="bg-white/10 border border-white/15 px-3.5 py-2.5 rounded-xl text-left sm:text-right flex-1 sm:flex-none">
+              <div className="text-[11px] font-medium text-blue-100 flex items-center sm:justify-end gap-1.5">
+                <Clock size={12} />
+                <span>{projectDeadline ? '48h Project Limit' : 'Project Limit'}</span>
+              </div>
+              <div
+                className={`text-lg sm:text-xl font-semibold font-mono tabular-nums mt-0.5 ${
+                  projectDeadline && projectRemainingSeconds < 3600 ? 'text-amber-200' : 'text-white'
+                }`}
+              >
+                {projectDeadline ? formatCooldownHMS(projectRemainingSeconds) : '48:00:00'}
+              </div>
             </div>
-            <div
-              className={`text-xl font-semibold font-mono tabular-nums mt-0.5 ${
-                cooldownRemainingSeconds > 0
-                  ? 'text-rose-200'
-                  : isSessionActive && remainingSeconds < 300
-                  ? 'text-amber-200'
-                  : 'text-white'
-              }`}
-            >
-              {cooldownRemainingSeconds > 0
-                ? formatCooldownHMS(cooldownRemainingSeconds)
-                : formatTimer(remainingSeconds)}
+
+            <div className="bg-white/10 border border-white/15 px-3.5 py-2.5 rounded-xl text-left sm:text-right flex-1 sm:flex-none">
+              <div className="text-[11px] font-medium text-blue-100 flex items-center sm:justify-end gap-1.5">
+                <Timer size={13} />
+                <span>
+                  {cooldownRemainingSeconds > 0
+                    ? 'Cooldown Lock'
+                    : isSessionActive
+                    ? 'Task Timer (30m)'
+                    : 'Task Allowance'}
+                </span>
+              </div>
+              <div
+                className={`text-lg sm:text-xl font-semibold font-mono tabular-nums mt-0.5 ${
+                  cooldownRemainingSeconds > 0
+                    ? 'text-rose-200'
+                    : isSessionActive && remainingSeconds < 300
+                    ? 'text-amber-200'
+                    : 'text-white'
+                }`}
+              >
+                {cooldownRemainingSeconds > 0
+                  ? formatCooldownHMS(cooldownRemainingSeconds)
+                  : formatTimer(remainingSeconds)}
+              </div>
             </div>
           </div>
         </div>
@@ -1374,6 +1480,30 @@ const TypingApp = () => {
           </div>
         </div>
       </div>
+
+      {/* 48-HOUR AUTO-RESET NOTICE (BENGALI) */}
+      <div className="bg-[#EEF5FC] border border-[#D4E4F7] rounded-xl p-4 text-[#1E2329] space-y-1.5">
+        <div className="flex items-center gap-2 font-semibold text-xs text-[#0A4D8C]">
+          <Clock size={15} className="shrink-0" />
+          <span>৪৮ ঘণ্টায় সম্পূর্ণ প্রজেক্ট ও অটো-রিসেট নির্দেশিকা</span>
+        </div>
+        <p className="text-xs text-slate-700 leading-relaxed">
+          একবার <strong>Start</strong> বাটনে ক্লিক করার পর <strong>৪৮ ঘণ্টার (48 Hours)</strong> ভেতর সম্পূর্ণ প্রজেক্টের সবগুলো (১০টি) টাইপিং টাস্ক শেষ করতে হবে। নির্ধারিত ৪৮ ঘণ্টার মধ্যে পুরো প্রজেক্ট শেষ করতে না পারলে কাজটি <strong>অটোমেটিক রিসেট</strong> হয়ে যাবে এবং আপনাকে আবার একদম শুরু থেকে (Task #1) নতুন করে করতে হবে।
+        </p>
+      </div>
+
+      {/* 48-HOUR EXPIRED AUTO-RESET ALERT */}
+      {projectAutoResetNotice && (
+        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 text-xs text-rose-800 flex items-start gap-2.5 font-medium">
+          <AlertCircle size={16} className="text-rose-700 shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <p className="font-semibold text-rose-900">৪৮ ঘণ্টা সময় শেষ — প্রজেক্ট অটো-রিসেট হয়েছে!</p>
+            <p className="leading-relaxed">
+              Start বাটনে ক্লিক করার পর ৪৮ ঘণ্টার মধ্যে সবগুলো কাজ শেষ না হওয়ায় আপনার পুরো টাইপিং প্রজেক্ট রিসেট হয়ে গেছে। এখন আবার শুরু থেকে (Task #1) Start বাটনে ক্লিক করে কাজ করুন।
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* MANDATORY SCREEN RECORDING NOTICE */}
       <div className="bg-[#EEF5FC] border border-[#D4E4F7] rounded-xl p-4 text-[#1E2329] space-y-1">

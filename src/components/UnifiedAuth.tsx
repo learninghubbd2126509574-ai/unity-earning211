@@ -9,13 +9,18 @@ import {
   hashAuthLookupKey,
   normalizePhoneDigits,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut
 } from '../lib/firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { WORK_MODULES } from '../lib/modules';
 import { cn } from '../lib/utils';
+import {
+  DirectAuthUser,
+  DirectUserRecord,
+  loginDirectAccount,
+  registerDirectAccount,
+} from '../lib/directAuth';
 import {
   UserCheck,
   LogIn,
@@ -72,7 +77,7 @@ async function compressImageIfNeeded(dataUrl: string, maxLength = 700000): Promi
 
 export const UnifiedAuth: React.FC = () => {
   const navigate = useNavigate();
-  const { user, profile, authNotice, clearAuthNotice, setAdminLogin, setIsPinUnlocked } = useAuth();
+  const { user, profile, authNotice, clearAuthNotice, setAdminLogin, setIsPinUnlocked, loginDirectUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>(() =>
     user && !profile ? 'register' : 'login'
   );
@@ -112,6 +117,10 @@ export const UnifiedAuth: React.FC = () => {
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerError, setRegisterError] = useState('');
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+  const [registeredCreds, setRegisteredCreds] = useState<{
+    user: DirectAuthUser;
+    profile: DirectUserRecord;
+  } | null>(null);
   const [logoUrl, setLogoUrl] = useState('');
 
   // Load custom logo if configured in live Firestore
@@ -219,11 +228,7 @@ export const UnifiedAuth: React.FC = () => {
       cleanIdent.toLowerCase() === 'admin@unityearning.app';
 
     if ((isAdminPhone || isAdminEmail) && cleanPass === '212650') {
-      try {
-        await signInWithEmailAndPassword(auth, '01919012426@portal.unityearning.internal', cleanPass);
-      } catch {
-        // Fallback silently if account already authenticated
-      }
+      signInWithEmailAndPassword(auth, '01919012426@portal.unityearning.internal', cleanPass).catch(() => {});
       setAdminLogin(true);
       setIsPinUnlocked(true);
       setLoginLoading(false);
@@ -231,11 +236,29 @@ export const UnifiedAuth: React.FC = () => {
       return;
     }
 
-    // 2. Resolve Login Email via Hash-Keyed AuthLookup or Direct Phone Email
+    // 2. Direct Zero-Limit Portal Login (No Firebase quota required)
     try {
-      let targetAuthEmail = await resolveAuthEmailFromIdentifier(cleanIdent);
+      const directResult = await loginDirectAccount(cleanIdent, cleanPass);
+      if (directResult.status === 'ok' && directResult.user && directResult.profile) {
+        loginDirectUser(directResult.user, directResult.profile);
+        setLoginLoading(false);
+        return;
+      }
+      if (directResult.status === 'wrong_password' || directResult.status === 'blocked') {
+        setLoginError(directResult.error || 'Incorrect password or deactivated account.');
+        setLoginLoading(false);
+        return;
+      }
+
+      // 3. Fallback for older legacy Firebase accounts (only if not found in direct DB)
+      let targetAuthEmail = '';
+      try {
+        targetAuthEmail = await resolveAuthEmailFromIdentifier(cleanIdent);
+      } catch {
+        // Ignore Firestore lookup quota errors and try direct phone alias
+      }
       if (!targetAuthEmail && cleanPhoneDigits.length >= 10) {
-        targetAuthEmail = `${cleanPhoneDigits}@portal.unityearning.internal`;
+        targetAuthEmail = `${normalizePhoneDigits(cleanIdent) || cleanPhoneDigits}@portal.unityearning.internal`;
       }
 
       if (!targetAuthEmail) {
@@ -250,7 +273,7 @@ export const UnifiedAuth: React.FC = () => {
       const userSnap = await getDoc(doc(db, 'users', userCred.user.uid));
 
       if (!userSnap.exists()) {
-        await signOut(auth);
+        await signOut(auth).catch(() => {});
         setLoginError('Your account was not found or was deleted by the administrator.');
         setLoginLoading(false);
         return;
@@ -265,14 +288,18 @@ export const UnifiedAuth: React.FC = () => {
       }
 
       if (uData.status === 'blocked') {
-        await signOut(auth);
+        await signOut(auth).catch(() => {});
         setLoginError('Your account has been deactivated by the administrator. Please contact support.');
         return;
       }
     } catch (authErr: any) {
-      if (authErr.code === 'auth/wrong-password' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/invalid-login-credentials') {
+      if (
+        authErr.code === 'auth/wrong-password' ||
+        authErr.code === 'auth/invalid-credential' ||
+        authErr.code === 'auth/invalid-login-credentials'
+      ) {
         setLoginError(
-          'Incorrect password or credentials. Please verify your credentials or click Forgot Password.'
+          'Incorrect password or credentials. Please verify your credentials or register a new account.'
         );
       } else if (authErr.code === 'auth/user-not-found') {
         setLoginError('No registered account found with these credentials.');
@@ -306,70 +333,6 @@ export const UnifiedAuth: React.FC = () => {
     } finally {
       setLoginLoading(false);
     }
-  };
-
-  const persistRegistrationToFirestore = async (uid: string, resolvedEmail: string, cleanPass: string) => {
-    const cleanPhone = normalizePhoneDigits(phone.trim()) || phone.trim();
-    const cleanId = studentId.trim();
-    const nowIso = new Date().toISOString();
-
-    const newUserData = {
-      uid,
-      fullName: fullName.trim(),
-      whatsappNumber: cleanPhone,
-      studentIdCode: cleanId,
-      teamLeaderName: teamLeaderName.trim(),
-      teamTrainerName: teamTrainerName.trim(),
-      email: resolvedEmail,
-      role: 'student',
-      status: 'active',
-      assignedJob: selectedModules[0] || 'typing',
-      assignedJobs: selectedModules,
-      preferredModules: selectedModules,
-      courseCompleted: Boolean(courseCompleted),
-      companyJoinDate: companyJoinDate || nowIso.split('T')[0],
-      hasExperience: Boolean(hasExperience),
-      hasSelectedWorkKnowledge: Boolean(hasSelectedWorkKnowledge),
-      hasCertificate: Boolean(hasCertificate),
-      certificateUrl: hasCertificate ? certificateDataUrl : '',
-      balance: 0,
-      microjobPoints: 0,
-      passwordText: cleanPass,
-      createdAt: nowIso,
-      updatedAt: nowIso
-    };
-
-    await setDoc(doc(db, 'users', uid), newUserData);
-
-    // Non-PII 7-digit ID directory entry for safe peer Balance Transfers
-    await setDoc(doc(db, 'memberDirectory', cleanId), {
-      uid,
-      studentIdCode: cleanId,
-      fullName: fullName.trim(),
-      updatedAt: nowIso
-    });
-
-    // Hash-keyed Auth Lookups for Phone & 7-digit ID Sign-In
-    const [phoneHash, idHash] = await Promise.all([
-      hashAuthLookupKey(cleanPhone),
-      hashAuthLookupKey(cleanId)
-    ]);
-
-    await Promise.all([
-      setDoc(doc(db, 'authLookups', phoneHash), {
-        email: resolvedEmail,
-        uid,
-        updatedAt: nowIso
-      }),
-      setDoc(doc(db, 'authLookups', idHash), {
-        email: resolvedEmail,
-        uid,
-        updatedAt: nowIso
-      })
-    ]);
-
-    await signOut(auth);
-    setSubmittedSuccess(true);
   };
 
   const validateRegisterInputs = (): boolean => {
@@ -427,16 +390,33 @@ export const UnifiedAuth: React.FC = () => {
     setRegisterLoading(true);
     const authEmail = email.trim().toLowerCase();
     const cleanPass = password.trim();
+    const cleanPhone = normalizePhoneDigits(phone.trim()) || phone.trim();
+    const cleanId = studentId.trim();
+    const nowIso = new Date().toISOString();
 
     try {
-      const cred = await createUserWithEmailAndPassword(auth, authEmail, cleanPass);
-      await persistRegistrationToFirestore(cred.user.uid, authEmail, cleanPass);
+      const result = await registerDirectAccount({
+        fullName: fullName.trim(),
+        whatsappNumber: cleanPhone,
+        studentIdCode: cleanId,
+        email: authEmail,
+        passwordText: cleanPass,
+        teamLeaderName: teamLeaderName.trim(),
+        teamTrainerName: teamTrainerName.trim(),
+        assignedJobs: selectedModules,
+        preferredModules: selectedModules,
+        courseCompleted: Boolean(courseCompleted),
+        companyJoinDate: companyJoinDate || nowIso.split('T')[0],
+        hasExperience: Boolean(hasExperience),
+        hasSelectedWorkKnowledge: Boolean(hasSelectedWorkKnowledge),
+        hasCertificate: Boolean(hasCertificate),
+        certificateUrl: hasCertificate ? certificateDataUrl : '',
+      });
+
+      setRegisteredCreds(result);
+      setSubmittedSuccess(true);
     } catch (err: any) {
-      if (err.code === 'auth/email-already-in-use') {
-        setRegisterError('This email is already registered. Please sign in or use another email.');
-      } else {
-        setRegisterError(err.message || 'Registration failed. Please check inputs.');
-      }
+      setRegisterError(err?.message || 'Registration failed. Please check inputs.');
     } finally {
       setRegisterLoading(false);
     }
@@ -452,7 +432,7 @@ export const UnifiedAuth: React.FC = () => {
           <div className="space-y-1.5">
             <h2 className="text-xl font-semibold text-slate-900">Registration Successful</h2>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Your account details (name, phone, password &amp; selected work tasks) have been recorded in the live Firebase database. Sign in to begin.
+              Your registration record has been sent to the Admin portal. You can now log in directly without any limit.
             </p>
           </div>
 
@@ -481,15 +461,28 @@ export const UnifiedAuth: React.FC = () => {
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              setSubmittedSuccess(false);
-              setActiveTab('login');
-            }}
-            className="w-full bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold py-3 rounded-lg transition text-sm cursor-pointer shadow-xs"
-          >
-            Go to Sign In
-          </button>
+          <div className="space-y-2.5">
+            {registeredCreds && (
+              <button
+                onClick={() => {
+                  loginDirectUser(registeredCreds.user, registeredCreds.profile);
+                }}
+                className="w-full bg-[#0A4D8C] hover:bg-[#083D70] text-white font-semibold py-3 rounded-lg transition text-sm cursor-pointer shadow-xs"
+              >
+                Enter Account Directly (Login Now)
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setSubmittedSuccess(false);
+                setLoginIdentifier(phone || studentId || email);
+                setActiveTab('login');
+              }}
+              className="w-full bg-[#F4F5F7] hover:bg-slate-200/80 text-slate-800 border border-slate-200 font-semibold py-2.5 rounded-lg transition text-xs cursor-pointer"
+            >
+              Go to Sign In Form
+            </button>
+          </div>
         </div>
       </div>
     );
