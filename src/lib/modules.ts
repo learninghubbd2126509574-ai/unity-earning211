@@ -18,7 +18,7 @@ export const WORK_MODULES: WorkModuleInfo[] = [
     badge: 'Popular',
     iconName: 'PenTool',
     color: 'bg-blue-100 text-blue-600',
-    rateInfo: 'BDT 1 per approved session'
+    rateInfo: 'BDT 180 per approved session'
   },
   {
     id: 'form',
@@ -28,7 +28,7 @@ export const WORK_MODULES: WorkModuleInfo[] = [
     badge: 'High Demand',
     iconName: 'FileText',
     color: 'bg-emerald-100 text-emerald-600',
-    rateInfo: 'BDT 1 per 10 verified forms'
+    rateInfo: 'BDT 250 per 10 verified forms'
   },
   {
     id: 'data',
@@ -38,7 +38,7 @@ export const WORK_MODULES: WorkModuleInfo[] = [
     badge: 'Structured',
     iconName: 'Database',
     color: 'bg-indigo-100 text-indigo-600',
-    rateInfo: 'BDT 1 per 10 verified links'
+    rateInfo: 'BDT 300 per 10 verified links'
   },
   {
     id: 'shop',

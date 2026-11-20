@@ -354,7 +354,7 @@ interface AuditErrorDetail {
 const FORM_PROJECT_DEADLINE_KEY = 'unity_form_project_deadline';
 const FORM_ACTIVE_SESSION_KEY = 'unity_form_active_session';
 const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
-const EIGHT_MINUTES_MS = 8 * 60 * 1000;
+const NINE_MINUTES_MS = 9 * 60 * 1000;
 
 interface ActiveFormSession {
   clientId: number;
@@ -385,7 +385,7 @@ export const FormFillupWork = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [pasteBlockedCount, setPasteBlockedCount] = useState(0);
 
-  const [autoResetNotice, setAutoResetNotice] = useState<'48h' | '8m' | null>(() => {
+  const [autoResetNotice, setAutoResetNotice] = useState<'48h' | '9m' | null>(() => {
     try {
       const savedDeadline = Number(localStorage.getItem(FORM_PROJECT_DEADLINE_KEY) || 0);
       if (savedDeadline > 0 && Date.now() >= savedDeadline) {
@@ -402,7 +402,7 @@ export const FormFillupWork = () => {
           localStorage.removeItem('unity_form_fillup_60_records');
           localStorage.removeItem('unity_form_fillup_60_rejected');
           localStorage.removeItem(FORM_ACTIVE_SESSION_KEY);
-          return '8m';
+          return '9m';
         }
       }
     } catch {}
@@ -435,7 +435,7 @@ export const FormFillupWork = () => {
   });
 
   const [formRemainingSeconds, setFormRemainingSeconds] = useState<number>(() => {
-    if (!activeFormSession) return 8 * 60;
+    if (!activeFormSession) return 9 * 60;
     return Math.max(0, Math.ceil((activeFormSession.expiresAt - Date.now()) / 1000));
   });
 
@@ -580,19 +580,19 @@ export const FormFillupWork = () => {
     };
   }, [isAnalyzingBatch]);
 
-  const triggerEightMinuteReset = () => {
+  const triggerNineMinuteReset = () => {
     localStorage.removeItem('unity_form_fillup_60_records');
     localStorage.removeItem('unity_form_fillup_60_rejected');
     localStorage.removeItem(FORM_ACTIVE_SESSION_KEY);
     setSubmittedClients({});
     setActiveFormSession(null);
-    setFormRemainingSeconds(8 * 60);
+    setFormRemainingSeconds(9 * 60);
     setSelectedClientId(1);
     setFormData(EMPTY_FORM);
     setFormSuccess(null);
-    setAutoResetNotice('8m');
+    setAutoResetNotice('9m');
     setFormError(
-      '৮ মিনিটের সময়সীমা শেষ! নির্ধারিত ৮ মিনিটের মধ্যে ফর্মটি পূরণ করতে না পারায় প্রজেক্ট রিসেট হয়েছে — আপনাকে আবার প্রথম থেকে (Client #1) শুরু করতে হবে।'
+      '৯ মিনিটের সময়সীমা শেষ! নির্ধারিত ৯ মিনিটের মধ্যে ফর্মটি পূরণ করতে না পারায় প্রজেক্ট রিসেট হয়েছে — আপনাকে আবার প্রথম থেকে (Client #1) শুরু করতে হবে।'
     );
   };
 
@@ -607,7 +607,7 @@ export const FormFillupWork = () => {
     setProjectDeadline(null);
     setProjectRemainingSeconds(48 * 3600);
     setActiveFormSession(null);
-    setFormRemainingSeconds(8 * 60);
+    setFormRemainingSeconds(9 * 60);
     setSelectedClientId(1);
     setFormData(EMPTY_FORM);
     setFormSuccess(null);
@@ -617,7 +617,7 @@ export const FormFillupWork = () => {
     );
   };
 
-  // Live 48-hour project & 8-minute per-form countdown enforcement
+  // Live 48-hour project & 9-minute per-form countdown enforcement
   useEffect(() => {
     if (!projectDeadline && !activeFormSession) return;
 
@@ -634,12 +634,12 @@ export const FormFillupWork = () => {
       }
 
       if (activeFormSession && !isAnalyzingBatch && !isRejectedBatch) {
-        const left8 = Math.ceil((activeFormSession.expiresAt - now) / 1000);
-        if (left8 <= 0) {
-          triggerEightMinuteReset();
+        const left9 = Math.ceil((activeFormSession.expiresAt - now) / 1000);
+        if (left9 <= 0) {
+          triggerNineMinuteReset();
           return;
         }
-        setFormRemainingSeconds(left8);
+        setFormRemainingSeconds(left9);
       }
     }, 1000);
 
@@ -651,7 +651,7 @@ export const FormFillupWork = () => {
     const deadline = now + FORTY_EIGHT_HOURS_MS;
     const firstFormSession: ActiveFormSession = {
       clientId: selectedClientId,
-      expiresAt: now + EIGHT_MINUTES_MS,
+      expiresAt: now + NINE_MINUTES_MS,
     };
     try {
       localStorage.setItem(FORM_PROJECT_DEADLINE_KEY, String(deadline));
@@ -660,7 +660,7 @@ export const FormFillupWork = () => {
     setProjectDeadline(deadline);
     setProjectRemainingSeconds(48 * 3600);
     setActiveFormSession(firstFormSession);
-    setFormRemainingSeconds(8 * 60);
+    setFormRemainingSeconds(9 * 60);
     setAutoResetNotice(null);
     setFormError(null);
   };
@@ -672,13 +672,13 @@ export const FormFillupWork = () => {
     }
     const nextSession: ActiveFormSession = {
       clientId: selectedClientId,
-      expiresAt: Date.now() + EIGHT_MINUTES_MS,
+      expiresAt: Date.now() + NINE_MINUTES_MS,
     };
     try {
       localStorage.setItem(FORM_ACTIVE_SESSION_KEY, JSON.stringify(nextSession));
     } catch {}
     setActiveFormSession(nextSession);
-    setFormRemainingSeconds(8 * 60);
+    setFormRemainingSeconds(9 * 60);
     setAutoResetNotice(null);
     setFormError(null);
   };
@@ -693,7 +693,7 @@ export const FormFillupWork = () => {
     setProjectDeadline(null);
     setProjectRemainingSeconds(48 * 3600);
     setActiveFormSession(null);
-    setFormRemainingSeconds(8 * 60);
+    setFormRemainingSeconds(9 * 60);
     setSelectedClientId(1);
     setFormData(EMPTY_FORM);
     setAutoResetNotice(null);
@@ -740,7 +740,7 @@ export const FormFillupWork = () => {
     }
 
     if (!isCurrentFormUnlocked) {
-      setFormError(`Client #${selectedClientId} ফর্মটি শুরু করতে Start বাটনে ক্লিক করুন (সময়সীমা ৮ মিনিট)।`);
+      setFormError(`Client #${selectedClientId} ফর্মটি শুরু করতে Start বাটনে ক্লিক করুন (সময়সীমা ৯ মিনিট)।`);
       return;
     }
 
@@ -764,7 +764,7 @@ export const FormFillupWork = () => {
       localStorage.removeItem(FORM_ACTIVE_SESSION_KEY);
     } catch {}
     setActiveFormSession(null);
-    setFormRemainingSeconds(8 * 60);
+    setFormRemainingSeconds(9 * 60);
 
     const newCount = Object.keys(updated).length;
 
@@ -937,7 +937,7 @@ export const FormFillupWork = () => {
 
               <div className="bg-white/10 border border-white/15 px-3.5 py-2.5 rounded-xl text-left sm:text-right">
                 <div className="text-[11px] font-medium text-blue-100 flex items-center sm:justify-end gap-1">
-                  <Clock size={12} /> Form #{selectedClientId} (8m)
+                  <Clock size={12} /> Form #{selectedClientId} (9m)
                 </div>
                 <div
                   className={`text-base font-semibold font-mono tabular-nums mt-0.5 ${
@@ -946,7 +946,7 @@ export const FormFillupWork = () => {
                       : 'text-white'
                   }`}
                 >
-                  {activeFormSession?.clientId === selectedClientId ? formatMS(formRemainingSeconds) : '08:00'}
+                  {activeFormSession?.clientId === selectedClientId ? formatMS(formRemainingSeconds) : '09:00'}
                 </div>
               </div>
 
@@ -978,15 +978,15 @@ export const FormFillupWork = () => {
           </div>
         </div>
 
-        {/* MANDATORY 48-HOUR & 8-MINUTE RULES NOTICE (BENGALI) */}
+        {/* MANDATORY 48-HOUR & 9-MINUTE RULES NOTICE (BENGALI) */}
         <div className="bg-[#EEF5FC] border border-[#D4E4F7] rounded-xl p-4 text-[#1E2329] space-y-2">
           <div className="flex items-center gap-2 font-semibold text-xs text-[#0A4D8C]">
             <Clock size={15} className="shrink-0" />
-            <span>জরুরি সময়সীমা ও অটো-রিসেট নির্দেশিকা (৮ মিনিট প্রতি ফর্ম ও ৪৮ ঘণ্টা প্রজেক্ট)</span>
+            <span>জরুরি সময়সীমা ও অটো-রিসেট নির্দেশিকা (৯ মিনিট প্রতি ফর্ম ও ৪৮ ঘণ্টা প্রজেক্ট)</span>
           </div>
           <ul className="space-y-1 text-xs text-slate-700 leading-relaxed list-disc pl-4">
             <li>
-              <strong>প্রতি ফর্ম ৮ মিনিট:</strong> কাজ শুরু করার আগে অবশ্যই <strong>Start</strong> বাটনে ক্লিক করতে হবে। Start করার পর প্রতিটি ফর্ম পূরণ করার জন্য <strong>৮ মিনিট (08:00)</strong> সময় পাবেন—৮ মিনিটের বেশি হয়ে গেলে সম্পূর্ণ কাজ রিসেট হয়ে যাবে এবং আপনাকে <strong>আবার প্রথম থেকে (Client #1)</strong> শুরু করতে হবে।
+              <strong>প্রতি ফর্ম ৯ মিনিট:</strong> কাজ শুরু করার আগে অবশ্যই <strong>Start</strong> বাটনে ক্লিক করতে হবে। Start করার পর প্রতিটি ফর্ম পূরণ করার জন্য <strong>৯ মিনিট (09:00)</strong> সময় পাবেন—৯ মিনিটের বেশি হয়ে গেলে সম্পূর্ণ কাজ রিসেট হয়ে যাবে এবং আপনাকে <strong>আবার প্রথম থেকে (Client #1)</strong> শুরু করতে হবে।
             </li>
             <li>
               <strong>৪৮ ঘণ্টা অটো-রিসেট সিস্টেম:</strong> একবার Start বাটনে ক্লিক করার পর <strong>৪৮ ঘণ্টার (48 Hours)</strong> ভেতর সম্পূর্ণ প্রজেক্টের সব কাজ (৬০টি ফর্ম) শেষ করতে হবে। নির্ধারিত ৪৮ ঘণ্টার মধ্যে সব কাজ শেষ করতে না পারলে পুরো প্রজেক্ট <strong>অটোমেটিক রিসেট</strong> হয়ে যাবে এবং শুরু থেকে করতে হবে।
@@ -994,19 +994,19 @@ export const FormFillupWork = () => {
           </ul>
         </div>
 
-        {/* AUTO-RESET ALERT BANNER (WHEN 8m OR 48h EXPIRED) */}
+        {/* AUTO-RESET ALERT BANNER (WHEN 9m OR 48h EXPIRED) */}
         {autoResetNotice && (
           <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 text-xs text-rose-800 flex items-start gap-2.5 font-medium">
             <AlertCircle size={16} className="text-rose-700 shrink-0 mt-0.5" />
             <div className="space-y-0.5">
               <p className="font-semibold text-rose-900">
-                {autoResetNotice === '8m'
-                  ? '৮ মিনিট সময় শেষ — প্রজেক্ট প্রথম থেকে রিসেট হয়েছে!'
+                {autoResetNotice === '9m'
+                  ? '৯ মিনিট সময় শেষ — প্রজেক্ট প্রথম থেকে রিসেট হয়েছে!'
                   : '৪৮ ঘণ্টা সময় শেষ — সম্পূর্ণ প্রজেক্ট অটো-রিসেট হয়েছে!'}
               </p>
               <p className="leading-relaxed">
-                {autoResetNotice === '8m'
-                  ? 'একটি ফর্ম পূরণে ৮ মিনিটের বেশি সময় লাগায় প্রজেক্ট প্রথম থেকে (Client #1) রিসেট করা হয়েছে। পুনরায় Start বাটনে ক্লিক করে নতুনভাবে শুরু করুন।'
+                {autoResetNotice === '9m'
+                  ? 'একটি ফর্ম পূরণে ৯ মিনিটের বেশি সময় লাগায় প্রজেক্ট প্রথম থেকে (Client #1) রিসেট করা হয়েছে। পুনরায় Start বাটনে ক্লিক করে নতুনভাবে শুরু করুন।'
                   : '৪৮ ঘণ্টার মধ্যে সম্পূর্ণ প্রজেক্ট শেষ না হওয়ায় সিস্টেম অটোমেটিক রিসেট করে দিয়েছে। আবার প্রথম থেকে Start বাটনে ক্লিক করে কাজ শুরু করুন।'}
               </p>
             </div>
@@ -1025,7 +1025,7 @@ export const FormFillupWork = () => {
                   প্রজেক্ট শুরু করতে Start বাটনে ক্লিক করুন
                 </h2>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Start বাটনে ক্লিক করার সাথে সাথে ৪৮ ঘণ্টার প্রজেক্ট কাউন্টডাউন এবং Client #{selectedClientId}-এর ৮ মিনিটের (08:00) ফর্ম টাইমার চালু হবে।
+                  Start বাটনে ক্লিক করার সাথে সাথে ৪৮ ঘণ্টার প্রজেক্ট কাউন্টডাউন এবং Client #{selectedClientId}-এর ৯ মিনিটের (09:00) ফর্ম টাইমার চালু হবে।
                 </p>
               </div>
             </div>
@@ -1036,7 +1036,7 @@ export const FormFillupWork = () => {
               className="w-full sm:w-auto bg-[#0D7A5F] hover:bg-[#0A634C] text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer shrink-0 whitespace-nowrap"
             >
               <Play size={14} fill="currentColor" />
-              <span>Start Project (48h / 08:00)</span>
+              <span>Start Project (48h / 09:00)</span>
             </button>
           </div>
         )}
@@ -1200,7 +1200,7 @@ export const FormFillupWork = () => {
                     Client #{currentClient.id} ফর্মটি লক করা আছে — Start বাটনে ক্লিক করুন
                   </p>
                   <p className="text-[11px] text-slate-300 mt-0.5">
-                    Start করলে ৮ মিনিট (08:00) সময় শুরু হবে। ৮ মিনিটের বেশি হলে প্রজেক্ট আবার প্রথম থেকে শুরু করতে হবে।
+                    Start করলে ৯ মিনিট (09:00) সময় শুরু হবে। ৯ মিনিটের বেশি হলে প্রজেক্ট আবার প্রথম থেকে শুরু করতে হবে।
                   </p>
                 </div>
               </div>
@@ -1210,7 +1210,7 @@ export const FormFillupWork = () => {
                 className="w-full sm:w-auto bg-[#0D7A5F] hover:bg-[#0A634C] text-white font-semibold px-4 py-2 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
               >
                 <Play size={13} fill="currentColor" />
-                <span>Start Form #{currentClient.id} (08:00)</span>
+                <span>Start Form #{currentClient.id} (09:00)</span>
               </button>
             </div>
           )}
@@ -1218,7 +1218,7 @@ export const FormFillupWork = () => {
           {projectDeadline && activeFormSession?.clientId === selectedClientId && (
             <div className="bg-[#FEF7E0] border border-[#F3DFA2] rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs">
               <span className="font-medium text-[#5F4B16]">
-                Client #{selectedClientId} Active 8-Minute Countdown (৮ মিনিটের মধ্যে Save করুন):
+                Client #{selectedClientId} Active 9-Minute Countdown (৯ মিনিটের মধ্যে Save করুন):
               </span>
               <span
                 className={`font-mono font-bold tabular-nums ${
@@ -1249,7 +1249,7 @@ export const FormFillupWork = () => {
                     placeholder={
                       isCurrentFormUnlocked
                         ? field.placeholder
-                        : 'Click Start above to unlock typing (08:00 timer)...'
+                        : 'Click Start above to unlock typing (09:00 timer)...'
                     }
                     className={`w-full border rounded-lg px-3 py-2.5 focus:outline-none transition-colors ${
                       !isCurrentFormUnlocked
